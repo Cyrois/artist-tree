@@ -1,5 +1,6 @@
 # Artist-Tree Project Tasks
-**Tech Stack:** Laravel + Vue.js + Supabase
+**Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + Laravel Cloud
+**Architecture:** Hybrid (Inertia.js pages + RESTful API)
 **Last updated:** 2025-12-21
 **AI Implementation:** Claude agents will implement majority of tasks with human oversight
 
@@ -23,16 +24,18 @@
 Establish the foundational technology stack to ensure scalability, maintainability, and developer productivity throughout the project lifecycle.
 
 **Technical Implementation:**
-- **Backend:** Laravel 12.x for RESTful API, business logic, and external API orchestration
-- **Frontend:** Vue.js 3 with Composition API for reactive SPA
-- **Database:** Supabase (PostgreSQL) for data storage, real-time features, and authentication
-- **Hosting:** Vercel (frontend), Laravel Forge/Vapor (backend), Supabase Cloud (database)
+- **Backend:** Laravel 12.x for monolithic application (Inertia pages + RESTful API endpoints)
+- **Frontend:** Inertia.js v2 + Vue 3 with Composition API for reactive UI
+- **Database:** Laravel Cloud (MySQL) for managed database with automatic backups and scaling
+- **Hosting:** Laravel Cloud (single monolithic deployment)
+- **Architecture:** Hybrid approach - Inertia for page navigation, API for interactivity
 
 **AI Agent Tasks:**
-- Research and document Laravel best practices for API development
-- Set up Vue 3 project structure with Vite
-- Document Supabase schema design patterns
-- Create architecture decision record (ADR) document
+- Research and document Laravel + Inertia.js best practices
+- Document RESTful API design patterns within Laravel monolith
+- Document Laravel Cloud database setup and migration patterns
+- Create architecture decision record (ADR) for hybrid approach
+- Document when to use Inertia vs API endpoints
 
 **Human Oversight:**
 - Approve technology choices
@@ -57,53 +60,56 @@ Establish the foundational technology stack to ensure scalability, maintainabili
 Initialize development environment and project scaffolding to enable immediate development productivity.
 
 **Technical Implementation:**
-- Create Laravel 12.x project with API-only configuration
-- Initialize Vue 3 project with Vite build tool
-- Set up Supabase project and generate API keys
-- Configure local development environment
+- Create Laravel 12.x project with Inertia.js starter kit
+- Configure Vue 3 with Inertia.js v2
+- Set up Laravel Cloud project and database connection
+- Configure local development environment with Vite
 
 **AI Agent Tasks:**
 ```bash
-# Laravel setup
-composer create-project laravel/laravel artist-tree-api
-cd artist-tree-api
-php artisan install:api
-composer require supabase/supabase-php
+# Laravel setup (already completed - current project)
+# Project already initialized with Inertia.js + Vue 3
 
-# Vue setup
-npm create vue@latest artist-tree-frontend
-cd artist-tree-frontend
-npm install @supabase/supabase-js axios
+# Verify Inertia installation
+php artisan about
+
+# Install additional dependencies
+composer require laravel/sanctum
+npm install axios lodash-es
 
 # Environment configuration
 cp .env.example .env
-# Configure database, API keys
+# Configure Laravel Cloud database connection in .env
+php artisan key:generate
 ```
 
 **Laravel Configuration:**
-- Configure `config/database.php` for Supabase PostgreSQL
-- Set up CORS in `config/cors.php` for Vue SPA
-- Install Laravel Sanctum for API authentication
-- Configure `.env` with Supabase credentials
+- Configure `config/database.php` for Laravel Cloud MySQL
+- Verify Inertia.js middleware in `bootstrap/app.php`
+- Configure Laravel Sanctum for cookie-based authentication
+- Set up API routes in `routes/api.php` for interactive features
+- Configure `.env` with Laravel Cloud database credentials and API keys
 
-**Vue Configuration:**
-- Install Vue Router, Pinia for state management
-- Configure API base URL for Laravel backend
-- Set up Supabase client configuration
-- Install UI library (Tailwind CSS, Vuetify, or PrimeVue)
+**Frontend Configuration (Already Configured):**
+- Inertia.js v2 already installed and configured
+- Vue 3 with Composition API and `<script setup>` syntax
+- Tailwind CSS v4 already configured
+- Vite build tool configured with Laravel Wayfinder plugin
+- Axios for API calls within Vue components
 
 **Human Oversight:**
-- Provide API keys and credentials
-- Review security configurations
+- Provide API keys (Spotify, YouTube) and database credentials
+- Review security configurations (Sanctum, rate limiting)
 - Approve dependency versions
 - Test local environment setup
 
 **Acceptance Criteria:**
-- [ ] Laravel API responds on `http://localhost:8000`
-- [ ] Vue dev server running on `http://localhost:5173`
-- [ ] Supabase connection verified
+- [ ] Laravel app serves Inertia pages on `http://localhost:8000`
+- [ ] Vite dev server running with HMR (Hot Module Replacement)
+- [ ] Laravel Cloud database connection verified
 - [ ] Git repository initialized with `.gitignore`
-- [ ] README with setup instructions
+- [ ] README with setup instructions updated
+- [ ] Example Inertia page renders correctly
 
 ---
 
@@ -115,67 +121,65 @@ cp .env.example .env
 **Business Context:**
 Design database schema to support artist data, metrics tracking, lineup management, and tier calculations with optimal query performance.
 
-**Technical Implementation (Supabase Migrations):**
+**Technical Implementation (Laravel Migrations):**
 
 **AI Agent Tasks:**
-Create migration files in `supabase/migrations/`:
+Create Laravel migration files using `php artisan make:migration`:
 
-```sql
--- Migration 001: Artists table
-CREATE TABLE artists (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    spotify_id TEXT UNIQUE,
-    youtube_channel_id TEXT,
-    genre TEXT[],
-    image_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+```php
+// database/migrations/xxxx_create_artists_table.php
+Schema::create('artists', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('spotify_id')->unique()->nullable();
+    $table->string('youtube_channel_id')->nullable();
+    $table->json('genre')->nullable();
+    $table->string('image_url')->nullable();
+    $table->timestamps();
 
-CREATE INDEX idx_artists_name ON artists USING GIN(to_tsvector('english', name));
-CREATE INDEX idx_artists_spotify ON artists(spotify_id);
+    $table->fullText('name');
+    $table->index('spotify_id');
+});
 
--- Migration 002: Artist metrics table
-CREATE TABLE artist_metrics (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    artist_id UUID REFERENCES artists(id) ON DELETE CASCADE,
-    score NUMERIC(5,2) NOT NULL,
-    spotify_monthly_listeners BIGINT,
-    youtube_subscribers BIGINT,
-    engagement_rate NUMERIC(5,2),
-    last_refreshed TIMESTAMPTZ DEFAULT NOW(),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+// database/migrations/xxxx_create_artist_metrics_table.php
+Schema::create('artist_metrics', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('artist_id')->constrained()->onDelete('cascade');
+    $table->decimal('score', 5, 2);
+    $table->unsignedBigInteger('spotify_monthly_listeners')->nullable();
+    $table->unsignedBigInteger('youtube_subscribers')->nullable();
+    $table->decimal('engagement_rate', 5, 2)->nullable();
+    $table->timestamp('last_refreshed')->nullable();
+    $table->timestamps();
 
-CREATE INDEX idx_metrics_artist ON artist_metrics(artist_id);
-CREATE INDEX idx_metrics_score ON artist_metrics(score DESC);
+    $table->index('artist_id');
+    $table->index(['score' => 'desc']);
+});
 
--- Migration 003: Lineups table
-CREATE TABLE lineups (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    name TEXT NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+// database/migrations/xxxx_create_lineups_table.php
+Schema::create('lineups', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained()->onDelete('cascade');
+    $table->string('name');
+    $table->text('description')->nullable();
+    $table->timestamps();
 
-CREATE INDEX idx_lineups_user ON lineups(user_id);
+    $table->index('user_id');
+});
 
--- Migration 004: Lineup artists junction table
-CREATE TABLE lineup_artists (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lineup_id UUID REFERENCES lineups(id) ON DELETE CASCADE,
-    artist_id UUID REFERENCES artists(id) ON DELETE CASCADE,
-    tier TEXT CHECK (tier IN ('headliner', 'sub_headliner', 'mid_tier', 'undercard')),
-    position INTEGER,
-    added_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(lineup_id, artist_id)
-);
+// database/migrations/xxxx_create_lineup_artists_table.php
+Schema::create('lineup_artists', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('lineup_id')->constrained()->onDelete('cascade');
+    $table->foreignId('artist_id')->constrained()->onDelete('cascade');
+    $table->enum('tier', ['headliner', 'sub_headliner', 'mid_tier', 'undercard']);
+    $table->integer('position')->nullable();
+    $table->timestamp('added_at')->useCurrent();
 
-CREATE INDEX idx_lineup_artists_lineup ON lineup_artists(lineup_id);
-CREATE INDEX idx_lineup_artists_tier ON lineup_artists(tier);
+    $table->unique(['lineup_id', 'artist_id']);
+    $table->index('lineup_id');
+    $table->index('tier');
+});
 ```
 
 **Laravel Eloquent Models:**
@@ -203,10 +207,10 @@ class Artist extends Model {
 - Ensure data types match business requirements
 
 **Acceptance Criteria:**
-- [ ] All tables created in Supabase
+- [ ] All Laravel migrations created and run successfully
 - [ ] Eloquent models with relationships defined
 - [ ] Database migrations versioned in Git
-- [ ] Row-level security policies defined (if using Supabase Auth)
+- [ ] Laravel authorization policies defined where needed
 - [ ] Seed data script for testing
 
 ---
@@ -1325,9 +1329,14 @@ public function search(Request $request) {
 }
 ```
 
-**Supabase Full-Text Search Index (Already created in Task 3):**
-```sql
-CREATE INDEX idx_artists_name ON artists USING GIN(to_tsvector('english', name));
+**Laravel Scout Full-Text Search (Already configured in Task 3 migrations):**
+```php
+// Full-text index created in migration:
+$table->fullText('name');
+
+// Or use Laravel Scout for advanced search:
+// composer require laravel/scout
+// Add Searchable trait to Artist model
 ```
 
 **Human Oversight:**
@@ -2849,20 +2858,45 @@ const sortedArtists = computed(() => {
 
 ---
 
-### Task 45-48: Deployment Setup
+### Task 45-48: Laravel Cloud Deployment Setup
 **Priority:** High
-**Tags:** deployment, devops
+**Tags:** deployment, devops, laravel-cloud
 **Dependencies:** Pre-Deployment Checklist
 
 **Business Context:**
-Deploy application to production with proper environment configuration and monitoring.
+Deploy monolithic Laravel application (Inertia + API) to Laravel Cloud with proper environment configuration and monitoring.
 
 **Technical Implementation:**
 
-**AI Agent Tasks:**
+**Laravel Cloud Setup:**
+```bash
+# Install Laravel Cloud CLI
+composer global require laravel/cloud
+
+# Login to Laravel Cloud
+php cloud login
+
+# Create new project
+php cloud create artist-tree
+
+# Link local project to Laravel Cloud
+php cloud link artist-tree
+
+# Configure environment variables via Laravel Cloud dashboard
+# - SPOTIFY_CLIENT_ID
+# - SPOTIFY_CLIENT_SECRET
+# - YOUTUBE_API_KEY
+# - APP_KEY (auto-generated)
+# - Database credentials (auto-configured by Laravel Cloud)
+
+# Deploy to production
+php cloud deploy
+```
+
+**CI/CD Pipeline (GitHub Actions):**
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy to Production
+name: Deploy to Laravel Cloud
 
 on:
   push:
@@ -2873,89 +2907,108 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run Laravel Tests
-        run: |
-          composer install
-          php artisan test
 
-  deploy-backend:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Laravel Forge
-        uses: jbrooksuk/laravel-forge-action@v1
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          trigger_url: ${{ secrets.FORGE_DEPLOY_URL }}
+          php-version: '8.4'
 
-  deploy-frontend:
+      - name: Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+          npm install
+
+      - name: Run Tests
+        run: php artisan test
+
+      - name: Build Assets
+        run: npm run build
+
+  deploy:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Build Vue App
+
+      - name: Deploy to Laravel Cloud
         run: |
-          npm install
-          npm run build
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          composer global require laravel/cloud
+          php cloud deploy --token=${{ secrets.LARAVEL_CLOUD_TOKEN }}
 ```
 
-**Environment Variables:**
+**Environment Variables (Laravel Cloud Dashboard):**
 ```bash
-# .env.production (Laravel)
+# Application
+APP_NAME="Artist Tree"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://api.artist-tree.com
+APP_URL=https://artist-tree.laravel.cloud
+APP_KEY=${AUTO_GENERATED}
 
-DB_CONNECTION=pgsql
-DB_HOST=db.your-supabase-project.supabase.co
-DB_PORT=5432
-DB_DATABASE=postgres
-DB_USERNAME=postgres
-DB_PASSWORD=${SUPABASE_DB_PASSWORD}
+# Database (Auto-configured by Laravel Cloud)
+DB_CONNECTION=mysql
+DB_HOST=${LARAVEL_CLOUD_DB_HOST}
+DB_PORT=3306
+DB_DATABASE=${LARAVEL_CLOUD_DB_NAME}
+DB_USERNAME=${LARAVEL_CLOUD_DB_USER}
+DB_PASSWORD=${LARAVEL_CLOUD_DB_PASSWORD}
 
+# Cache & Queue (Laravel Cloud Redis)
 CACHE_DRIVER=redis
 QUEUE_CONNECTION=redis
+REDIS_HOST=${LARAVEL_CLOUD_REDIS_HOST}
+REDIS_PASSWORD=${LARAVEL_CLOUD_REDIS_PASSWORD}
 
-SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+# External APIs
+SPOTIFY_CLIENT_ID=${YOUR_SPOTIFY_CLIENT_ID}
+SPOTIFY_CLIENT_SECRET=${YOUR_SPOTIFY_CLIENT_SECRET}
+YOUTUBE_API_KEY=${YOUR_YOUTUBE_API_KEY}
 
-# .env.production (Vue)
-VITE_API_URL=https://api.artist-tree.com
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+# Session (important for Inertia)
+SESSION_DRIVER=redis
+SESSION_LIFETIME=120
 ```
 
-**Vercel Configuration:**
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "env": {
-    "VITE_API_URL": "@artist-tree-api-url"
-  }
-}
+**Deployment Commands:**
+```bash
+# Manual deployment
+php cloud deploy
+
+# Run migrations after deployment
+php cloud artisan migrate --force
+
+# Clear caches
+php cloud artisan optimize:clear
+php cloud artisan config:cache
+php cloud artisan route:cache
+php cloud artisan view:cache
+
+# Check deployment status
+php cloud status
+
+# View logs
+php cloud logs
 ```
 
 **Human Oversight:**
-- Provide production credentials
-- Review deployment pipeline
-- Test production environment
+- Create Laravel Cloud account and project
+- Provide production API credentials (Spotify, YouTube)
+- Review security settings (HTTPS, SSL)
+- Test production environment post-deployment
 - Approve go-live checklist
+- Set up monitoring/alerting in Laravel Cloud dashboard
 
 **Acceptance Criteria:**
-- [ ] Frontend deployed to Vercel
-- [ ] Backend deployed to Forge/Vapor
-- [ ] Environment variables configured
-- [ ] SSL certificates active
-- [ ] Database migrations run
-- [ ] Monitoring/logging configured
+- [ ] Application deployed to Laravel Cloud
+- [ ] Custom domain configured (optional) or using .laravel.cloud subdomain
+- [ ] Environment variables configured in Laravel Cloud dashboard
+- [ ] SSL certificate active (automatic with Laravel Cloud)
+- [ ] Database migrations run successfully
+- [ ] Inertia pages load correctly in production
+- [ ] API endpoints responding with valid JSON
+- [ ] Background jobs/queues processing (if configured)
+- [ ] Monitoring/logging configured via Laravel Cloud dashboard
+- [ ] Cache working (Redis on Laravel Cloud)
 
 ---
 
@@ -2964,7 +3017,7 @@ VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 ### Task 49: Documentation - API Setup Guide
 **Priority:** Medium
 **Tags:** documentation
-**Dependencies:** Vercel Deployment Setup
+**Dependencies:** Laravel Cloud Deployment Setup
 
 **Business Context:**
 Provide clear documentation for API usage, setup, and troubleshooting.
@@ -3106,7 +3159,7 @@ Create `docs/WEEK2_ROADMAP.md`:
    - Share link generation
 
 3. **User Authentication**
-   - Implement Supabase Auth
+   - Implement Laravel Fortify/Breeze for authentication
    - User profile management
    - Save lineups to user account
 
@@ -3170,7 +3223,7 @@ Create `docs/WEEK2_ROADMAP.md`:
 - Generate documentation
 
 **Human Oversight Required:**
-- Provide API credentials (Spotify, YouTube, Supabase)
+- Provide API credentials (Spotify, YouTube, Laravel Cloud)
 - Review and approve algorithms and business logic
 - Test UX and provide design feedback
 - Make final decisions on architecture choices
