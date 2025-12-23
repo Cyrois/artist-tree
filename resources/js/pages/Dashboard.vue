@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import LineupCard from '@/components/mockup/lineup/LineupCard.vue';
-import ArtistCard from '@/components/mockup/artist/ArtistCard.vue';
+import LineupCard from '@/components/lineup/LineupCard.vue';
+import ArtistCard from '@/components/artist/ArtistCard.vue';
 import { getLineups } from '@/data/lineups';
 import { searchArtists, getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
@@ -62,7 +62,7 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
 
 <template>
     <Head title="Dashboard - Artist-Tree" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-8">
             <!-- Hero Section -->
             <div class="relative rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-8 md:p-12">
@@ -161,5 +161,5 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
                 </div>
             </div>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

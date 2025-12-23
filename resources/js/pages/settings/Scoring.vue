@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import WeightSlider from '@/components/mockup/settings/WeightSlider.vue';
-import TeamMemberRow from '@/components/mockup/settings/TeamMemberRow.vue';
+import WeightSlider from '@/components/settings/WeightSlider.vue';
+import TeamMemberRow from '@/components/settings/TeamMemberRow.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { metricPresets } from '@/data/constants';
 import type { TeamMember } from '@/data/types';
@@ -79,7 +79,7 @@ const breadcrumbs = [
 
 <template>
     <Head title="Settings - Artist-Tree" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 max-w-4xl">
             <!-- Header -->
             <div>
@@ -312,5 +312,5 @@ const breadcrumbs = [
                 </Card>
             </div>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

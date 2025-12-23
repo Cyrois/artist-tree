@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ArtistCardGrid from '@/components/mockup/artist/ArtistCardGrid.vue';
-import ArtistCard from '@/components/mockup/artist/ArtistCard.vue';
+import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
+import ArtistCard from '@/components/artist/ArtistCard.vue';
 import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists, filterArtistsByGenre, filterArtistsByScoreRange, sortArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
@@ -108,7 +108,7 @@ const breadcrumbs = [
 
 <template>
     <Head title="Search Artists - Artist-Tree" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Search Header -->
             <div class="flex flex-col sm:flex-row gap-4">
@@ -265,5 +265,5 @@ const breadcrumbs = [
                 </div>
             </div>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

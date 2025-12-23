@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
-import ArtistCard from '@/components/mockup/artist/ArtistCard.vue';
-import ScoreBadge from '@/components/mockup/score/ScoreBadge.vue';
-import MiniChart from '@/components/mockup/chart/MiniChart.vue';
-import ScoreBreakdown from '@/components/mockup/chart/ScoreBreakdown.vue';
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
+import ArtistCard from '@/components/artist/ArtistCard.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import MiniChart from '@/components/chart/MiniChart.vue';
+import ScoreBreakdown from '@/components/chart/ScoreBreakdown.vue';
 import { getArtistById, getSimilarArtists } from '@/data/artists';
 import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
@@ -49,7 +49,7 @@ const breadcrumbs = computed(() => [
 
 <template>
     <Head :title="`${artist?.name ?? 'Artist'} - Artist-Tree`" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="artist" class="space-y-8">
             <!-- Back button -->
             <Button variant="ghost" size="sm" @click="router.visit('/search')">
@@ -332,5 +332,5 @@ const breadcrumbs = computed(() => [
                 Back to Search
             </Button>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

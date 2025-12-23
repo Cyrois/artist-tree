@@ -24,6 +24,16 @@ For detailed navigation, see `.claude/README.md`.
 
 ---
 
+## Communication & Planning Style
+
+When presenting implementation plans:
+- **Provide high-level summaries only** - focus on the main steps without implementation details
+- Keep plan overviews concise and action-oriented
+- Avoid verbose explanations of "how" unless specifically asked
+- Let the user ask for details when needed
+
+---
+
 ## Architecture Decision ✅ CONFIRMED
 
 **Hybrid Architecture: Inertia.js + RESTful API (Option C)**

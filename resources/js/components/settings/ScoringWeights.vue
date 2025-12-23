@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import WeightSlider from '@/components/mockup/settings/WeightSlider.vue';
+import WeightSlider from '@/components/settings/WeightSlider.vue';
 import { metricPresets } from '@/data/constants';
 import { Music, Youtube, TrendingUp, AlertCircle, Check } from 'lucide-vue-next';
 import { ref, computed } from 'vue';

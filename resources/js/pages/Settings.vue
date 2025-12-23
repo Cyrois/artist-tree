@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { User, Building2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
@@ -38,7 +38,7 @@ const user = computed(() => page.props.auth.user);
 
 <template>
     <Head title="Settings - Artist-Tree" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 max-w-5xl">
             <!-- Header -->
             <div>
@@ -115,5 +115,5 @@ const user = computed(() => page.props.auth.user);
                 <ScoringWeights />
             </div>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>
