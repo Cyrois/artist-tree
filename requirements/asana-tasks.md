@@ -26,8 +26,8 @@ Establish the foundational technology stack to ensure scalability, maintainabili
 **Technical Implementation:**
 - **Backend:** Laravel 12.x for monolithic application (Inertia pages + RESTful API endpoints)
 - **Frontend:** Inertia.js v2 + Vue 3 with Composition API for reactive UI
-- **Database:** Laravel Cloud (MySQL) for managed database with automatic backups and scaling
-- **Hosting:** Laravel Cloud (single monolithic deployment)
+- **Database:** PostgreSQL for managed database with automatic backups and scaling
+- **Hosting:** TBD (single monolithic deployment)
 - **Architecture:** Hybrid approach - Inertia for page navigation, API for interactivity
 
 **AI Agent Tasks:**
@@ -84,7 +84,7 @@ php artisan key:generate
 ```
 
 **Laravel Configuration:**
-- Configure `config/database.php` for Laravel Cloud MySQL
+- Configure `config/database.php` for PostgreSQL
 - Verify Inertia.js middleware in `bootstrap/app.php`
 - Configure Laravel Sanctum for cookie-based authentication
 - Set up API routes in `routes/api.php` for interactive features
@@ -2945,10 +2945,10 @@ APP_DEBUG=false
 APP_URL=https://artist-tree.laravel.cloud
 APP_KEY=${AUTO_GENERATED}
 
-# Database (Auto-configured by Laravel Cloud)
-DB_CONNECTION=mysql
-DB_HOST=${LARAVEL_CLOUD_DB_HOST}
-DB_PORT=3306
+# Database (PostgreSQL)
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
 DB_DATABASE=${LARAVEL_CLOUD_DB_NAME}
 DB_USERNAME=${LARAVEL_CLOUD_DB_USER}
 DB_PASSWORD=${LARAVEL_CLOUD_DB_PASSWORD}

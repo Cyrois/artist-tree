@@ -376,8 +376,8 @@ artistStacks: {
 
 - **Backend:** Laravel 12
 - **Frontend:** Inertia.js v2 + Vue 3
-- **Database:** Laravel Cloud (MySQL)
-- **Deployment:** Laravel Cloud
+- **Database:** PostgreSQL
+- **Deployment:** TBD
 
 ---
 

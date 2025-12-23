@@ -3,7 +3,7 @@
 ## Project Overview
 Artist-Tree is a festival lineup builder and artist discovery platform that helps music festival organizers create balanced lineups using data-driven insights from Spotify and YouTube APIs.
 
-**Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + Laravel Cloud (MySQL)
+**Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + PostgreSQL
 
 ## Documentation Structure
 
