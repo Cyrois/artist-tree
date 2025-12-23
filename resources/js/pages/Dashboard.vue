@@ -10,6 +10,7 @@ import { searchArtists, getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
 import { Search, Music, TrendingUp } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 const lineups = getLineups();
 const trendingArtists = getTrendingArtists(5);
@@ -56,11 +57,11 @@ function handleSearchBlur() {
     }, 200);
 }
 
-const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
+const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dashboard' }];
 </script>
 
 <template>
-    <Head title="Dashboard - Artist-Tree" />
+    <Head :title="$t('dashboard.page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-8">
             <!-- Hero Section -->
@@ -72,10 +73,10 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
                         </div>
                     </div>
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
-                        Build Your Dream Lineup
+                        {{ $t('dashboard.hero_title') }}
                     </h1>
                     <p class="text-muted-foreground text-lg">
-                        Search for artists, compare metrics, and create the perfect festival lineup.
+                        {{ $t('dashboard.hero_subtitle') }}
                     </p>
 
                     <!-- Search -->
@@ -85,7 +86,7 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
                             <Input
                                 v-model="searchQuery"
                                 type="text"
-                                placeholder="Search for artists..."
+                                :placeholder="$t('dashboard.search_placeholder')"
                                 class="bg-white pl-12 pr-4 py-6 text-lg rounded-xl border-2 focus:border-primary"
                                 @focus="handleSearchFocus"
                                 @blur="handleSearchBlur"
@@ -123,11 +124,11 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
             <div>
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold">Your Lineups</h2>
-                        <p class="text-muted-foreground">Manage your festival lineups</p>
+                        <h2 class="text-2xl font-bold">{{ $t('dashboard.lineups_section_title') }}</h2>
+                        <p class="text-muted-foreground">{{ $t('dashboard.lineups_section_subtitle') }}</p>
                     </div>
                     <Button @click="router.visit('/lineups')">
-                        View All
+                        {{ $t('dashboard.lineups_view_all_button') }}
                     </Button>
                 </div>
 
@@ -145,7 +146,7 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
             <div>
                 <div class="flex items-center gap-2 mb-6">
                     <TrendingUp class="w-5 h-5 text-primary" />
-                    <h2 class="text-2xl font-bold">Trending Artists</h2>
+                    <h2 class="text-2xl font-bold">{{ $t('dashboard.trending_section_title') }}</h2>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

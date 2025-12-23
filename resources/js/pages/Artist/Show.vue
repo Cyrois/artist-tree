@@ -14,6 +14,7 @@ import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { ArrowLeft, Plus, Scale, Globe, Calendar, Disc, TrendingUp, RefreshCw, Music, Instagram, Twitter, Youtube } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     id: number;
@@ -30,9 +31,9 @@ const activeTab = ref<'overview' | 'data'>('overview');
 const scoreBreakdown = computed(() => {
     if (!artist.value) return [];
     return [
-        { label: 'Spotify Listeners', value: artist.value.spotifyListeners, weight: 0.4, contribution: (artist.value.score * 0.4) },
-        { label: 'Spotify Popularity', value: artist.value.spotifyPopularity, weight: 0.3, contribution: (artist.value.score * 0.3) },
-        { label: 'YouTube Subscribers', value: artist.value.youtubeSubscribers, weight: 0.3, contribution: (artist.value.score * 0.3) },
+        { label: trans('artists.show_monthly_listeners'), value: artist.value.spotifyListeners, weight: 0.4, contribution: (artist.value.score * 0.4) },
+        { label: trans('artists.show_spotify_popularity'), value: artist.value.spotifyPopularity, weight: 0.3, contribution: (artist.value.score * 0.3) },
+        { label: trans('artists.show_youtube_subscribers'), value: artist.value.youtubeSubscribers, weight: 0.3, contribution: (artist.value.score * 0.3) },
     ];
 });
 
@@ -41,20 +42,20 @@ function handleArtistClick(a: Artist) {
 }
 
 const breadcrumbs = computed(() => [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Search Artists', href: '/search' },
-    { title: artist.value?.name ?? 'Artist', href: `/artist/${props.id}` },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_search_artists'), href: '/search' },
+    { title: artist.value?.name ?? trans('artists.show_page_title'), href: `/artist/${props.id}` },
 ]);
 </script>
 
 <template>
-    <Head :title="`${artist?.name ?? 'Artist'} - Artist-Tree`" />
+    <Head :title="`${artist?.name ?? $t('artists.show_page_title')} - Artist-Tree`" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="artist" class="space-y-8">
             <!-- Back button -->
             <Button variant="ghost" size="sm" @click="router.visit('/search')">
                 <ArrowLeft class="w-4 h-4 mr-2" />
-                Back to Search
+                {{ $t('artists.show_back_button') }}
             </Button>
 
             <!-- Header -->
@@ -92,11 +93,11 @@ const breadcrumbs = computed(() => [
                     <div class="flex gap-3">
                         <Button>
                             <Plus class="w-4 h-4 mr-2" />
-                            Add to Lineup
+                            {{ $t('artists.show_add_to_lineup_button') }}
                         </Button>
                         <Button variant="outline">
                             <Scale class="w-4 h-4 mr-2" />
-                            Compare
+                            {{ $t('artists.show_compare_button') }}
                         </Button>
                     </div>
                 </div>
@@ -112,7 +113,7 @@ const breadcrumbs = computed(() => [
                         ]"
                         @click="activeTab = 'overview'"
                     >
-                        Overview
+                        {{ $t('artists.show_tab_overview') }}
                     </button>
                     <button
                         :class="[
@@ -121,7 +122,7 @@ const breadcrumbs = computed(() => [
                         ]"
                         @click="activeTab = 'data'"
                     >
-                        Data & Metrics
+                        {{ $t('artists.show_tab_data') }}
                     </button>
                 </div>
             </div>
@@ -130,7 +131,7 @@ const breadcrumbs = computed(() => [
             <div v-if="activeTab === 'overview'" class="space-y-8">
                 <!-- Bio -->
                 <div>
-                    <h2 class="text-lg font-semibold mb-3">About</h2>
+                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_about_title') }}</h2>
                     <p class="text-muted-foreground">{{ artist.bio }}</p>
                 </div>
 
@@ -138,25 +139,25 @@ const breadcrumbs = computed(() => [
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Monthly Listeners</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_monthly_listeners') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyListeners) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Spotify Popularity</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_popularity') }}</p>
                             <p class="text-2xl font-bold">{{ artist.spotifyPopularity }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">YouTube Subs</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_subs') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeSubscribers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Instagram</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_instagram') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.instagramFollowers) }}</p>
                         </CardContent>
                     </Card>
@@ -164,7 +165,7 @@ const breadcrumbs = computed(() => [
 
                 <!-- Top Tracks -->
                 <div>
-                    <h2 class="text-lg font-semibold mb-3">Top Tracks</h2>
+                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_top_tracks_title') }}</h2>
                     <div class="space-y-2">
                         <div
                             v-for="(track, index) in artist.topTracks"
@@ -180,7 +181,7 @@ const breadcrumbs = computed(() => [
 
                 <!-- Albums -->
                 <div>
-                    <h2 class="text-lg font-semibold mb-3">Discography</h2>
+                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_discography_title') }}</h2>
                     <div class="flex flex-wrap gap-2">
                         <Badge v-for="album in artist.albums" :key="album" variant="outline" class="py-1.5 px-3">
                             {{ album }}
@@ -190,7 +191,7 @@ const breadcrumbs = computed(() => [
 
                 <!-- Similar Artists -->
                 <div v-if="similarArtists.length > 0">
-                    <h2 class="text-lg font-semibold mb-3">Similar Artists</h2>
+                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_similar_artists_title') }}</h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <ArtistCard
                             v-for="a in similarArtists"
@@ -204,7 +205,7 @@ const breadcrumbs = computed(() => [
 
                 <!-- External Links -->
                 <div>
-                    <h2 class="text-lg font-semibold mb-3">Listen & Follow</h2>
+                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_listen_follow_title') }}</h2>
                     <div class="flex flex-wrap gap-3">
                         <Button variant="outline" class="bg-[hsl(var(--spotify))]/10 border-[hsl(var(--spotify))]/30 hover:bg-[hsl(var(--spotify))]/20">
                             <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -235,7 +236,7 @@ const breadcrumbs = computed(() => [
                     <Card>
                         <CardContent class="pt-6">
                             <div class="flex items-center justify-between mb-1">
-                                <p class="text-sm text-muted-foreground">Monthly Listeners</p>
+                                <p class="text-sm text-muted-foreground">{{ $t('artists.show_monthly_listeners') }}</p>
                                 <TrendingUp class="w-4 h-4 text-[hsl(var(--score-high))]" />
                             </div>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyListeners) }}</p>
@@ -244,43 +245,43 @@ const breadcrumbs = computed(() => [
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Spotify Popularity</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_popularity') }}</p>
                             <p class="text-2xl font-bold">{{ artist.spotifyPopularity }}/100</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Spotify Followers</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_followers') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyFollowers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">YouTube Subscribers</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_subscribers') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeSubscribers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Instagram Followers</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_instagram_followers') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.instagramFollowers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Twitter Followers</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_twitter_followers') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.twitterFollowers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">YouTube Views</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_views') }}</p>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeViews) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">Active Since</p>
+                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_active_since') }}</p>
                             <p class="text-2xl font-bold">{{ artist.formedYear }}</p>
                         </CardContent>
                     </Card>
@@ -289,7 +290,7 @@ const breadcrumbs = computed(() => [
                 <!-- Listeners Trend Chart -->
                 <Card>
                     <CardHeader>
-                        <CardTitle>Monthly Listeners Trend</CardTitle>
+                        <CardTitle>{{ $t('artists.show_listeners_trend_title') }}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <MiniChart
@@ -304,7 +305,7 @@ const breadcrumbs = computed(() => [
                 <!-- Score Breakdown -->
                 <Card>
                     <CardHeader>
-                        <CardTitle>Score Breakdown</CardTitle>
+                        <CardTitle>{{ $t('artists.show_score_breakdown_title') }}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ScoreBreakdown :metrics="scoreBreakdown" />
@@ -315,11 +316,11 @@ const breadcrumbs = computed(() => [
                 <div class="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                     <div class="flex items-center gap-2 text-sm text-muted-foreground">
                         <RefreshCw class="w-4 h-4" />
-                        <span>Last updated: {{ artist.lastUpdated }}</span>
+                        <span>{{ $t('artists.show_last_updated') }} {{ artist.lastUpdated }}</span>
                     </div>
                     <Button variant="outline" size="sm">
                         <RefreshCw class="w-4 h-4 mr-2" />
-                        Refresh Data
+                        {{ $t('artists.show_refresh_data_button') }}
                     </Button>
                 </div>
             </div>
@@ -327,9 +328,9 @@ const breadcrumbs = computed(() => [
 
         <!-- Not Found -->
         <div v-else class="text-center py-12">
-            <p class="text-muted-foreground">Artist not found.</p>
+            <p class="text-muted-foreground">{{ $t('artists.show_not_found') }}</p>
             <Button class="mt-4" @click="router.visit('/search')">
-                Back to Search
+                {{ $t('artists.show_back_button') }}
             </Button>
         </div>
     </MainLayout>

@@ -16,6 +16,7 @@ import { tierOrder, formatCurrency } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { ArrowLeft, Search, Layers, Scale, Download } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     id: number;
@@ -84,14 +85,14 @@ function exitCompareMode() {
 }
 
 const breadcrumbs = computed(() => [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'My Lineups', href: '/lineups' },
-    { title: lineup.value?.name ?? 'Lineup', href: `/lineups/${props.id}` },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_my_lineups'), href: '/lineups' },
+    { title: lineup.value?.name ?? trans('lineups.show_page_title'), href: `/lineups/${props.id}` },
 ]);
 </script>
 
 <template>
-    <Head :title="`${lineup?.name ?? 'Lineup'} - Artist-Tree`" />
+    <Head :title="`${lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="lineup" class="space-y-6">
             <!-- Header -->
@@ -103,13 +104,13 @@ const breadcrumbs = computed(() => [
                     <div>
                         <h1 class="text-2xl font-bold">{{ lineup.name }}</h1>
                         <p class="text-sm text-muted-foreground">
-                            {{ stats?.artistCount }} artists · Updated {{ lineup.updatedAt }}
+                            {{ stats?.artistCount }} {{ $t('lineups.show_stats_artists').toLowerCase() }} · {{ $t('lineups.show_updated_prefix') }} {{ lineup.updatedAt }}
                         </p>
                     </div>
                 </div>
                 <Button variant="outline">
                     <Download class="w-4 h-4 mr-2" />
-                    Export
+                    {{ $t('lineups.show_export_button') }}
                 </Button>
             </div>
 
@@ -120,12 +121,12 @@ const breadcrumbs = computed(() => [
                     <CardContent class="px-4 py-1.5 flex flex-col h-full">
                         <div class="flex flex-col justify-between h-full">
                             <div class="flex justify-between items-baseline">
-                                <p class="text-xs text-muted-foreground">Artists</p>
+                                <p class="text-xs text-muted-foreground">{{ $t('lineups.show_stats_artists') }}</p>
                                 <p class="text-lg font-bold">{{ stats?.artistCount ?? 0 }}</p>
                             </div>
                             <Separator class="my-1" />
                             <div class="flex justify-between items-center">
-                                <p class="text-xs text-muted-foreground">Avg Score</p>
+                                <p class="text-xs text-muted-foreground">{{ $t('lineups.show_stats_avg_score') }}</p>
                                 <div class="p-2 rounded-lg bg-green-100">
                                     <span class="text-sm font-bold text-green-700">{{ stats?.avgScore }}</span>
                                 </div>
@@ -140,30 +141,30 @@ const breadcrumbs = computed(() => [
                         <div class="grid grid-cols-4 gap-2 text-center">
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#8b5cf6' }">{{ stats?.ideaCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Idea</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_idea') }}</p>
                             </div>
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#3b82f6' }">{{ stats?.outreachCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Outreach</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_outreach') }}</p>
                             </div>
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#f59e0b' }">{{ stats?.negotiatingCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Negotiating</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_negotiating') }}</p>
                             </div>
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#6366f1' }">{{ stats?.contractSentCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Contract</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_contract') }}</p>
                             </div>
                         </div>
                         <Separator class="my-1.5" />
                         <div class="grid grid-cols-2 gap-2 text-center">
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#10b981' }">{{ stats?.contractSignedCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Signed</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_signed') }}</p>
                             </div>
                             <div>
                                 <p class="text-lg font-bold" :style="{ color: '#059669' }">{{ stats?.confirmedCount ?? 0 }}</p>
-                                <p class="text-[10px] text-muted-foreground">Confirmed</p>
+                                <p class="text-[10px] text-muted-foreground">{{ $t('lineups.show_stats_confirmed') }}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -174,15 +175,15 @@ const breadcrumbs = computed(() => [
                     <CardContent class="px-4 py-1.5 h-full">
                         <div class="space-y-1 flex flex-col h-full justify-between">
                             <div class="flex justify-between items-baseline">
-                                <p class="text-xs text-muted-foreground">Projected</p>
+                                <p class="text-xs text-muted-foreground">{{ $t('lineups.show_stats_projected') }}</p>
                                 <p class="text-sm font-semibold">{{ formatCurrency(stats?.totalBudget ?? 0) }}</p>
                             </div>
                             <div class="flex justify-between items-baseline">
-                                <p class="text-xs text-muted-foreground">Confirmed</p>
+                                <p class="text-xs text-muted-foreground">{{ $t('lineups.show_stats_confirmed') }}</p>
                                 <p class="text-lg font-bold text-green-600">{{ formatCurrency(stats?.confirmedBudget ?? 0) }}</p>
                             </div>
                             <div class="flex justify-between items-baseline">
-                                <p class="text-xs text-muted-foreground">Remaining</p>
+                                <p class="text-xs text-muted-foreground">{{ $t('lineups.show_stats_remaining') }}</p>
                                 <p class="text-sm font-medium">{{ formatCurrency((stats?.totalBudget ?? 0) - (stats?.confirmedBudget ?? 0)) }}</p>
                             </div>
                         </div>
@@ -202,7 +203,7 @@ const breadcrumbs = computed(() => [
                         ]"
                         @click="activeTab = tab"
                     >
-                        {{ tab }}
+                        {{ $t(`lineups.show_tab_${tab}`) }}
                     </button>
                 </div>
             </div>
@@ -216,7 +217,7 @@ const breadcrumbs = computed(() => [
                         <Input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Search and add artists..."
+                            :placeholder="$t('lineups.show_search_placeholder')"
                             class="pl-9"
                         />
                     </div>
@@ -228,7 +229,7 @@ const breadcrumbs = computed(() => [
                             :class="{ 'bg-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/90': stackMode }"
                         >
                             <Layers class="w-4 h-4 mr-2" />
-                            Stack
+                            {{ $t('lineups.show_stack_button') }}
                         </Button>
                         <Button
                             :variant="compareMode ? 'default' : 'outline'"
@@ -236,7 +237,7 @@ const breadcrumbs = computed(() => [
                             :class="{ 'bg-[hsl(var(--compare-coral))] hover:bg-[hsl(var(--compare-coral))]/90': compareMode }"
                         >
                             <Scale class="w-4 h-4 mr-2" />
-                            Compare
+                            {{ $t('lineups.show_compare_button') }}
                         </Button>
                     </div>
                 </div>
@@ -247,10 +248,10 @@ const breadcrumbs = computed(() => [
                     class="flex items-center justify-between p-4 rounded-lg bg-[hsl(var(--stack-purple-bg))] border border-[hsl(var(--stack-purple))]/30"
                 >
                     <p class="text-sm">
-                        <span class="font-medium">Stack Mode:</span> Click the layers icon on an artist to make them primary, then click other artists to add as alternatives.
+                        {{ $t('lineups.show_stack_mode_description') }}
                     </p>
                     <Button variant="outline" size="sm" @click="stackMode = false">
-                        Done
+                        {{ $t('lineups.show_stack_mode_done') }}
                     </Button>
                 </div>
 
@@ -260,7 +261,7 @@ const breadcrumbs = computed(() => [
                 >
                     <div class="flex items-center gap-4">
                         <p class="text-sm">
-                            <span class="font-medium">Compare Mode:</span> Select up to 4 artists to compare
+                            {{ $t('lineups.show_compare_mode_description') }}
                         </p>
                         <div class="flex -space-x-2">
                             <ArtistAvatar
@@ -274,9 +275,9 @@ const breadcrumbs = computed(() => [
                         <Badge v-if="selectedArtistIds.length > 0">{{ selectedArtistIds.length }}/4</Badge>
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="ghost" size="sm" @click="clearSelection">Clear</Button>
+                        <Button variant="ghost" size="sm" @click="clearSelection">{{ $t('lineups.show_compare_clear') }}</Button>
                         <Button size="sm" :disabled="selectedArtistIds.length < 2" @click="exitCompareMode">
-                            Compare
+                            {{ $t('lineups.show_compare_submit') }}
                         </Button>
                     </div>
                 </div>
@@ -320,9 +321,9 @@ const breadcrumbs = computed(() => [
 
         <!-- Not Found -->
         <div v-else class="text-center py-12">
-            <p class="text-muted-foreground">Lineup not found.</p>
+            <p class="text-muted-foreground">{{ $t('lineups.show_not_found') }}</p>
             <Button class="mt-4" @click="router.visit('/lineups')">
-                Back to Lineups
+                {{ $t('lineups.show_back_button') }}
             </Button>
         </div>
     </MainLayout>

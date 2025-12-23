@@ -6,6 +6,7 @@ import LineupCard from '@/components/lineup/LineupCard.vue';
 import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
 import { Plus } from 'lucide-vue-next';
+import { trans } from 'laravel-vue-i18n';
 
 const lineups = getLineups();
 
@@ -14,24 +15,24 @@ function handleLineupClick(lineup: Lineup) {
 }
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'My Lineups', href: '/lineups' },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_my_lineups'), href: '/lineups' },
 ];
 </script>
 
 <template>
-    <Head title="My Lineups - Artist-Tree" />
+    <Head :title="$t('lineups.index_page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold">My Lineups</h1>
-                    <p class="text-muted-foreground">Manage your festival lineups</p>
+                    <h1 class="text-2xl font-bold">{{ $t('lineups.index_title') }}</h1>
+                    <p class="text-muted-foreground">{{ $t('lineups.index_subtitle') }}</p>
                 </div>
                 <Button>
                     <Plus class="w-4 h-4 mr-2" />
-                    Create Lineup
+                    {{ $t('lineups.index_create_button') }}
                 </Button>
             </div>
 
@@ -47,10 +48,10 @@ const breadcrumbs = [
 
             <!-- Empty State -->
             <div v-if="lineups.length === 0" class="text-center py-12">
-                <p class="text-muted-foreground mb-4">No lineups yet. Create your first lineup!</p>
+                <p class="text-muted-foreground mb-4">{{ $t('lineups.index_empty_state_message') }}</p>
                 <Button>
                     <Plus class="w-4 h-4 mr-2" />
-                    Create Lineup
+                    {{ $t('lineups.index_create_button') }}
                 </Button>
             </div>
         </div>

@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { User, Building2 } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 // Import profile settings components
 import ProfileSettings from '@/components/settings/ProfileSettings.vue';
@@ -27,20 +28,20 @@ const props = withDefaults(defineProps<Props>(), {
 const activeTab = ref<'profile' | 'organization'>(props.tab);
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Settings', href: '/settings' },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_settings'), href: '/settings' },
 ];
 
 </script>
 
 <template>
-    <Head title="Settings - Artist-Tree" />
+    <Head :title="$t('settings.page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 max-w-5xl">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl font-bold">Settings</h1>
-                <p class="text-muted-foreground">Manage your profile and organization settings</p>
+                <h1 class="text-2xl font-bold">{{ $t('settings.title') }}</h1>
+                <p class="text-muted-foreground">{{ $t('settings.subtitle') }}</p>
             </div>
 
             <!-- Main Tabs -->
@@ -54,7 +55,7 @@ const breadcrumbs = [
                         @click="activeTab = 'profile'"
                     >
                         <User class="w-4 h-4" />
-                        Profile
+                        {{ $t('settings.tab_profile') }}
                     </button>
                     <button
                         :class="[
@@ -64,7 +65,7 @@ const breadcrumbs = [
                         @click="activeTab = 'organization'"
                     >
                         <Building2 class="w-4 h-4" />
-                        Organization
+                        {{ $t('settings.tab_organization') }}
                     </button>
                 </div>
             </div>
@@ -95,7 +96,7 @@ const breadcrumbs = [
                                 true ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                             ]"
                         >
-                            Scoring Weights
+                            {{ $t('settings.org_tab_scoring') }}
                         </button>
                         <button
                             :class="[
@@ -103,7 +104,7 @@ const breadcrumbs = [
                             ]"
                             disabled
                         >
-                            Team Members
+                            {{ $t('settings.org_tab_team') }}
                         </button>
                     </div>
                 </div>

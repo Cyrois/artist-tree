@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'page_title' => 'Dashboard - Artist-Tree',
+    'hero_title' => 'Build Your Dream Lineup',
+    'hero_subtitle' => 'Search for artists, compare metrics, and create the perfect festival lineup.',
+    'search_placeholder' => 'Search for artists...',
+    'lineups_section_title' => 'Your Lineups',
+    'lineups_section_subtitle' => 'Manage your festival lineups',
+    'lineups_view_all_button' => 'View All',
+    'trending_section_title' => 'Trending Artists',
+];

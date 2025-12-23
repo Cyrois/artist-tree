@@ -13,6 +13,7 @@ import { metricPresets } from '@/data/constants';
 import type { TeamMember } from '@/data/types';
 import { Music, Youtube, TrendingUp, Plus, AlertCircle, Check, Sun, Moon, Monitor } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 // Tab state
 const activeTab = ref<'weights' | 'team' | 'appearance'>('weights');
@@ -72,19 +73,19 @@ function updateMemberRole(id: number, role: 'admin' | 'member') {
 }
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Settings', href: '/settings/scoring' },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_settings'), href: '/settings/scoring' },
 ];
 </script>
 
 <template>
-    <Head title="Settings - Artist-Tree" />
+    <Head :title="$t('settings.scoring_page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 max-w-4xl">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl font-bold">Organization Settings</h1>
-                <p class="text-muted-foreground">Manage your scoring weights and team members</p>
+                <h1 class="text-2xl font-bold">{{ $t('settings.scoring_title') }}</h1>
+                <p class="text-muted-foreground">{{ $t('settings.scoring_subtitle') }}</p>
             </div>
 
             <!-- Tabs -->
@@ -97,7 +98,7 @@ const breadcrumbs = [
                         ]"
                         @click="activeTab = 'weights'"
                     >
-                        Scoring Weights
+                        {{ $t('settings.scoring_tab_weights') }}
                     </button>
                     <button
                         :class="[
@@ -106,7 +107,7 @@ const breadcrumbs = [
                         ]"
                         @click="activeTab = 'team'"
                     >
-                        Team Members
+                        {{ $t('settings.scoring_tab_team') }}
                     </button>
                     <button
                         :class="[
@@ -115,7 +116,7 @@ const breadcrumbs = [
                         ]"
                         @click="activeTab = 'appearance'"
                     >
-                        Appearance
+                        {{ $t('settings.scoring_tab_appearance') }}
                     </button>
                 </div>
             </div>
@@ -124,16 +125,15 @@ const breadcrumbs = [
             <div v-if="activeTab === 'weights'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Metric Weights</CardTitle>
+                        <CardTitle>{{ $t('settings.scoring_weights_title') }}</CardTitle>
                         <CardDescription>
-                            Adjust how much each metric contributes to the overall artist score.
-                            Weights must add up to 100%.
+                            {{ $t('settings.scoring_weights_subtitle') }}
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-6">
                         <!-- Presets -->
                         <div>
-                            <p class="text-sm font-medium mb-3">Quick Presets</p>
+                            <p class="text-sm font-medium mb-3">{{ $t('settings.scoring_presets_title') }}</p>
                             <div class="flex flex-wrap gap-2">
                                 <Button
                                     v-for="(preset, key) in metricPresets"
@@ -153,17 +153,17 @@ const breadcrumbs = [
                         <div class="space-y-6">
                             <WeightSlider
                                 v-model="weights.spotifyListeners"
-                                label="Spotify Monthly Listeners"
+                                :label="$t('settings.scoring_spotify_listeners')"
                                 :icon="Music"
                             />
                             <WeightSlider
                                 v-model="weights.spotifyPopularity"
-                                label="Spotify Popularity"
+                                :label="$t('settings.scoring_spotify_popularity')"
                                 :icon="TrendingUp"
                             />
                             <WeightSlider
                                 v-model="weights.youtubeSubscribers"
-                                label="YouTube Subscribers"
+                                :label="$t('settings.scoring_youtube_subscribers')"
                                 :icon="Youtube"
                             />
                         </div>
@@ -172,7 +172,7 @@ const breadcrumbs = [
 
                         <!-- Total -->
                         <div class="flex items-center justify-between">
-                            <span class="font-medium">Total Weight</span>
+                            <span class="font-medium">{{ $t('settings.scoring_total_weight') }}</span>
                             <div class="flex items-center gap-2">
                                 <span
                                     :class="[
@@ -190,14 +190,14 @@ const breadcrumbs = [
                         <Alert v-if="!isValidTotal" variant="destructive">
                             <AlertCircle class="h-4 w-4" />
                             <AlertDescription>
-                                Weights must add up to 100%. Current total: {{ Math.round(totalWeight * 100) }}%
+                                {{ $t('settings.scoring_weights_error', { total: Math.round(totalWeight * 100) }) }}
                             </AlertDescription>
                         </Alert>
 
                         <!-- Save Button -->
                         <div class="flex justify-end">
                             <Button :disabled="!isValidTotal">
-                                Save Changes
+                                {{ $t('settings.scoring_save_button') }}
                             </Button>
                         </div>
                     </CardContent>
@@ -208,9 +208,9 @@ const breadcrumbs = [
             <div v-if="activeTab === 'team'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Team Members</CardTitle>
+                        <CardTitle>{{ $t('settings.team_title') }}</CardTitle>
                         <CardDescription>
-                            Manage who has access to your organization's lineups and settings.
+                            {{ $t('settings.team_subtitle') }}
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
@@ -230,18 +230,18 @@ const breadcrumbs = [
 
                         <!-- Invite Member -->
                         <div>
-                            <p class="text-sm font-medium mb-3">Invite New Member</p>
+                            <p class="text-sm font-medium mb-3">{{ $t('settings.team_invite_title') }}</p>
                             <div class="flex gap-2">
                                 <Input
                                     v-model="inviteEmail"
                                     type="email"
-                                    placeholder="Enter email address..."
+                                    :placeholder="$t('settings.team_invite_placeholder')"
                                     class="flex-1"
                                     @keyup.enter="inviteMember"
                                 />
                                 <Button @click="inviteMember" :disabled="!inviteEmail">
                                     <Plus class="w-4 h-4 mr-2" />
-                                    Invite
+                                    {{ $t('settings.team_invite_button') }}
                                 </Button>
                             </div>
                         </div>
@@ -253,9 +253,9 @@ const breadcrumbs = [
             <div v-if="activeTab === 'appearance'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Theme</CardTitle>
+                        <CardTitle>{{ $t('settings.theme_title') }}</CardTitle>
                         <CardDescription>
-                            Choose your preferred color scheme for the application.
+                            {{ $t('settings.theme_subtitle') }}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -272,8 +272,8 @@ const breadcrumbs = [
                                 <div class="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
                                     <Sun class="w-6 h-6 text-amber-600" />
                                 </div>
-                                <span class="font-medium">Light</span>
-                                <span class="text-xs text-muted-foreground">Bright and clean</span>
+                                <span class="font-medium">{{ $t('settings.theme_light') }}</span>
+                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_light_description') }}</span>
                             </button>
 
                             <button
@@ -288,8 +288,8 @@ const breadcrumbs = [
                                 <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
                                     <Moon class="w-6 h-6 text-indigo-600" />
                                 </div>
-                                <span class="font-medium">Dark</span>
-                                <span class="text-xs text-muted-foreground">Easy on the eyes</span>
+                                <span class="font-medium">{{ $t('settings.theme_dark') }}</span>
+                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_dark_description') }}</span>
                             </button>
 
                             <button
@@ -304,8 +304,8 @@ const breadcrumbs = [
                                 <div class="p-3 rounded-full bg-gray-100 dark:bg-gray-800">
                                     <Monitor class="w-6 h-6 text-gray-600" />
                                 </div>
-                                <span class="font-medium">System</span>
-                                <span class="text-xs text-muted-foreground">Match device</span>
+                                <span class="font-medium">{{ $t('settings.theme_system') }}</span>
+                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_system_description') }}</span>
                             </button>
                         </div>
                     </CardContent>

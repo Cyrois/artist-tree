@@ -13,6 +13,7 @@ import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { Search, SlidersHorizontal, ChevronDown, TrendingUp } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 // State
 const searchQuery = ref('');
@@ -95,19 +96,19 @@ function handleArtistClick(artist: Artist) {
 }
 
 const sortOptions = [
-    { value: 'score', label: 'Score (High to Low)' },
-    { value: 'name', label: 'Name (A-Z)' },
-    { value: 'listeners', label: 'Listeners (High to Low)' },
+    { value: 'score', label: trans('artists.search_sort_score') },
+    { value: 'name', label: trans('artists.search_sort_name') },
+    { value: 'listeners', label: trans('artists.search_sort_listeners') },
 ];
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Search Artists', href: '/search' },
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+    { title: trans('common.breadcrumb_search_artists'), href: '/search' },
 ];
 </script>
 
 <template>
-    <Head title="Search Artists - Artist-Tree" />
+    <Head :title="$t('artists.search_page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Search Header -->
@@ -118,7 +119,7 @@ const breadcrumbs = [
                     <Input
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Search artists by name or genre..."
+                        :placeholder="$t('artists.search_input_placeholder')"
                         class="pl-10"
                     />
                 </div>
@@ -130,7 +131,7 @@ const breadcrumbs = [
                     :class="{ 'border-primary': showFilters }"
                 >
                     <SlidersHorizontal class="w-4 h-4 mr-2" />
-                    Filters
+                    {{ $t('artists.search_filters_button') }}
                     <Badge v-if="activeFilterCount > 0" variant="secondary" class="ml-2">
                         {{ activeFilterCount }}
                     </Badge>
@@ -140,7 +141,7 @@ const breadcrumbs = [
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button variant="outline">
-                            Sort
+                            {{ $t('artists.search_sort_button') }}
                             <ChevronDown class="w-4 h-4 ml-2" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -163,9 +164,9 @@ const breadcrumbs = [
                     <!-- Genres -->
                     <div>
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-medium">Genres</h3>
+                            <h3 class="font-medium">{{ $t('artists.search_genres_title') }}</h3>
                             <Button v-if="selectedGenres.length > 0" variant="ghost" size="sm" @click="selectedGenres = []">
-                                Clear
+                                {{ $t('artists.search_clear_button') }}
                             </Button>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -183,10 +184,10 @@ const breadcrumbs = [
 
                     <!-- Score Range -->
                     <div>
-                        <h3 class="font-medium mb-3">Score Range</h3>
+                        <h3 class="font-medium mb-3">{{ $t('artists.search_score_range_title') }}</h3>
                         <div class="flex items-center gap-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">Min:</span>
+                                <span class="text-sm text-muted-foreground">{{ $t('artists.search_score_min') }}</span>
                                 <Input
                                     v-model.number="scoreMin"
                                     type="number"
@@ -197,7 +198,7 @@ const breadcrumbs = [
                             </div>
                             <span class="text-muted-foreground">-</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">Max:</span>
+                                <span class="text-sm text-muted-foreground">{{ $t('artists.search_score_max') }}</span>
                                 <Input
                                     v-model.number="scoreMax"
                                     type="number"
@@ -212,7 +213,7 @@ const breadcrumbs = [
                     <!-- Clear All -->
                     <div class="flex justify-end pt-2 border-t">
                         <Button variant="outline" @click="clearFilters">
-                            Clear All Filters
+                            {{ $t('artists.search_clear_all_filters') }}
                         </Button>
                     </div>
                 </CardContent>
@@ -221,7 +222,7 @@ const breadcrumbs = [
             <!-- Results Count -->
             <div class="flex items-center justify-between">
                 <p class="text-muted-foreground">
-                    <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> artists found
+                    <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> {{ $t('artists.search_results_count') }}
                 </p>
             </div>
 
@@ -234,7 +235,7 @@ const breadcrumbs = [
 
             <!-- Similar Artists (if searching) -->
             <div v-if="similarArtists.length > 0 && searchQuery.length >= 2" class="pt-6 border-t">
-                <h3 class="text-lg font-semibold mb-4">Similar Artists</h3>
+                <h3 class="text-lg font-semibold mb-4">{{ $t('artists.search_similar_artists_title') }}</h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <ArtistCard
                         v-for="artist in similarArtists"
@@ -251,7 +252,7 @@ const breadcrumbs = [
             <div class="pt-6 border-t">
                 <div class="flex items-center gap-2 mb-4">
                     <TrendingUp class="w-5 h-5 text-primary" />
-                    <h3 class="text-lg font-semibold">Trending Artists</h3>
+                    <h3 class="text-lg font-semibold">{{ $t('artists.search_trending_artists_title') }}</h3>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <ArtistCard
