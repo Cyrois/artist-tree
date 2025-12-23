@@ -4,15 +4,15 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
-import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists, filterArtistsByGenre, filterArtistsByScoreRange, sortArtists } from '@/data/artists';
+import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, X, ChevronDown, TrendingUp } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { Search, SlidersHorizontal, ChevronDown, TrendingUp } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 
 // State
 const searchQuery = ref('');

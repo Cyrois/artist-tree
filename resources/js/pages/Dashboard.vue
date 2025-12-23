@@ -3,14 +3,13 @@ import { Head, router } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LineupCard from '@/components/lineup/LineupCard.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
 import { getLineups } from '@/data/lineups';
 import { searchArtists, getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
-import { Search, Plus, Music, TrendingUp } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { Search, Music, TrendingUp } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 
 const lineups = getLineups();
 const trendingArtists = getTrendingArtists(5);
