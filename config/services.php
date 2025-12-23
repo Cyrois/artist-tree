@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+<<<<<<< Updated upstream
+=======
+    'spotify' => [
+        'client_id' => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'token_cache_ttl' => env('SPOTIFY_TOKEN_CACHE_TTL', 3600), // 1 hour default
+        'search_cache_ttl' => env('SPOTIFY_SEARCH_CACHE_TTL', 86400), // 24 hours default
+        'rate_limit_per_minute' => env('SPOTIFY_RATE_LIMIT', 180),
+    ],
+
+>>>>>>> Stashed changes
 ];
