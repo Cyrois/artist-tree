@@ -17,8 +17,7 @@ class PasswordController extends Controller
     public function edit(): Response
     {
         return Inertia::render('Settings', [
-            'tab' => 'profile',
-            'mustVerifyEmail' => true,
+            'tab' => 'password',
         ]);
     }
 
