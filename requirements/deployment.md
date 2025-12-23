@@ -11,7 +11,7 @@ This guide covers the complete deployment process for the Artist Tree applicatio
 ### Step 1.1: Environment Variables ✅
 
 The `.env.example` file has been configured with production-ready settings:
-- Database: SQLite → MySQL
+- Database: SQLite → PostgreSQL
 - Cache: database → Redis
 - Added Spotify & YouTube API key placeholders
 - Set `APP_DEBUG=false` for production
@@ -69,10 +69,10 @@ git push origin ui-mockup
 
 ### Step 4.1: Database Setup
 
-Laravel Cloud will prompt you to add a database:
+Database setup will depend on your hosting provider:
 
 1. Click **"Add Database"**
-2. Choose **MySQL 8.0**
+2. Choose **PostgreSQL**
 3. Select instance size:
    - **Development**: Small (512MB RAM)
    - **Production**: Medium (1GB RAM) or larger
@@ -96,8 +96,8 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-app-name.cloud.laravel.app  # Laravel Cloud provides this
 
-# Database (auto-populated by Laravel Cloud)
-DB_CONNECTION=mysql
+# Database (auto-populated by hosting provider)
+DB_CONNECTION=pgsql
 DB_HOST=<auto-filled>
 DB_PORT=<auto-filled>
 DB_DATABASE=<auto-filled>
@@ -359,9 +359,9 @@ git push origin main  # Auto-deploys to Laravel Cloud
 ## ✅ Quick Checklist
 
 - [ ] Push code to GitHub/GitLab/Bitbucket
-- [ ] Sign up at cloud.laravel.com
+- [ ] Sign up at hosting provider
 - [ ] Create new application and connect Git repo
-- [ ] Add MySQL database
+- [ ] Add PostgreSQL database
 - [ ] Add Redis cache
 - [ ] Set environment variables
 - [ ] Configure build/deploy commands
