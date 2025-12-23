@@ -374,10 +374,48 @@ artistStacks: {
 
 *(Unchanged from v1.1 - see original PRD for full technical details)*
 
-- **Backend:** Laravel 12
-- **Frontend:** Inertia.js v2 + Vue 3
-- **Database:** PostgreSQL
-- **Deployment:** TBD
+### Backend: Laravel 12
+- **Framework:** Laravel 12.x
+- **Purpose:** Monolithic application serving both Inertia pages and RESTful API endpoints
+- **Key Features:**
+  - Eloquent ORM for data modeling
+  - Inertia.js for server-side rendering of Vue pages
+  - API resource transformers for JSON responses
+  - Job queues for async API data fetching (Spotify/YouTube)
+  - Service layer for business logic and external API integration
+  - Cache layer for API response optimization (Redis/file cache)
+  - Laravel Sanctum for cookie-based authentication
+
+### Frontend: Inertia.js v2 + Vue 3
+- **Framework:** Inertia.js v2 with Vue 3 Composition API
+- **Purpose:** Interactive user interface with server-side routing
+- **Key Features:**
+  - Component-based architecture with `<script setup>`
+  - Reactive state management with `ref()` and `reactive()`
+  - Composables for reusable logic
+  - Inertia routing (server-side) for page navigation
+  - Axios for API calls within components (search, tier updates)
+  - Tailwind CSS v4 for styling
+  - Laravel Wayfinder for TypeScript route helpers
+
+**Routing Strategy:**
+- **Web Routes** (`routes/web.php`): Inertia pages (Dashboard, Lineups, etc.)
+- **API Routes** (`routes/api.php`): RESTful JSON endpoints for interactive features
+
+### Database: Laravel Cloud (PostgreSQL)
+- **Platform:** Laravel Cloud (Serverless PostgreSQL)
+- **Purpose:** Primary data storage with Laravel integration
+- **Key Features:**
+  - Serverless PostgreSQL database with automatic backups
+  - Optimized for Laravel applications
+  - Built-in database monitoring and performance insights
+  - Seamless integration with Laravel migrations and Eloquent ORM
+  - Automatic scaling and optimization
+
+### Deployment
+- **Platform:** Laravel Cloud (single deployment)
+- **Components:** Backend + Frontend + Database (monolithic)
+- **No CORS needed:** Same origin (Inertia + API on same server)
 
 ---
 
