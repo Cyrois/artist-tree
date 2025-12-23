@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import { statusConfig, statusOrder, formatCurrency } from '@/data/constants';
 import { tierConfig } from '@/data/constants';
 import type { Artist, ArtistStatus, BookingStatus, TierType } from '@/data/types';

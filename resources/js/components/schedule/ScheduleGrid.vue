@@ -2,7 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import { scheduleDays, scheduleStages } from '@/data/constants';
 import type { Artist, ScheduleSlot } from '@/data/types';
 import { cn } from '@/lib/utils';

@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import ArtistAvatar from './ArtistAvatar.vue';
-import ScoreBadge from '@/components/mockup/score/ScoreBadge.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { cn } from '@/lib/utils';

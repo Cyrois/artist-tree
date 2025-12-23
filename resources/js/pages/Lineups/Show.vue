@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import TierSection from '@/components/mockup/lineup/TierSection.vue';
-import KanbanBoard from '@/components/mockup/booking/KanbanBoard.vue';
-import ScheduleGrid from '@/components/mockup/schedule/ScheduleGrid.vue';
-import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
+import TierSection from '@/components/lineup/TierSection.vue';
+import KanbanBoard from '@/components/booking/KanbanBoard.vue';
+import ScheduleGrid from '@/components/schedule/ScheduleGrid.vue';
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import { getLineupById, getLineupStats, getAllLineupArtists, getLineupSchedule } from '@/data/lineups';
 import { getArtistsByIds } from '@/data/artists';
 import { tierOrder, formatCurrency } from '@/data/constants';
@@ -93,7 +93,7 @@ const breadcrumbs = computed(() => [
 
 <template>
     <Head :title="`${lineup?.name ?? 'Lineup'} - Artist-Tree`" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="lineup" class="space-y-6">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -326,5 +326,5 @@ const breadcrumbs = computed(() => [
                 Back to Lineups
             </Button>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

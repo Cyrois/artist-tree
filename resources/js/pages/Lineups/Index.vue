@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import MockupLayout from '@/layouts/MockupLayout.vue';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
-import LineupCard from '@/components/mockup/lineup/LineupCard.vue';
+import LineupCard from '@/components/lineup/LineupCard.vue';
 import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
 import { Plus } from 'lucide-vue-next';
@@ -21,7 +21,7 @@ const breadcrumbs = [
 
 <template>
     <Head title="My Lineups - Artist-Tree" />
-    <MockupLayout :breadcrumbs="breadcrumbs">
+    <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
@@ -54,5 +54,5 @@ const breadcrumbs = [
                 </Button>
             </div>
         </div>
-    </MockupLayout>
+    </MainLayout>
 </template>

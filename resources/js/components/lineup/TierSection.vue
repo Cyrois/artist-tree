@@ -9,8 +9,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
-import ScoreBadge from '@/components/mockup/score/ScoreBadge.vue';
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { tierConfig, statusConfig, formatCurrency } from '@/data/constants';
 import type { Artist, TierType, ArtistStatus } from '@/data/types';
 import { cn } from '@/lib/utils';
