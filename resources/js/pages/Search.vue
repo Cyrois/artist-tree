@@ -91,7 +91,7 @@ function clearFilters() {
 }
 
 function handleArtistClick(artist: Artist) {
-    router.visit(`/mockup/artist/${artist.id}`);
+    router.visit(`/artist/${artist.id}`);
 }
 
 const sortOptions = [
@@ -101,8 +101,8 @@ const sortOptions = [
 ];
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/mockup' },
-    { title: 'Search Artists', href: '/mockup/search' },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Search Artists', href: '/search' },
 ];
 </script>
 

@@ -2,12 +2,19 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import ArtistAvatar from '@/components/mockup/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/mockup/score/ScoreBadge.vue';
 import { tierConfig, statusConfig, formatCurrency } from '@/data/constants';
 import type { Artist, TierType, ArtistStatus } from '@/data/types';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, Sparkles, MoreHorizontal, Layers, Scale, X } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, Sparkles, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 interface Props {
@@ -70,7 +77,7 @@ function isSelected(artistId: number) {
                     v-for="artist in artists"
                     :key="artist.id"
                     :class="cn(
-                        'group flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer',
+                        'flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer',
                         compareMode && isSelected(artist.id) && 'bg-[hsl(var(--compare-coral-bg))] border-l-4 border-[hsl(var(--compare-coral))]'
                     )"
                     @click="compareMode ? emit('select-artist', artist) : emit('view-artist', artist)"
@@ -125,18 +132,29 @@ function isSelected(artistId: number) {
                     <!-- Score -->
                     <ScoreBadge :score="artist.score" size="md" />
 
-                    <!-- Actions -->
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop="emit('select-artist', artist)">
-                            <Layers class="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop="emit('select-artist', artist)">
-                            <Scale class="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive" @click.stop="emit('remove-artist', artist)">
-                            <X class="w-4 h-4" />
-                        </Button>
-                    </div>
+                    <!-- Actions Menu -->
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>
+                                <MoreHorizontal class="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" @click.stop>
+                            <DropdownMenuItem @click="emit('select-artist', artist)">
+                                <Layers class="w-4 h-4 mr-2" />
+                                Add to Stack
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @click="emit('select-artist', artist)">
+                                <Scale class="w-4 h-4 mr-2" />
+                                Compare Artist
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', artist)">
+                                <Trash2 class="w-4 h-4 mr-2" />
+                                Remove from Lineup
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 <!-- Empty state -->

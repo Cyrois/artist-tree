@@ -15,7 +15,7 @@ import { getArtistsByIds } from '@/data/artists';
 import { tierOrder, formatCurrency } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Search, Layers, Scale, Download, Check, Clock, DollarSign, X } from 'lucide-vue-next';
+import { ArrowLeft, Search, Layers, Scale, Download } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 interface Props {
@@ -71,7 +71,7 @@ function handleArtistSelect(artist: Artist) {
 
 function handleArtistView(artist: Artist) {
     if (!compareMode.value && !stackMode.value) {
-        router.visit(`/mockup/artist/${artist.id}`);
+        router.visit(`/artist/${artist.id}`);
     }
 }
 
@@ -85,9 +85,9 @@ function exitCompareMode() {
 }
 
 const breadcrumbs = computed(() => [
-    { title: 'Dashboard', href: '/mockup' },
-    { title: 'My Lineups', href: '/mockup/lineups' },
-    { title: lineup.value?.name ?? 'Lineup', href: `/mockup/lineups/${props.id}` },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'My Lineups', href: '/lineups' },
+    { title: lineup.value?.name ?? 'Lineup', href: `/lineups/${props.id}` },
 ]);
 </script>
 
@@ -98,7 +98,7 @@ const breadcrumbs = computed(() => [
             <!-- Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" @click="router.visit('/mockup/lineups')">
+                    <Button variant="ghost" size="icon" @click="router.visit('/lineups')">
                         <ArrowLeft class="w-5 h-5" />
                     </Button>
                     <div>
@@ -115,59 +115,77 @@ const breadcrumbs = computed(() => [
             </div>
 
             <!-- Stats Bar -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Artist Count & Average Score Card -->
                 <Card>
-                    <CardContent class="p-4 flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-muted">
-                            <Check class="w-4 h-4 text-[hsl(var(--status-confirmed))]" />
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold">{{ stats?.confirmedCount }}</p>
-                            <p class="text-xs text-muted-foreground">Confirmed</p>
+                    <CardContent class="px-4 py-1.5 flex flex-col h-full">
+                        <div class="flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-baseline">
+                                <p class="text-xs text-muted-foreground">Artists</p>
+                                <p class="text-lg font-bold">{{ stats?.artistCount ?? 0 }}</p>
+                            </div>
+                            <Separator class="my-1" />
+                            <div class="flex justify-between items-center">
+                                <p class="text-xs text-muted-foreground">Avg Score</p>
+                                <div class="p-2 rounded-lg bg-green-100">
+                                    <span class="text-sm font-bold text-green-700">{{ stats?.avgScore }}</span>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
+
+                <!-- Artist Status Breakdown Card -->
                 <Card>
-                    <CardContent class="p-4 flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-muted">
-                            <Clock class="w-4 h-4 text-[hsl(var(--status-negotiating))]" />
+                    <CardContent class="px-4 py-1.5">
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#8b5cf6' }">{{ stats?.ideaCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Idea</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#3b82f6' }">{{ stats?.outreachCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Outreach</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#f59e0b' }">{{ stats?.negotiatingCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Negotiating</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#6366f1' }">{{ stats?.contractSentCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Contract</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-2xl font-bold">{{ stats?.pendingCount }}</p>
-                            <p class="text-xs text-muted-foreground">Pending</p>
+                        <Separator class="my-1.5" />
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#10b981' }">{{ stats?.contractSignedCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Signed</p>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold" :style="{ color: '#059669' }">{{ stats?.confirmedCount ?? 0 }}</p>
+                                <p class="text-[10px] text-muted-foreground">Confirmed</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
+
+                <!-- Budget Breakdown Card -->
                 <Card>
-                    <CardContent class="p-4 flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-muted">
-                            <X class="w-4 h-4 text-[hsl(var(--status-declined))]" />
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold">{{ stats?.declinedCount }}</p>
-                            <p class="text-xs text-muted-foreground">Declined</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent class="p-4 flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-muted">
-                            <DollarSign class="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold">{{ formatCurrency(stats?.totalBudget ?? 0) }}</p>
-                            <p class="text-xs text-muted-foreground">Total Budget</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent class="p-4 flex items-center gap-3">
-                        <div class="p-2 rounded-lg bg-muted">
-                            <span class="text-sm font-bold">{{ stats?.avgScore }}</span>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold">{{ stats?.avgScore }}</p>
-                            <p class="text-xs text-muted-foreground">Avg Score</p>
+                    <CardContent class="px-4 py-1.5 h-full">
+                        <div class="space-y-1 flex flex-col h-full justify-between">
+                            <div class="flex justify-between items-baseline">
+                                <p class="text-xs text-muted-foreground">Projected</p>
+                                <p class="text-sm font-semibold">{{ formatCurrency(stats?.totalBudget ?? 0) }}</p>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <p class="text-xs text-muted-foreground">Confirmed</p>
+                                <p class="text-lg font-bold text-green-600">{{ formatCurrency(stats?.confirmedBudget ?? 0) }}</p>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <p class="text-xs text-muted-foreground">Remaining</p>
+                                <p class="text-sm font-medium">{{ formatCurrency((stats?.totalBudget ?? 0) - (stats?.confirmedBudget ?? 0)) }}</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -287,7 +305,7 @@ const breadcrumbs = computed(() => [
                     :artists="allArtists"
                     :statuses="lineup.artistStatuses"
                     :artist-tiers="artistTiers"
-                    @artist-click="(artist) => router.visit(`/mockup/artist/${artist.id}`)"
+                    @artist-click="(artist) => router.visit(`/artist/${artist.id}`)"
                 />
             </div>
 
@@ -296,7 +314,7 @@ const breadcrumbs = computed(() => [
                 <ScheduleGrid
                     :artists="allArtists"
                     :schedule="schedule"
-                    @artist-click="(artist) => router.visit(`/mockup/artist/${artist.id}`)"
+                    @artist-click="(artist) => router.visit(`/artist/${artist.id}`)"
                 />
             </div>
         </div>
@@ -304,7 +322,7 @@ const breadcrumbs = computed(() => [
         <!-- Not Found -->
         <div v-else class="text-center py-12">
             <p class="text-muted-foreground">Lineup not found.</p>
-            <Button class="mt-4" @click="router.visit('/mockup/lineups')">
+            <Button class="mt-4" @click="router.visit('/lineups')">
                 Back to Lineups
             </Button>
         </div>

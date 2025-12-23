@@ -10,12 +10,12 @@ import { Plus } from 'lucide-vue-next';
 const lineups = getLineups();
 
 function handleLineupClick(lineup: Lineup) {
-    router.visit(`/mockup/lineups/${lineup.id}`);
+    router.visit(`/lineups/${lineup.id}`);
 }
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/mockup' },
-    { title: 'My Lineups', href: '/mockup/lineups' },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'My Lineups', href: '/lineups' },
 ];
 </script>
 

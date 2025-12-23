@@ -101,8 +101,13 @@ export interface TeamMember {
 export interface LineupStats {
   artistCount: number;
   avgScore: number;
-  confirmedCount: number;
-  pendingCount: number;
-  declinedCount: number;
   totalBudget: number;
+  confirmedBudget: number;
+  ideaCount: number;
+  outreachCount: number;
+  negotiatingCount: number;
+  contractSentCount: number;
+  contractSignedCount: number;
+  confirmedCount: number;
+  declinedCount: number;
 }

@@ -72,8 +72,8 @@ function updateMemberRole(id: number, role: 'admin' | 'member') {
 }
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/mockup' },
-    { title: 'Settings', href: '/mockup/settings' },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Settings', href: '/settings/scoring' },
 ];
 </script>
 

@@ -37,13 +37,13 @@ const scoreBreakdown = computed(() => {
 });
 
 function handleArtistClick(a: Artist) {
-    router.visit(`/mockup/artist/${a.id}`);
+    router.visit(`/artist/${a.id}`);
 }
 
 const breadcrumbs = computed(() => [
-    { title: 'Dashboard', href: '/mockup' },
-    { title: 'Search Artists', href: '/mockup/search' },
-    { title: artist.value?.name ?? 'Artist', href: `/mockup/artist/${props.id}` },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Search Artists', href: '/search' },
+    { title: artist.value?.name ?? 'Artist', href: `/artist/${props.id}` },
 ]);
 </script>
 
@@ -52,7 +52,7 @@ const breadcrumbs = computed(() => [
     <MockupLayout :breadcrumbs="breadcrumbs">
         <div v-if="artist" class="space-y-8">
             <!-- Back button -->
-            <Button variant="ghost" size="sm" @click="router.visit('/mockup/search')">
+            <Button variant="ghost" size="sm" @click="router.visit('/search')">
                 <ArrowLeft class="w-4 h-4 mr-2" />
                 Back to Search
             </Button>
@@ -328,7 +328,7 @@ const breadcrumbs = computed(() => [
         <!-- Not Found -->
         <div v-else class="text-center py-12">
             <p class="text-muted-foreground">Artist not found.</p>
-            <Button class="mt-4" @click="router.visit('/mockup/search')">
+            <Button class="mt-4" @click="router.visit('/search')">
                 Back to Search
             </Button>
         </div>

@@ -130,21 +130,37 @@ export function getLineupStats(lineup: Lineup): LineupStats {
   const allArtistIds = tierOrder.flatMap((tier) => lineup.artists[tier]);
   const artists = getArtistsByIds(allArtistIds);
 
-  const confirmedStatuses = ['confirmed', 'contract_signed'];
-  const pendingStatuses = ['outreach', 'negotiating', 'contract_sent'];
-
-  let confirmedCount = 0;
-  let pendingCount = 0;
-  let declinedCount = 0;
   let totalBudget = 0;
+  let confirmedBudget = 0;
+
+  // Status counts
+  let ideaCount = 0;
+  let outreachCount = 0;
+  let negotiatingCount = 0;
+  let contractSentCount = 0;
+  let contractSignedCount = 0;
+  let confirmedCount = 0;
+  let declinedCount = 0;
 
   allArtistIds.forEach((artistId) => {
     const status = lineup.artistStatuses[artistId];
     if (status) {
-      if (confirmedStatuses.includes(status.status)) confirmedCount++;
-      if (pendingStatuses.includes(status.status)) pendingCount++;
+      // Count by specific status
+      if (status.status === 'idea') ideaCount++;
+      if (status.status === 'outreach') outreachCount++;
+      if (status.status === 'negotiating') negotiatingCount++;
+      if (status.status === 'contract_sent') contractSentCount++;
+      if (status.status === 'contract_signed') contractSignedCount++;
+      if (status.status === 'confirmed') confirmedCount++;
       if (status.status === 'declined') declinedCount++;
-      if (status.fee) totalBudget += status.fee;
+
+      // Budget calculations
+      if (status.fee) {
+        totalBudget += status.fee;
+        if (status.status === 'confirmed') {
+          confirmedBudget += status.fee;
+        }
+      }
     }
   });
 
@@ -153,10 +169,15 @@ export function getLineupStats(lineup: Lineup): LineupStats {
   return {
     artistCount: allArtistIds.length,
     avgScore,
-    confirmedCount,
-    pendingCount,
-    declinedCount,
     totalBudget,
+    confirmedBudget,
+    ideaCount,
+    outreachCount,
+    negotiatingCount,
+    contractSentCount,
+    contractSignedCount,
+    confirmedCount,
+    declinedCount,
   };
 }
 

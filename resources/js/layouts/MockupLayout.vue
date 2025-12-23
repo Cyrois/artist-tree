@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
-import MockupSidebar from '@/components/MockupSidebar.vue';
+import AppSidebar from '@/components/AppSidebar.vue';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -26,7 +26,7 @@ const hasBreadcrumbs = computed(() => props.breadcrumbs.length > 0);
 
 <template>
     <AppShell variant="sidebar">
-        <MockupSidebar />
+        <AppSidebar />
         <AppContent variant="sidebar" class="overflow-x-hidden">
             <!-- Header with breadcrumbs -->
             <header
