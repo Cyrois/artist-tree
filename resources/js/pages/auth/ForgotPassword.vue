@@ -9,7 +9,6 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
 
 defineProps<{
     status?: string;
@@ -18,10 +17,10 @@ defineProps<{
 
 <template>
     <AuthLayout
-        :title="trans('auth.forgot_password.title')"
-        :description="trans('auth.forgot_password.description')"
+        title="Forgot password"
+        description="Enter your email to receive a password reset link"
     >
-        <Head :title="trans('auth.forgot_password.title')" />
+        <Head title="Forgot password" />
 
         <div
             v-if="status"
@@ -33,14 +32,14 @@ defineProps<{
         <div class="space-y-6">
             <Form v-bind="email.form()" v-slot="{ errors, processing }">
                 <div class="grid gap-2">
-                    <Label for="email">{{ trans('auth.forgot_password.email_label') }}</Label>
+                    <Label for="email">Email address</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="off"
                         autofocus
-                        :placeholder="trans('auth.forgot_password.email_placeholder')"
+                        placeholder="email@example.com"
                     />
                     <InputError :message="errors.email" />
                 </div>
@@ -52,14 +51,14 @@ defineProps<{
                         data-test="email-password-reset-link-button"
                     >
                         <Spinner v-if="processing" />
-                        {{ trans('auth.forgot_password.submit_button') }}
+                        Email password reset link
                     </Button>
                 </div>
             </Form>
 
             <div class="space-x-1 text-center text-sm text-muted-foreground">
-                <span>{{ trans('auth.forgot_password.back_to_login') }}</span>
-                <TextLink :href="login()">{{ trans('auth.login.submit_button').toLowerCase() }}</TextLink>
+                <span>Or, return to</span>
+                <TextLink :href="login()">log in</TextLink>
             </div>
         </div>
     </AuthLayout>

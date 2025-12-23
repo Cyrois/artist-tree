@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import LineupCard from '@/components/lineup/LineupCard.vue';
 import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
-import { trans } from 'laravel-vue-i18n';
 import { Plus } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 const lineups = getLineups();
 
@@ -15,10 +13,10 @@ function handleLineupClick(lineup: Lineup) {
     router.visit(`/lineups/${lineup.id}`);
 }
 
-const breadcrumbs = computed(() => [
-    { title: trans('navigation.dashboard'), href: '/dashboard' },
-    { title: trans('navigation.my_lineups'), href: '/lineups' },
-]);
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'My Lineups', href: '/lineups' },
+];
 </script>
 
 <template>
@@ -28,12 +26,12 @@ const breadcrumbs = computed(() => [
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold">{{ trans('lineups.title') }}</h1>
-                    <p class="text-muted-foreground">{{ trans('lineups.description') }}</p>
+                    <h1 class="text-2xl font-bold">My Lineups</h1>
+                    <p class="text-muted-foreground">Manage your festival lineups</p>
                 </div>
                 <Button>
                     <Plus class="w-4 h-4 mr-2" />
-                    {{ trans('lineups.create_button') }}
+                    Create Lineup
                 </Button>
             </div>
 
@@ -49,10 +47,10 @@ const breadcrumbs = computed(() => [
 
             <!-- Empty State -->
             <div v-if="lineups.length === 0" class="text-center py-12">
-                <p class="text-muted-foreground mb-4">{{ trans('lineups.no_lineups') }}</p>
+                <p class="text-muted-foreground mb-4">No lineups yet. Create your first lineup!</p>
                 <Button>
                     <Plus class="w-4 h-4 mr-2" />
-                    {{ trans('lineups.create_button') }}
+                    Create Lineup
                 </Button>
             </div>
         </div>

@@ -11,7 +11,6 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
 
 defineProps<{
     status?: string;
@@ -22,10 +21,10 @@ defineProps<{
 
 <template>
     <AuthBase
-        :title="trans('auth.login.title')"
-        :description="trans('auth.login.description')"
+        title="Log in to your account"
+        description="Enter your email and password below to log in"
     >
-        <Head :title="trans('auth.login.title')" />
+        <Head title="Log in" />
 
         <div
             v-if="status"
@@ -42,7 +41,7 @@ defineProps<{
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">{{ trans('auth.login.email_label') }}</Label>
+                    <Label for="email">Email address</Label>
                     <Input
                         id="email"
                         type="email"
@@ -51,21 +50,21 @@ defineProps<{
                         autofocus
                         :tabindex="1"
                         autocomplete="email"
-                        :placeholder="trans('auth.login.email_placeholder')"
+                        placeholder="email@example.com"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">{{ trans('auth.login.password_label') }}</Label>
+                        <Label for="password">Password</Label>
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
                             class="text-sm"
                             :tabindex="5"
                         >
-                            {{ trans('auth.login.forgot_password') }}
+                            Forgot password?
                         </TextLink>
                     </div>
                     <Input
@@ -75,7 +74,7 @@ defineProps<{
                         required
                         :tabindex="2"
                         autocomplete="current-password"
-                        :placeholder="trans('auth.login.password_placeholder')"
+                        placeholder="Password"
                     />
                     <InputError :message="errors.password" />
                 </div>
@@ -83,7 +82,7 @@ defineProps<{
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span>{{ trans('auth.login.remember_me') }}</span>
+                        <span>Remember me</span>
                     </Label>
                 </div>
 
@@ -95,7 +94,7 @@ defineProps<{
                     data-test="login-button"
                 >
                     <Spinner v-if="processing" />
-                    {{ trans('auth.login.submit_button') }}
+                    Log in
                 </Button>
             </div>
 
@@ -103,8 +102,8 @@ defineProps<{
                 class="text-center text-sm text-muted-foreground"
                 v-if="canRegister"
             >
-                {{ trans('auth.login.no_account') }}
-                <TextLink :href="register()" :tabindex="5">{{ trans('auth.login.sign_up_link') }}</TextLink>
+                Don't have an account?
+                <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
             </div>
         </Form>
     </AuthBase>

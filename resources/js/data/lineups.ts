@@ -1,5 +1,5 @@
 import type { Lineup, LineupStats, TierType, ScheduleSlot } from './types';
-import { getArtistsByIds } from './artists';
+import { getArtistById, getArtistsByIds } from './artists';
 import { tierOrder } from './constants';
 
 // Mock lineup data
@@ -200,7 +200,7 @@ export function getLineupSchedule(lineupId: number): Record<number, ScheduleSlot
 
 export function getArtistsByBookingStatus(lineup: Lineup, status: string) {
   const artistIds = Object.entries(lineup.artistStatuses)
-    .filter(([, s]) => s.status === status)
+    .filter(([_, s]) => s.status === status)
     .map(([id]) => parseInt(id));
   return getArtistsByIds(artistIds);
 }

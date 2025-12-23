@@ -9,15 +9,14 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 import { Form, Head } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
 </script>
 
 <template>
     <AuthBase
-        :title="trans('auth.register.title')"
-        :description="trans('auth.register.description')"
+        title="Create an account"
+        description="Enter your details below to create your account"
     >
-        <Head :title="trans('auth.register.title')" />
+        <Head title="Register" />
 
         <Form
             v-bind="store.form()"
@@ -27,7 +26,7 @@ import { trans } from 'laravel-vue-i18n';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">{{ trans('auth.register.name_label') }}</Label>
+                    <Label for="name">Name</Label>
                     <Input
                         id="name"
                         type="text"
@@ -36,13 +35,13 @@ import { trans } from 'laravel-vue-i18n';
                         :tabindex="1"
                         autocomplete="name"
                         name="name"
-                        :placeholder="trans('auth.register.name_placeholder')"
+                        placeholder="Full name"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">{{ trans('auth.register.email_label') }}</Label>
+                    <Label for="email">Email address</Label>
                     <Input
                         id="email"
                         type="email"
@@ -50,13 +49,13 @@ import { trans } from 'laravel-vue-i18n';
                         :tabindex="2"
                         autocomplete="email"
                         name="email"
-                        :placeholder="trans('auth.register.email_placeholder')"
+                        placeholder="email@example.com"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">{{ trans('auth.register.password_label') }}</Label>
+                    <Label for="password">Password</Label>
                     <Input
                         id="password"
                         type="password"
@@ -64,13 +63,13 @@ import { trans } from 'laravel-vue-i18n';
                         :tabindex="3"
                         autocomplete="new-password"
                         name="password"
-                        :placeholder="trans('auth.register.password_placeholder')"
+                        placeholder="Password"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">{{ trans('auth.register.password_confirmation_label') }}</Label>
+                    <Label for="password_confirmation">Confirm password</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -78,7 +77,7 @@ import { trans } from 'laravel-vue-i18n';
                         :tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        :placeholder="trans('auth.register.password_confirmation_placeholder')"
+                        placeholder="Confirm password"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
@@ -91,17 +90,17 @@ import { trans } from 'laravel-vue-i18n';
                     data-test="register-user-button"
                 >
                     <Spinner v-if="processing" />
-                    {{ trans('auth.register.submit_button') }}
+                    Create account
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                {{ trans('auth.register.already_have_account') }}
+                Already have an account?
                 <TextLink
                     :href="login()"
                     class="underline underline-offset-4"
                     :tabindex="6"
-                    >{{ trans('auth.register.log_in_link') }}</TextLink
+                    >Log in</TextLink
                 >
             </div>
         </Form>

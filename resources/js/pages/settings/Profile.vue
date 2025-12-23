@@ -13,8 +13,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { trans } from 'laravel-vue-i18n';
-import { computed } from 'vue';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -23,12 +21,12 @@ interface Props {
 
 defineProps<Props>();
 
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: trans('settings.profile.title'),
+        title: 'Profile settings',
         href: edit().url,
     },
-]);
+];
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -36,13 +34,13 @@ const user = page.props.auth.user;
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head :title="trans('settings.profile.title')" />
+        <Head title="Profile settings" />
 
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
                 <HeadingSmall
-                    :title="trans('settings.profile.heading')"
-                    :description="trans('settings.profile.description')"
+                    title="Profile information"
+                    description="Update your name and email address"
                 />
 
                 <Form
@@ -51,7 +49,7 @@ const user = page.props.auth.user;
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="name">{{ trans('settings.profile.name_label') }}</Label>
+                        <Label for="name">Name</Label>
                         <Input
                             id="name"
                             class="mt-1 block w-full"
@@ -59,13 +57,13 @@ const user = page.props.auth.user;
                             :default-value="user.name"
                             required
                             autocomplete="name"
-                            :placeholder="trans('settings.profile.name_placeholder')"
+                            placeholder="Full name"
                         />
                         <InputError class="mt-2" :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">{{ trans('settings.profile.email_label') }}</Label>
+                        <Label for="email">Email address</Label>
                         <Input
                             id="email"
                             type="email"
@@ -74,20 +72,20 @@ const user = page.props.auth.user;
                             :default-value="user.email"
                             required
                             autocomplete="username"
-                            :placeholder="trans('settings.profile.email_placeholder')"
+                            placeholder="Email address"
                         />
                         <InputError class="mt-2" :message="errors.email" />
                     </div>
 
                     <div v-if="mustVerifyEmail && !user.email_verified_at">
                         <p class="-mt-4 text-sm text-muted-foreground">
-                            {{ trans('settings.profile.email_unverified') }}
+                            Your email address is unverified.
                             <Link
                                 :href="send()"
                                 as="button"
                                 class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                             >
-                                {{ trans('settings.profile.resend_verification') }}
+                                Click here to resend the verification email.
                             </Link>
                         </p>
 
@@ -95,7 +93,8 @@ const user = page.props.auth.user;
                             v-if="status === 'verification-link-sent'"
                             class="mt-2 text-sm font-medium text-green-600"
                         >
-                            {{ trans('settings.profile.verification_sent') }}
+                            A new verification link has been sent to your email
+                            address.
                         </div>
                     </div>
 
@@ -103,7 +102,7 @@ const user = page.props.auth.user;
                         <Button
                             :disabled="processing"
                             data-test="update-profile-button"
-                            >{{ trans('settings.profile.save_button') }}</Button
+                            >Save</Button
                         >
 
                         <Transition
@@ -116,7 +115,7 @@ const user = page.props.auth.user;
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                {{ trans('common.saved') }}
+                                Saved.
                             </p>
                         </Transition>
                     </div>

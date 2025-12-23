@@ -8,26 +8,24 @@ import { type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/appearance';
-import { trans } from 'laravel-vue-i18n';
-import { computed } from 'vue';
 
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+const breadcrumbItems: BreadcrumbItem[] = [
     {
-        title: trans('settings.appearance.title'),
+        title: 'Appearance settings',
         href: edit().url,
     },
-]);
+];
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head :title="trans('settings.appearance.title')" />
+        <Head title="Appearance settings" />
 
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall
-                    :title="trans('settings.appearance.heading')"
-                    :description="trans('settings.appearance.description')"
+                    title="Appearance settings"
+                    description="Update your account's appearance settings"
                 />
                 <AppearanceTabs />
             </div>

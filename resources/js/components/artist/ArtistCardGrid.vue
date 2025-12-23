@@ -9,7 +9,7 @@ interface Props {
     columns?: 2 | 3 | 4 | 5;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     compact: false,
     columns: 4,
 });

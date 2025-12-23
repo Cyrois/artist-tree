@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import { statusConfig, statusOrder, formatCurrency } from '@/data/constants';
 import { tierConfig } from '@/data/constants';
 import type { Artist, ArtistStatus, BookingStatus, TierType } from '@/data/types';
+import { cn } from '@/lib/utils';
 import { Lightbulb, Mail, DollarSign, Send, FileSignature, CheckCircle, X } from 'lucide-vue-next';
 import { computed } from 'vue';
 

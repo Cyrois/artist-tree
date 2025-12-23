@@ -7,15 +7,14 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { store } from '@/routes/password/confirm';
 import { Form, Head } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
 </script>
 
 <template>
     <AuthLayout
-        :title="trans('auth.confirm_password.title')"
-        :description="trans('auth.confirm_password.description')"
+        title="Confirm your password"
+        description="This is a secure area of the application. Please confirm your password before continuing."
     >
-        <Head :title="trans('auth.confirm_password.title')" />
+        <Head title="Confirm password" />
 
         <Form
             v-bind="store.form()"
@@ -24,7 +23,7 @@ import { trans } from 'laravel-vue-i18n';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">{{ trans('auth.confirm_password.password_label') }}</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Input
                         id="password"
                         type="password"
@@ -45,7 +44,7 @@ import { trans } from 'laravel-vue-i18n';
                         data-test="confirm-password-button"
                     >
                         <Spinner v-if="processing" />
-                        {{ trans('auth.confirm_password.submit_button') }}
+                        Confirm Password
                     </Button>
                 </div>
             </div>
