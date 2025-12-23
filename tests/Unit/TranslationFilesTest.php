@@ -3,103 +3,70 @@
 declare(strict_types=1);
 
 describe('Translation Files', function () {
-    // Helper function to get lang path
-    $getLangPath = function () {
-        return __DIR__.'/../../lang';
+    // Helper to get translations from the main file
+    $getTranslations = function () {
+        $langPath = __DIR__.'/../../lang/en.json';
+        expect(file_exists($langPath))->toBeTrue('Main translation file lang/en.json is missing');
+
+        $content = file_get_contents($langPath);
+        $decoded = json_decode($content, true);
+        expect(json_last_error())->toBe(JSON_ERROR_NONE, 'Invalid JSON in lang/en.json: '.json_last_error_msg());
+
+        return $decoded;
     };
 
-    it('has all required translation files', function () use ($getLangPath) {
-        $requiredFiles = [
-            'auth',
-            'dashboard',
-            'lineups',
-            'artists',
-            'settings',
-            'common',
-        ];
-
-        $langPath = $getLangPath();
-
-        foreach ($requiredFiles as $file) {
-            $filePath = "{$langPath}/en/{$file}.json";
-            expect(file_exists($filePath))
-                ->toBeTrue("Translation file en/{$file}.json is missing");
-        }
+    it('has main translation file', function () {
+        $langPath = __DIR__.'/../../lang/en.json';
+        expect(file_exists($langPath))->toBeTrue('Main translation file lang/en.json is missing');
     });
 
-    it('has valid JSON in all translation files', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $files = glob("{$langPath}/en/*.json");
-
-        expect($files)->not->toBeEmpty('No JSON translation files found in lang/en/');
-
-        foreach ($files as $file) {
-            $content = file_get_contents($file);
-            $decoded = json_decode($content, true);
-
-            expect(json_last_error())
-                ->toBe(JSON_ERROR_NONE, "Invalid JSON in {$file}: ".json_last_error_msg());
-            expect($decoded)->toBeArray("Translation file {$file} did not decode to an array");
-        }
+    it('has valid JSON in translation file', function () use ($getTranslations) {
+        $translations = $getTranslations();
+        expect($translations)->toBeArray('Translation file did not decode to an array');
+        expect($translations)->not->toBeEmpty('Translation file is empty');
     });
 
-    it('has no duplicate keys across translation files', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $files = glob("{$langPath}/en/*.json");
-        $allKeys = [];
+    it('has all required namespaces', function () use ($getTranslations) {
+        $translations = $getTranslations();
+        $requiredNamespaces = ['auth', 'dashboard', 'lineups', 'artists', 'settings', 'common'];
 
-        foreach ($files as $file) {
-            $content = json_decode(file_get_contents($file), true);
-            $fileName = basename($file, '.json');
-
-            foreach (array_keys($content ?? []) as $key) {
-                $fullKey = "{$fileName}.{$key}";
-                expect($allKeys)->not->toContain($fullKey, "Duplicate key found: {$fullKey}");
-                $allKeys[] = $fullKey;
+        foreach ($requiredNamespaces as $namespace) {
+            $hasNamespace = false;
+            foreach (array_keys($translations) as $key) {
+                if (str_starts_with($key, "{$namespace}.")) {
+                    $hasNamespace = true;
+                    break;
+                }
             }
-        }
-
-        expect($allKeys)->not->toBeEmpty('No translation keys found across all files');
-    });
-
-    it('has no empty translation strings', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $files = glob("{$langPath}/en/*.json");
-
-        foreach ($files as $file) {
-            $content = json_decode(file_get_contents($file), true);
-            $fileName = basename($file, '.json');
-
-            foreach ($content ?? [] as $key => $value) {
-                expect($value)
-                    ->not->toBeEmpty("{$fileName}.{$key} has empty translation string");
-                expect($value)
-                    ->toBeString("{$fileName}.{$key} is not a string");
-            }
+            expect($hasNamespace)->toBeTrue("Missing required namespace: {$namespace}");
         }
     });
 
-    it('has all auth page translation keys', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $authFile = "{$langPath}/en/auth.json";
-        expect(file_exists($authFile))->toBeTrue('auth.json file is missing');
+    it('has no empty translation strings', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
-        $translations = json_decode(file_get_contents($authFile), true);
+        foreach ($translations as $key => $value) {
+            expect($value)->not->toBeEmpty("{$key} has empty translation string");
+            expect($value)->toBeString("{$key} is not a string");
+        }
+    });
+
+    it('has all auth page translation keys', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
         $requiredKeys = [
-            'login_title',
-            'login_subtitle',
-            'login_email_label',
-            'login_email_placeholder',
-            'login_password_label',
-            'login_submit_button',
-            'register_title',
-            'register_submit_button',
-            'forgot_password_title',
-            'reset_password_title',
-            'verify_email_title',
-            'two_factor_title',
-            'confirm_password_title',
+            'auth.login_title',
+            'auth.login_subtitle',
+            'auth.login_email_label',
+            'auth.login_email_placeholder',
+            'auth.login_password_label',
+            'auth.login_submit_button',
+            'auth.register_title',
+            'auth.register_submit_button',
+            'auth.forgot_password_title',
+            'auth.reset_password_title',
+            'auth.verify_email_title',
+            'auth.confirm_password_title',
         ];
 
         foreach ($requiredKeys as $key) {
@@ -108,21 +75,17 @@ describe('Translation Files', function () {
         }
     });
 
-    it('has all dashboard page translation keys', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $dashboardFile = "{$langPath}/en/dashboard.json";
-        expect(file_exists($dashboardFile))->toBeTrue('dashboard.json file is missing');
-
-        $translations = json_decode(file_get_contents($dashboardFile), true);
+    it('has all dashboard page translation keys', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
         $requiredKeys = [
-            'page_title',
-            'hero_title',
-            'hero_subtitle',
-            'search_placeholder',
-            'lineups_section_title',
-            'lineups_view_all_button',
-            'trending_section_title',
+            'dashboard.page_title',
+            'dashboard.hero_title',
+            'dashboard.hero_subtitle',
+            'dashboard.search_placeholder',
+            'dashboard.lineups_section_title',
+            'dashboard.lineups_view_all_button',
+            'dashboard.trending_section_title',
         ];
 
         foreach ($requiredKeys as $key) {
@@ -131,22 +94,18 @@ describe('Translation Files', function () {
         }
     });
 
-    it('has all common UI translation keys', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $commonFile = "{$langPath}/en/common.json";
-        expect(file_exists($commonFile))->toBeTrue('common.json file is missing');
-
-        $translations = json_decode(file_get_contents($commonFile), true);
+    it('has all common UI translation keys', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
         $requiredKeys = [
-            'action_save',
-            'action_cancel',
-            'action_delete',
-            'action_edit',
-            'action_create',
-            'status_loading',
-            'error_generic',
-            'success_saved',
+            'common.action_save',
+            'common.action_cancel',
+            'common.action_delete',
+            'common.action_edit',
+            'common.action_create',
+            'common.status_loading',
+            'common.error_generic',
+            'common.success_saved',
         ];
 
         foreach ($requiredKeys as $key) {
@@ -155,50 +114,30 @@ describe('Translation Files', function () {
         }
     });
 
-    it('has translation keys follow naming convention', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $files = glob("{$langPath}/en/*.json");
+    it('has translation keys follow naming convention', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
-        foreach ($files as $file) {
-            $content = json_decode(file_get_contents($file), true);
-            $fileName = basename($file, '.json');
+        foreach (array_keys($translations) as $key) {
+            // Keys should be namespace.snake_case format
+            expect($key)
+                ->toMatch('/^[a-z]+\.[a-z0-9_]+$/', "{$key} does not follow namespace.snake_case convention");
 
-            foreach (array_keys($content ?? []) as $key) {
-                // Keys should be snake_case (no spaces, no uppercase, no hyphens)
-                expect($key)
-                    ->toMatch('/^[a-z0-9_]+$/', "{$fileName}.{$key} does not follow snake_case convention");
-
-                // Keys should not be too short (minimum 3 characters)
-                expect(strlen($key))
-                    ->toBeGreaterThan(2, "{$fileName}.{$key} is too short (minimum 3 characters)");
-            }
+            // Keys should not be too short (minimum namespace.xxx = 5 chars)
+            expect(strlen($key))
+                ->toBeGreaterThan(5, "{$key} is too short");
         }
     });
 
-    it('has parameter placeholders in correct format', function () use ($getLangPath) {
-        $langPath = $getLangPath();
-        $files = glob("{$langPath}/en/*.json");
+    it('has parameter placeholders in correct format', function () use ($getTranslations) {
+        $translations = $getTranslations();
 
-        foreach ($files as $file) {
-            $content = json_decode(file_get_contents($file), true);
-            $fileName = basename($file, '.json');
-
-            foreach ($content ?? [] as $key => $value) {
-                // If translation contains parameters, they should use :param format
-                if (preg_match_all('/\{(\w+)\}/', $value, $matches)) {
-                    // Found {param} format - this is acceptable for laravel-vue-i18n
-                    expect(true)->toBeTrue();
-                } elseif (preg_match_all('/:(\w+)/', $value, $matches)) {
-                    // Found :param format - also acceptable
-                    expect(true)->toBeTrue();
-                }
-
-                // Should not have malformed placeholders like {{param}} or $param
-                expect($value)
-                    ->not->toMatch('/\{\{/', "{$fileName}.{$key} has malformed {{}} placeholders");
-                expect($value)
-                    ->not->toMatch('/\$\w+/', "{$fileName}.{$key} has malformed $ placeholders");
-            }
+        foreach ($translations as $key => $value) {
+            // Should use :param format (Laravel standard)
+            // Should not have malformed placeholders like {{param}} or $param
+            expect($value)
+                ->not->toMatch('/\{\{/', "{$key} has malformed {{}} placeholders");
+            expect($value)
+                ->not->toMatch('/\$\w+/', "{$key} has malformed $ placeholders");
         }
     });
 });

@@ -6,19 +6,20 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
 
 describe('i18n Integration', function () {
-    it('can load translation files from lang/en directory', function () {
+    it('can load main translation file from lang directory', function () {
         $langPath = base_path('lang');
-        $files = File::glob("{$langPath}/en/*.json");
+        $mainFile = "{$langPath}/en.json";
 
-        expect($files)->not->toBeEmpty('No translation files found in lang/en/');
+        expect(File::exists($mainFile))->toBeTrue('Main translation file /lang/en.json not found');
 
-        foreach ($files as $file) {
-            $fileName = basename($file, '.json');
-            $translations = json_decode(File::get($file), true);
+        $translations = json_decode(File::get($mainFile), true);
 
-            expect($translations)->toBeArray("Failed to load {$fileName}.json");
-            expect($translations)->not->toBeEmpty("{$fileName}.json is empty");
-        }
+        expect($translations)->toBeArray('Failed to load en.json');
+        expect($translations)->not->toBeEmpty('en.json is empty');
+
+        // Verify it uses flat key structure (e.g., "auth.login_title")
+        $keys = array_keys($translations);
+        expect($keys[0])->toContain('.');
     });
 
     it('loads auth translation keys correctly', function () {
@@ -54,7 +55,7 @@ describe('i18n Integration', function () {
     });
 
     it('handles parameter interpolation with colon syntax', function () {
-        // Assuming common.json has: "pagination_showing": "Showing :from to :to of :total results"
+        // JSON translations use :param syntax: "pagination_showing": "Showing :from to :to of :total results"
         if (! Lang::has('common.pagination_showing')) {
             $this->markTestSkipped('common.pagination_showing key not found');
         }
@@ -73,62 +74,58 @@ describe('i18n Integration', function () {
         expect($translation)->not->toContain(':total');
     });
 
-    it('handles parameter interpolation with curly brace syntax', function () {
-        // Assuming lineups.json has: "show_artist_count": "{count} artists"
-        if (! Lang::has('lineups.show_artist_count')) {
-            $this->markTestSkipped('lineups.show_artist_count key not found');
+    it('handles parameter interpolation with single parameter', function () {
+        // Test with single parameter: "show_artists_count": ":count artists"
+        if (! Lang::has('lineups.show_artists_count')) {
+            $this->markTestSkipped('lineups.show_artists_count key not found');
         }
 
-        $translation = __('lineups.show_artist_count', [
+        $translation = __('lineups.show_artists_count', [
             'count' => 25,
         ]);
 
         expect($translation)->toContain('25');
-        expect($translation)->not->toContain('{count}');
+        expect($translation)->not->toContain(':count');
     });
 
     it('uses default locale as en', function () {
         expect(app()->getLocale())->toBe('en');
     });
 
-    it('can retrieve all translations for a namespace', function () {
-        $authTranslations = Lang::get('auth');
+    it('can retrieve translations by full key', function () {
+        // With flat JSON structure, we access translations by full key (namespace.key)
+        $loginTitle = Lang::get('auth.login_title');
+        $registerTitle = Lang::get('auth.register_title');
 
-        expect($authTranslations)->toBeArray();
-        expect($authTranslations)->not->toBeEmpty();
-        expect($authTranslations)->toHaveKey('login_title');
+        expect($loginTitle)->toBeString();
+        expect($loginTitle)->not->toBe('auth.login_title', 'Should return translation, not key');
+        expect($registerTitle)->toBeString();
+        expect($registerTitle)->not->toBe('auth.register_title', 'Should return translation, not key');
     });
 
-    it('handles nested translation keys if present', function () {
-        // Test that the system can handle both flat and nested structures
-        $authTranslations = Lang::get('auth');
+    it('all translation values are strings', function () {
+        // With flat JSON structure, all values should be strings
+        $langPath = base_path('lang/en.json');
+        $translations = json_decode(File::get($langPath), true);
 
-        foreach ($authTranslations as $key => $value) {
-            if (is_array($value)) {
-                // Nested structure
-                expect($value)->toBeArray();
-            } else {
-                // Flat structure
-                expect($value)->toBeString();
-            }
+        foreach ($translations as $key => $value) {
+            expect($value)->toBeString("Translation '{$key}' should be a string");
         }
-
-        expect(true)->toBeTrue('Translation structure is valid');
     });
 
-    it('has consistent key structure across all files', function () {
+    it('has consistent key structure in main translation file', function () {
         $langPath = base_path('lang');
-        $files = File::glob("{$langPath}/en/*.json");
+        $mainFile = "{$langPath}/en.json";
 
-        foreach ($files as $file) {
-            $translations = json_decode(File::get($file), true);
-            $fileName = basename($file, '.json');
+        $translations = json_decode(File::get($mainFile), true);
 
-            foreach ($translations ?? [] as $key => $value) {
-                // All values should be strings (not arrays, for MVP)
-                expect($value)
-                    ->toBeString("{$fileName}.{$key} should be a string, not an array");
-            }
+        foreach ($translations ?? [] as $key => $value) {
+            // All values should be strings (not arrays, for MVP)
+            expect($value)
+                ->toBeString("Translation key '{$key}' should be a string, not an array");
+
+            // All keys should use namespace.key format
+            expect($key)->toContain('.');
         }
     });
 });
