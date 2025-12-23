@@ -4,7 +4,7 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import TierSection from '@/components/lineup/TierSection.vue';
 import KanbanBoard from '@/components/booking/KanbanBoard.vue';
@@ -14,7 +14,6 @@ import { getLineupById, getLineupStats, getAllLineupArtists, getLineupSchedule }
 import { getArtistsByIds } from '@/data/artists';
 import { tierOrder, formatCurrency } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
-import { cn } from '@/lib/utils';
 import { ArrowLeft, Search, Layers, Scale, Download } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 

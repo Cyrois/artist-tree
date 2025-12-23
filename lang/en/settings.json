@@ -1,0 +1,73 @@
+{
+  "title": "Settings",
+  "description": "Manage your profile and organization settings",
+  "tabs": {
+    "profile": "Profile",
+    "organization": "Organization",
+    "password": "Password",
+    "appearance": "Appearance",
+    "two_factor": "Two-Factor Authentication"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "description": "Update your name and email address",
+    "name_label": "Full name",
+    "email_label": "Email address",
+    "email_unverified": "Your email address is unverified.",
+    "resend_verification": "Click here to resend the verification email.",
+    "verification_sent": "A new verification link has been sent to your email address."
+  },
+  "password": {
+    "title": "Update Password",
+    "description": "Ensure your account is using a long, random password to stay secure",
+    "current_password_label": "Current password",
+    "new_password_label": "New password",
+    "confirm_password_label": "Confirm password"
+  },
+  "delete_account": {
+    "title": "Delete Account",
+    "description": "Delete your account and all of its resources",
+    "warning_message": "Please proceed with caution, this cannot be undone.",
+    "button": "Delete account",
+    "confirmation_title": "Are you sure you want to delete your account?",
+    "confirmation_message": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
+  },
+  "scoring": {
+    "title": "Metric Weights",
+    "description": "Adjust how much each metric contributes to the overall artist score",
+    "weights_info": "Weights must add up to 100%.",
+    "quick_presets": "Quick Presets",
+    "spotify_monthly_listeners": "Spotify Monthly Listeners",
+    "spotify_popularity": "Spotify Popularity",
+    "youtube_subscribers": "YouTube Subscribers",
+    "total_weight": "Total Weight",
+    "validation_error": "Weights must add up to 100%. Current total: :total%"
+  },
+  "team": {
+    "title": "Team Members",
+    "description": "Manage who has access to your organization's lineups and settings",
+    "invite_button": "Invite New Member",
+    "email_placeholder": "Enter email address...",
+    "invite": "Invite"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Choose your preferred color scheme for the application",
+    "theme": "Theme",
+    "light": "Light",
+    "light_description": "Bright and clean",
+    "dark": "Dark",
+    "dark_description": "Easy on the eyes",
+    "system": "System",
+    "system_description": "Match device"
+  },
+  "organization": {
+    "title": "Organization Settings",
+    "description": "Manage your scoring weights and team members",
+    "tabs": {
+      "scoring": "Scoring Weights",
+      "team": "Team Members",
+      "appearance": "Appearance"
+    }
+  }
+}

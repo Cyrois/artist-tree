@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getInitials, avatarColors } from '@/data/constants';
 import type { TeamMember } from '@/data/types';
-import { cn } from '@/lib/utils';
 import { ChevronDown, X } from 'lucide-vue-next';
 
 interface Props {

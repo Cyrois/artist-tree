@@ -2,11 +2,23 @@ import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { i18nVue } from 'laravel-vue-i18n';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// Get initial locale from localStorage or default to English
+function getInitialLocale(): string {
+    if (typeof window === 'undefined') return 'en';
+
+    const stored = localStorage.getItem('locale');
+    if (stored) return stored;
+
+    // Default to English
+    return 'en';
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -18,6 +30,13 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(i18nVue, {
+                lang: getInitialLocale(),
+                resolve: async (lang: string) => {
+                    const langs = import.meta.glob('../../lang/*.json');
+                    return await langs[`../../lang/${lang}.json`]();
+                },
+            })
             .mount(el);
     },
     progress: {

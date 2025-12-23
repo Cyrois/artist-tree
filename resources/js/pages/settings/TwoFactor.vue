@@ -11,7 +11,8 @@ import { disable, enable, show } from '@/routes/two-factor';
 import { BreadcrumbItem } from '@/types';
 import { Form, Head } from '@inertiajs/vue3';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
-import { onUnmounted, ref } from 'vue';
+import { onUnmounted, ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     requiresConfirmation?: boolean;
@@ -23,12 +24,12 @@ withDefaults(defineProps<Props>(), {
     twoFactorEnabled: false,
 });
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Two-Factor Authentication',
+        title: trans('settings.two_factor.title'),
         href: show.url(),
     },
-];
+]);
 
 const { hasSetupData, clearTwoFactorAuthData } = useTwoFactorAuth();
 const showSetupModal = ref<boolean>(false);
@@ -40,25 +41,22 @@ onUnmounted(() => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Two-Factor Authentication" />
+        <Head :title="trans('settings.two_factor.title')" />
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall
-                    title="Two-Factor Authentication"
-                    description="Manage your two-factor authentication settings"
+                    :title="trans('settings.two_factor.heading')"
+                    :description="trans('settings.two_factor.description')"
                 />
 
                 <div
                     v-if="!twoFactorEnabled"
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="destructive">Disabled</Badge>
+                    <Badge variant="destructive">{{ trans('settings.two_factor.disabled') }}</Badge>
 
                     <p class="text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
+                        {{ trans('settings.two_factor.enable_description') }}
                     </p>
 
                     <div>
@@ -66,7 +64,7 @@ onUnmounted(() => {
                             v-if="hasSetupData"
                             @click="showSetupModal = true"
                         >
-                            <ShieldCheck />Continue Setup
+                            <ShieldCheck />{{ trans('settings.two_factor.continue_setup') }}
                         </Button>
                         <Form
                             v-else
@@ -75,7 +73,7 @@ onUnmounted(() => {
                             #default="{ processing }"
                         >
                             <Button type="submit" :disabled="processing">
-                                <ShieldCheck />Enable 2FA</Button
+                                <ShieldCheck />{{ trans('settings.two_factor.enable_button') }}</Button
                             ></Form
                         >
                     </div>
@@ -85,13 +83,10 @@ onUnmounted(() => {
                     v-else
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="default">Enabled</Badge>
+                    <Badge variant="default">{{ trans('settings.two_factor.enabled') }}</Badge>
 
                     <p class="text-muted-foreground">
-                        With two-factor authentication enabled, you will be
-                        prompted for a secure, random pin during login, which
-                        you can retrieve from the TOTP-supported application on
-                        your phone.
+                        {{ trans('settings.two_factor.enabled_description') }}
                     </p>
 
                     <TwoFactorRecoveryCodes />
@@ -104,7 +99,7 @@ onUnmounted(() => {
                                 :disabled="processing"
                             >
                                 <ShieldBan />
-                                Disable 2FA
+                                {{ trans('settings.two_factor.disable_button') }}
                             </Button>
                         </Form>
                     </div>

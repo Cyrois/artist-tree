@@ -1,0 +1,14 @@
+{
+  "title": "Dashboard",
+  "hero": {
+    "title": "Build Your Dream Lineup",
+    "description": "Search for artists, compare metrics, and create the perfect festival lineup."
+  },
+  "your_lineups": {
+    "title": "Your Lineups",
+    "description": "Manage your festival lineups"
+  },
+  "trending_artists": {
+    "title": "Trending Artists"
+  }
+}

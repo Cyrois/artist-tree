@@ -39,16 +39,6 @@ const emit = defineEmits<{
 const isOpen = ref(true);
 const config = computed(() => tierConfig[props.tier]);
 
-function getStatusIcon(status: string) {
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return config?.label ?? status;
-}
-
-function getStatusColor(status: string) {
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return config?.color ?? '#666';
-}
-
 function isSelected(artistId: number) {
     return props.selectedArtistIds.includes(artistId);
 }

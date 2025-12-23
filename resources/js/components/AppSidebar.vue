@@ -13,26 +13,28 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { Home, List, Search } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
+const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: trans('navigation.dashboard'),
         href: '/dashboard',
         icon: Home,
     },
     {
-        title: 'Search Artists',
+        title: trans('navigation.search_artists'),
         href: '/search',
         icon: Search,
     },
     {
-        title: 'My Lineups',
+        title: trans('navigation.my_lineups'),
         href: '/lineups',
         icon: List,
     },
-];
+]);
 
 const footerNavItems: NavItem[] = [];
 </script>

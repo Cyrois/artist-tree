@@ -11,24 +11,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type BreadcrumbItem } from '@/types';
+import { trans } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 
-const breadcrumbItems: BreadcrumbItem[] = [
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Password settings',
+        title: trans('settings.password.title'),
         href: edit().url,
     },
-];
+]);
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Password settings" />
+        <Head :title="trans('settings.password.title')" />
 
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall
-                    title="Update password"
-                    description="Ensure your account is using a long, random password to stay secure"
+                    :title="trans('settings.password.heading')"
+                    :description="trans('settings.password.description')"
                 />
 
                 <Form
@@ -46,34 +48,34 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
+                        <Label for="current_password">{{ trans('settings.password.current_password_label') }}</Label>
                         <Input
                             id="current_password"
                             name="current_password"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            placeholder="Current password"
+                            :placeholder="trans('settings.password.current_password_placeholder')"
                         />
                         <InputError :message="errors.current_password" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">New password</Label>
+                        <Label for="password">{{ trans('settings.password.new_password_label') }}</Label>
                         <Input
                             id="password"
                             name="password"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="New password"
+                            :placeholder="trans('settings.password.new_password_placeholder')"
                         />
                         <InputError :message="errors.password" />
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="password_confirmation"
-                            >Confirm password</Label
+                            >{{ trans('settings.password.confirm_password_label') }}</Label
                         >
                         <Input
                             id="password_confirmation"
@@ -81,7 +83,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="Confirm password"
+                            :placeholder="trans('settings.password.confirm_password_placeholder')"
                         />
                         <InputError :message="errors.password_confirmation" />
                     </div>
@@ -90,7 +92,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"
-                            >Save password</Button
+                            >{{ trans('settings.password.save_button') }}</Button
                         >
 
                         <Transition
@@ -103,7 +105,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                {{ trans('common.saved') }}
                             </p>
                         </Transition>
                     </div>

@@ -4,15 +4,16 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
-import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists, filterArtistsByGenre, filterArtistsByScoreRange, sortArtists } from '@/data/artists';
+import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, X, ChevronDown, TrendingUp } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { Search, SlidersHorizontal, ChevronDown, TrendingUp } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 // State
 const searchQuery = ref('');
@@ -94,20 +95,20 @@ function handleArtistClick(artist: Artist) {
     router.visit(`/artist/${artist.id}`);
 }
 
-const sortOptions = [
-    { value: 'score', label: 'Score (High to Low)' },
-    { value: 'name', label: 'Name (A-Z)' },
-    { value: 'listeners', label: 'Listeners (High to Low)' },
-];
+const sortOptions = computed(() => [
+    { value: 'score', label: trans('search.sort_score') },
+    { value: 'name', label: trans('search.sort_name') },
+    { value: 'listeners', label: trans('search.sort_listeners') },
+]);
 
-const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Search Artists', href: '/search' },
-];
+const breadcrumbs = computed(() => [
+    { title: trans('navigation.dashboard'), href: '/dashboard' },
+    { title: trans('search.title'), href: '/search' },
+]);
 </script>
 
 <template>
-    <Head title="Search Artists - Artist-Tree" />
+    <Head :title="`${trans('search.title')} - Artist-Tree`" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Search Header -->
@@ -118,7 +119,7 @@ const breadcrumbs = [
                     <Input
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Search artists by name or genre..."
+                        :placeholder="trans('search.placeholder')"
                         class="pl-10"
                     />
                 </div>
@@ -130,7 +131,7 @@ const breadcrumbs = [
                     :class="{ 'border-primary': showFilters }"
                 >
                     <SlidersHorizontal class="w-4 h-4 mr-2" />
-                    Filters
+                    {{ trans('search.filters') }}
                     <Badge v-if="activeFilterCount > 0" variant="secondary" class="ml-2">
                         {{ activeFilterCount }}
                     </Badge>
@@ -140,7 +141,7 @@ const breadcrumbs = [
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button variant="outline">
-                            Sort
+                            {{ trans('search.sort') }}
                             <ChevronDown class="w-4 h-4 ml-2" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -163,9 +164,9 @@ const breadcrumbs = [
                     <!-- Genres -->
                     <div>
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-medium">Genres</h3>
+                            <h3 class="font-medium">{{ trans('search.genres') }}</h3>
                             <Button v-if="selectedGenres.length > 0" variant="ghost" size="sm" @click="selectedGenres = []">
-                                Clear
+                                {{ trans('search.clear') }}
                             </Button>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -183,10 +184,10 @@ const breadcrumbs = [
 
                     <!-- Score Range -->
                     <div>
-                        <h3 class="font-medium mb-3">Score Range</h3>
+                        <h3 class="font-medium mb-3">{{ trans('search.score_range') }}</h3>
                         <div class="flex items-center gap-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">Min:</span>
+                                <span class="text-sm text-muted-foreground">{{ trans('search.min') }}:</span>
                                 <Input
                                     v-model.number="scoreMin"
                                     type="number"
@@ -197,7 +198,7 @@ const breadcrumbs = [
                             </div>
                             <span class="text-muted-foreground">-</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">Max:</span>
+                                <span class="text-sm text-muted-foreground">{{ trans('search.max') }}:</span>
                                 <Input
                                     v-model.number="scoreMax"
                                     type="number"
@@ -212,7 +213,7 @@ const breadcrumbs = [
                     <!-- Clear All -->
                     <div class="flex justify-end pt-2 border-t">
                         <Button variant="outline" @click="clearFilters">
-                            Clear All Filters
+                            {{ trans('search.clear_all_filters') }}
                         </Button>
                     </div>
                 </CardContent>
@@ -221,7 +222,7 @@ const breadcrumbs = [
             <!-- Results Count -->
             <div class="flex items-center justify-between">
                 <p class="text-muted-foreground">
-                    <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> artists found
+                    <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> {{ trans('search.artists_found') }}
                 </p>
             </div>
 
@@ -234,7 +235,7 @@ const breadcrumbs = [
 
             <!-- Similar Artists (if searching) -->
             <div v-if="similarArtists.length > 0 && searchQuery.length >= 2" class="pt-6 border-t">
-                <h3 class="text-lg font-semibold mb-4">Similar Artists</h3>
+                <h3 class="text-lg font-semibold mb-4">{{ trans('search.similar_artists') }}</h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <ArtistCard
                         v-for="artist in similarArtists"
@@ -251,7 +252,7 @@ const breadcrumbs = [
             <div class="pt-6 border-t">
                 <div class="flex items-center gap-2 mb-4">
                     <TrendingUp class="w-5 h-5 text-primary" />
-                    <h3 class="text-lg font-semibold">Trending Artists</h3>
+                    <h3 class="text-lg font-semibold">{{ trans('search.trending_artists') }}</h3>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <ArtistCard

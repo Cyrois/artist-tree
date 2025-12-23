@@ -6,6 +6,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 import { Form, Head } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 
 defineProps<{
     status?: string;
@@ -14,17 +15,16 @@ defineProps<{
 
 <template>
     <AuthLayout
-        title="Verify email"
-        description="Please verify your email address by clicking on the link we just emailed to you."
+        :title="trans('auth.verify_email.title')"
+        :description="trans('auth.verify_email.description')"
     >
-        <Head title="Email verification" />
+        <Head :title="trans('auth.verify_email.title')" />
 
         <div
             v-if="status === 'verification-link-sent'"
             class="mb-4 text-center text-sm font-medium text-green-600"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            {{ trans('auth.verify_email.verification_sent') }}
         </div>
 
         <Form
@@ -34,7 +34,7 @@ defineProps<{
         >
             <Button :disabled="processing" variant="secondary">
                 <Spinner v-if="processing" />
-                Resend verification email
+                {{ trans('auth.verify_email.resend_button') }}
             </Button>
 
             <TextLink
@@ -42,7 +42,7 @@ defineProps<{
                 as="button"
                 class="mx-auto block text-sm"
             >
-                Log out
+                {{ trans('auth.verify_email.logout') }}
             </TextLink>
         </Form>
     </AuthLayout>

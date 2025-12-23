@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getLineupStats } from '@/data/lineups';
 import { getArtistsByIds } from '@/data/artists';
 import { formatCurrency } from '@/data/constants';
 import type { Lineup } from '@/data/types';
-import { cn } from '@/lib/utils';
 import { Calendar, Check, Clock, DollarSign, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 

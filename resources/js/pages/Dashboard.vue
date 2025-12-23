@@ -3,14 +3,14 @@ import { Head, router } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LineupCard from '@/components/lineup/LineupCard.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
 import { getLineups } from '@/data/lineups';
 import { searchArtists, getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
-import { Search, Plus, Music, TrendingUp } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { trans } from 'laravel-vue-i18n';
+import { Search, Music, TrendingUp } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 
 const lineups = getLineups();
 const trendingArtists = getTrendingArtists(5);
@@ -57,7 +57,7 @@ function handleSearchBlur() {
     }, 200);
 }
 
-const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
+const breadcrumbs = computed(() => [{ title: trans('navigation.dashboard'), href: '/dashboard' }]);
 </script>
 
 <template>
@@ -73,10 +73,10 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
                         </div>
                     </div>
                     <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
-                        Build Your Dream Lineup
+                        {{ trans('dashboard.hero.title') }}
                     </h1>
                     <p class="text-muted-foreground text-lg">
-                        Search for artists, compare metrics, and create the perfect festival lineup.
+                        {{ trans('dashboard.hero.description') }}
                     </p>
 
                     <!-- Search -->
@@ -86,7 +86,7 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
                             <Input
                                 v-model="searchQuery"
                                 type="text"
-                                placeholder="Search for artists..."
+                                :placeholder="trans('common.search_placeholder')"
                                 class="bg-white pl-12 pr-4 py-6 text-lg rounded-xl border-2 focus:border-primary"
                                 @focus="handleSearchFocus"
                                 @blur="handleSearchBlur"
@@ -124,11 +124,11 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
             <div>
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold">Your Lineups</h2>
-                        <p class="text-muted-foreground">Manage your festival lineups</p>
+                        <h2 class="text-2xl font-bold">{{ trans('dashboard.your_lineups.title') }}</h2>
+                        <p class="text-muted-foreground">{{ trans('dashboard.your_lineups.description') }}</p>
                     </div>
                     <Button @click="router.visit('/lineups')">
-                        View All
+                        {{ trans('common.view_all') }}
                     </Button>
                 </div>
 
@@ -146,7 +146,7 @@ const breadcrumbs = [{ title: 'Dashboard', href: '/dashboard' }];
             <div>
                 <div class="flex items-center gap-2 mb-6">
                     <TrendingUp class="w-5 h-5 text-primary" />
-                    <h2 class="text-2xl font-bold">Trending Artists</h2>
+                    <h2 class="text-2xl font-bold">{{ trans('dashboard.trending_artists.title') }}</h2>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

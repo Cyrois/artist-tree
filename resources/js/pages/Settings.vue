@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { User, Building2 } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 // Import profile settings components
 import ProfileSettings from '@/components/settings/ProfileSettings.vue';
@@ -12,7 +12,6 @@ import DeleteUser from '@/components/DeleteUser.vue';
 
 // Import organization settings components
 import ScoringWeights from '@/components/settings/ScoringWeights.vue';
-import TeamMembers from '@/components/settings/TeamMembers.vue';
 
 interface Props {
     tab?: 'profile' | 'organization';
@@ -32,8 +31,7 @@ const breadcrumbs = [
     { title: 'Settings', href: '/settings' },
 ];
 
-const page = usePage();
-const user = computed(() => page.props.auth.user);
+usePage();
 </script>
 
 <template>

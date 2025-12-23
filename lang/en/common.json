@@ -1,0 +1,19 @@
+{
+  "save": "Save",
+  "save_changes": "Save Changes",
+  "saved": "Saved.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "create": "Create",
+  "update": "Update",
+  "confirm": "Confirm",
+  "close": "Close",
+  "loading": "Loading...",
+  "creating": "Creating...",
+  "saving": "Saving...",
+  "deleting": "Deleting...",
+  "view_all": "View All",
+  "search_placeholder": "Search for artists...",
+  "warning": "Warning"
+}

@@ -12,7 +12,7 @@ import ScoreBreakdown from '@/components/chart/ScoreBreakdown.vue';
 import { getArtistById, getSimilarArtists } from '@/data/artists';
 import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { ArrowLeft, Plus, Scale, Globe, Calendar, Disc, TrendingUp, RefreshCw, ExternalLink, Music, Instagram, Twitter, Youtube } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Scale, Globe, Calendar, Disc, TrendingUp, RefreshCw, Music, Instagram, Twitter, Youtube } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 interface Props {
