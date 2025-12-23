@@ -18,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('artist/{id}', fn($id) => Inertia::render('Artist/Show', ['id' => (int) $id]))->name('artist.show');
     Route::get('lineups', fn() => Inertia::render('Lineups/Index'))->name('lineups.index');
     Route::get('lineups/{id}', fn($id) => Inertia::render('Lineups/Show', ['id' => (int) $id]))->name('lineups.show');
-    Route::get('settings/scoring', fn() => Inertia::render('settings/Scoring'))->name('settings.scoring');
+    // Settings routes are in routes/settings.php
 });
 
 require __DIR__.'/settings.php';
