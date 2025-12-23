@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     // Appearance route
     Route::get('settings/appearance', function () {
         return Inertia::render('Settings', [
-            'tab' => 'profile',
+            'tab' => 'appearance',
             'mustVerifyEmail' => true,
         ]);
     })->name('appearance.edit');
