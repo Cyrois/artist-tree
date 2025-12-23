@@ -11,10 +11,10 @@ import { Form, Head } from '@inertiajs/vue3';
 
 <template>
     <AuthLayout
-        title="Confirm your password"
-        description="This is a secure area of the application. Please confirm your password before continuing."
+        :title="$t('auth.confirm_password_title')"
+        :description="$t('auth.confirm_password_subtitle')"
     >
-        <Head title="Confirm password" />
+        <Head :title="$t('auth.confirm_password_title')" />
 
         <Form
             v-bind="store.form()"
@@ -23,7 +23,7 @@ import { Form, Head } from '@inertiajs/vue3';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{{ $t('auth.confirm_password_password_label') }}</Label>
                     <Input
                         id="password"
                         type="password"
@@ -44,7 +44,7 @@ import { Form, Head } from '@inertiajs/vue3';
                         data-test="confirm-password-button"
                     >
                         <Spinner v-if="processing" />
-                        Confirm Password
+                        {{ $t('auth.confirm_password_submit_button') }}
                     </Button>
                 </div>
             </div>

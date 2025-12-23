@@ -4,9 +4,9 @@ import { Form } from '@inertiajs/vue3';
 import { useTemplateRef } from 'vue';
 
 // Components
-import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogClose,
@@ -24,14 +24,18 @@ const passwordInput = useTemplateRef('passwordInput');
 </script>
 
 <template>
-    <div class="space-y-6">
-        <HeadingSmall
-            title="Delete account"
-            description="Delete your account and all of its resources"
-        />
-        <div
-            class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
-        >
+    <div class="max-w-2xl">
+        <Card>
+            <CardHeader>
+                <CardTitle>Delete Account</CardTitle>
+                <CardDescription>
+                    Delete your account and all of its resources
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div
+                    class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
+                >
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
                 <p class="font-medium">Warning</p>
                 <p class="text-sm">
@@ -110,6 +114,8 @@ const passwordInput = useTemplateRef('passwordInput');
                     </Form>
                 </DialogContent>
             </Dialog>
-        </div>
+                </div>
+            </CardContent>
+        </Card>
     </div>
 </template>

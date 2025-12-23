@@ -124,6 +124,46 @@
     --sidebar-border: hsl(0 0% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
+
+    /* Artist-Tree Score Badge Colors */
+    --score-high: 142 76% 36%;
+    --score-high-bg: 142 76% 95%;
+    --score-medium: 199 89% 48%;
+    --score-medium-bg: 199 89% 94%;
+    --score-low: 38 92% 50%;
+    --score-low-bg: 38 92% 95%;
+    --score-critical: 0 84% 60%;
+    --score-critical-bg: 0 84% 95%;
+
+    /* Booking Status Colors */
+    --status-idea: 258 90% 66%;
+    --status-idea-bg: 270 100% 97%;
+    --status-outreach: 217 91% 60%;
+    --status-outreach-bg: 214 100% 93%;
+    --status-negotiating: 38 92% 50%;
+    --status-negotiating-bg: 48 96% 95%;
+    --status-contract-sent: 239 84% 67%;
+    --status-contract-sent-bg: 229 100% 94%;
+    --status-contract-signed: 152 69% 41%;
+    --status-contract-signed-bg: 152 76% 91%;
+    --status-confirmed: 158 64% 40%;
+    --status-confirmed-bg: 152 76% 91%;
+    --status-declined: 0 84% 60%;
+    --status-declined-bg: 0 93% 94%;
+
+    /* Platform Brand Colors */
+    --spotify: 141 76% 48%;
+    --youtube: 0 100% 50%;
+    --instagram: 340 82% 52%;
+    --twitter: 0 0% 10%;
+
+    /* Stack Mode Colors */
+    --stack-purple: 258 90% 66%;
+    --stack-purple-bg: 270 100% 97%;
+
+    /* Compare Mode Colors */
+    --compare-coral: 7 78% 60%;
+    --compare-coral-bg: 7 78% 95%;
 }
 
 .dark {
@@ -160,6 +200,29 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(240 5.9% 10%);
+
+    /* Artist-Tree Score Badge Colors (Dark Mode) */
+    --score-high: 142 76% 42%;
+    --score-high-bg: 142 50% 15%;
+    --score-medium: 199 89% 52%;
+    --score-medium-bg: 199 50% 15%;
+    --score-low: 38 92% 55%;
+    --score-low-bg: 38 50% 15%;
+    --score-critical: 0 84% 60%;
+    --score-critical-bg: 0 50% 15%;
+
+    /* Booking Status Colors (Dark Mode) */
+    --status-idea-bg: 270 50% 20%;
+    --status-outreach-bg: 214 50% 20%;
+    --status-negotiating-bg: 48 50% 15%;
+    --status-contract-sent-bg: 229 50% 20%;
+    --status-contract-signed-bg: 152 50% 15%;
+    --status-confirmed-bg: 152 50% 15%;
+    --status-declined-bg: 0 50% 15%;
+
+    /* Stack/Compare Mode (Dark Mode) */
+    --stack-purple-bg: 270 50% 20%;
+    --compare-coral-bg: 7 50% 20%;
 }
 
 @layer base {

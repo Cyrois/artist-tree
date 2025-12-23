@@ -13,10 +13,10 @@ import { Form, Head } from '@inertiajs/vue3';
 
 <template>
     <AuthBase
-        title="Create an account"
-        description="Enter your details below to create your account"
+        :title="$t('auth.register_title')"
+        :description="$t('auth.register_subtitle')"
     >
-        <Head title="Register" />
+        <Head :title="$t('auth.register_title')" />
 
         <Form
             v-bind="store.form()"
@@ -26,7 +26,7 @@ import { Form, Head } from '@inertiajs/vue3';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">Name</Label>
+                    <Label for="name">{{ $t('auth.register_name_label') }}</Label>
                     <Input
                         id="name"
                         type="text"
@@ -35,13 +35,13 @@ import { Form, Head } from '@inertiajs/vue3';
                         :tabindex="1"
                         autocomplete="name"
                         name="name"
-                        placeholder="Full name"
+                        :placeholder="$t('auth.register_name_placeholder')"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">{{ $t('auth.register_email_label') }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -49,13 +49,13 @@ import { Form, Head } from '@inertiajs/vue3';
                         :tabindex="2"
                         autocomplete="email"
                         name="email"
-                        placeholder="email@example.com"
+                        :placeholder="$t('auth.register_email_placeholder')"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password">{{ $t('auth.register_password_label') }}</Label>
                     <Input
                         id="password"
                         type="password"
@@ -63,13 +63,13 @@ import { Form, Head } from '@inertiajs/vue3';
                         :tabindex="3"
                         autocomplete="new-password"
                         name="password"
-                        placeholder="Password"
+                        :placeholder="$t('auth.register_password_placeholder')"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">Confirm password</Label>
+                    <Label for="password_confirmation">{{ $t('auth.register_password_confirmation_label') }}</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -77,7 +77,7 @@ import { Form, Head } from '@inertiajs/vue3';
                         :tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        placeholder="Confirm password"
+                        :placeholder="$t('auth.register_password_confirmation_placeholder')"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
@@ -90,17 +90,17 @@ import { Form, Head } from '@inertiajs/vue3';
                     data-test="register-user-button"
                 >
                     <Spinner v-if="processing" />
-                    Create account
+                    {{ $t('auth.register_submit_button') }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Already have an account?
+                {{ $t('auth.register_have_account_text') }}
                 <TextLink
                     :href="login()"
                     class="underline underline-offset-4"
                     :tabindex="6"
-                    >Log in</TextLink
+                    >{{ $t('auth.register_login_link') }}</TextLink
                 >
             </div>
         </Form>

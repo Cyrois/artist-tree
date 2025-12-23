@@ -2,6 +2,7 @@ import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { i18nVue } from 'laravel-vue-i18n';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
@@ -18,6 +19,16 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(i18nVue, {
+                lang: 'en',
+                resolve: async (lang: string) => {
+                    const langs = import.meta.glob<{ default: Record<string, string> }>(
+                        '../../lang/*.json',
+                        { eager: false }
+                    );
+                    return await langs[`../../lang/${lang}.json`]();
+                },
+            })
             .mount(el);
     },
     progress: {
