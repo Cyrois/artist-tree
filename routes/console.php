@@ -2,12 +2,11 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-<<<<<<< Updated upstream
-=======
 
 /*
 |--------------------------------------------------------------------------
@@ -92,4 +91,3 @@ Artisan::command('spotify:test {query}', function (string $query) {
 
     return 0;
 })->purpose('Test Spotify API connectivity and artist search');
->>>>>>> Stashed changes
