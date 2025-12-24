@@ -38,8 +38,7 @@ Artisan::command('spotify:test {query}', function (string $query) {
     ]);
 
     if ($tokenResponse->failed()) {
-        $this->error('Authentication failed: '.$tokenResponse->body());
-
+        $this->error('Authentication failed: ' . $tokenResponse->body());
         return 1;
     }
 
@@ -57,13 +56,12 @@ Artisan::command('spotify:test {query}', function (string $query) {
         ]);
 
     if ($searchResponse->failed()) {
-        $this->error('Search failed: '.$searchResponse->body());
-
+        $this->error('Search failed: ' . $searchResponse->body());
         return 1;
     }
 
     $artists = $searchResponse->json('artists.items');
-    $this->info('✓ Search successful - Found '.count($artists).' artists');
+    $this->info('✓ Search successful - Found ' . count($artists) . ' artists');
     $this->newLine();
 
     // Step 3: Display results
@@ -83,7 +81,7 @@ Artisan::command('spotify:test {query}', function (string $query) {
     $this->info('Spike test complete! The Spotify API is working correctly.');
 
     // Show raw first result for schema reference
-    if (! empty($artists)) {
+    if (!empty($artists)) {
         $this->newLine();
         $this->comment('Raw first result (for schema reference):');
         $this->line(json_encode($artists[0], JSON_PRETTY_PRINT));

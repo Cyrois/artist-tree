@@ -3,7 +3,7 @@
 ## Project Overview
 Artist-Tree is a festival lineup builder and artist discovery platform that helps music festival organizers create balanced lineups using data-driven insights from Spotify and YouTube APIs.
 
-**Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + Laravel Cloud (MySQL)
+**Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + Laravel Cloud (PostgreSQL)
 
 ## Documentation Structure
 
@@ -21,6 +21,16 @@ This project uses modular documentation:
 - Complete Laravel Boost Guidelines: See `.claude/guidelines/laravel-boost.md`
 
 For detailed navigation, see `.claude/README.md`.
+
+---
+
+## Communication & Planning Style
+
+When presenting implementation plans:
+- **Provide high-level summaries only** - focus on the main steps without implementation details
+- Keep plan overviews concise and action-oriented
+- Avoid verbose explanations of "how" unless specifically asked
+- Let the user ask for details when needed
 
 ---
 
@@ -517,4 +527,3 @@ All framework-specific implementation guidelines have been moved to `.claude/gui
 AI agents and developers MUST consult these files for implementation.
 
 ---
-

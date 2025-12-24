@@ -1,7 +1,7 @@
 # Artist-Tree Product Requirements Document
 
-**Version:** 1.1
-**Last Updated:** 2025-12-21
+**Version:** 2.0
+**Last Updated:** 2025-12-23
 **Tech Stack:** Laravel 12 + Inertia.js v2 + Vue 3 + Laravel Cloud
 **Architecture:** Hybrid (Inertia.js pages + RESTful API)
 
@@ -13,9 +13,366 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 
 ---
 
+## Design System
+
+### Color Palette
+- **Primary:** #1a1a1a (Charcoal - text, headings)
+- **Secondary:** #6b7280 (Gray - secondary text, labels)
+- **Accent:** #e85d4c (Coral - CTAs, highlights, active states)
+- **Background:** #ffffff (White)
+- **Surface:** #f8f8f8 (Light gray - cards, sections)
+- **Border:** #e5e5e5 (Subtle borders)
+
+### Typography
+- **Font Family:** DM Sans
+- **Headings:** Font-black (900 weight)
+- **Body:** Regular (400 weight)
+- **Labels:** Medium (500 weight)
+
+### Component Styles
+- **Border Radius:** 2xl (16px) for cards, xl (12px) for buttons
+- **Shadows:** Subtle, used sparingly for elevation
+- **Icons:** Lucide React icon library
+
+---
+
+## UI Pages & Features
+
+### 1. Dashboard
+**Purpose:** Landing page with quick access to lineups and artist search
+
+**Components:**
+- **Hero Section**
+  - Title: "Build Your Dream Lineup"
+  - Full-width search bar with typeahead
+  - Search results dropdown (z-index prioritized, appears above all content)
+  
+- **Your Lineups Section**
+  - Card for each lineup showing:
+    - Lineup name and description
+    - Artist count
+    - Average score (calculated from lineup artists)
+    - Confirmed bookings count (green)
+    - Pending bookings count (amber)
+    - Total budget
+  - Click to navigate to lineup detail
+
+**Removed:**
+- ~~Global stats cards (Active Lineups, Artists Saved, Avg Score)~~
+- ~~Trending Artists section~~ (moved to Search page)
+
+---
+
+### 2. Search Artists Page
+**Purpose:** Discover and search for artists to add to lineups
+
+**Layout:**
+- Responsive grid: 2 cols (mobile) → 3 cols (md) → 4 cols (lg) → 5 cols (xl)
+
+**Components:**
+- **Search Bar**
+  - Full-width input with search icon
+  - Filters button (genre, score range)
+  - Search button
+  
+- **Filter Panel** (collapsible)
+  - Genre pills (multi-select)
+  - Score range inputs (min/max)
+  - Clear filters button
+  
+- **Compact Artist Cards**
+  - Artist image (small, rounded)
+  - Artist name with score badge
+  - Genre tags (max 2)
+  - Monthly listeners count
+  - Hover: shadow + arrow indicator
+  
+- **Search Results Section**
+  - Shows after searching
+  - Sort dropdown (Score, Name, Listeners)
+  - Results count
+  
+- **Similar Artists Section**
+  - Appears below search results
+  - Shows artists with overlapping genres not in results
+  - Max 5 artists
+  
+- **Trending Artists Section**
+  - Always visible at bottom
+  - Top 10 artists by Spotify listeners
+  - Same compact card format
+
+---
+
+### 3. Artist Detail Page
+**Purpose:** View detailed artist information and add to lineups
+
+**Header Section:**
+- Artist image (160x160, rounded)
+- Artist name (large, bold)
+- Genre tags
+- Country and label info
+- Score badge (large)
+- **Action Buttons:**
+  - "Add to Lineup" (accent color, primary CTA)
+  - "Compare" (surface color, opens comparison modal)
+
+**Tabs:**
+1. **Overview Tab**
+   - Bio paragraph
+   - Quick Stats grid (4 columns):
+     - Monthly Listeners
+     - Spotify Popularity
+     - YouTube Subscribers
+     - Instagram Followers
+   - Top Tracks list (top 5)
+   - Recent Releases list (top 5)
+   - Similar Artists (compact cards, 3 columns)
+   - External Links section:
+     - Spotify (green branded button)
+     - YouTube (red branded button)
+     - Instagram (pink branded button)
+     - X/Twitter (black branded button)
+
+2. **Data & Metrics Tab**
+   - Detailed metrics grid (8 cards):
+     - Monthly Listeners (with % change)
+     - Spotify Popularity
+     - Spotify Followers
+     - YouTube Subscribers
+     - Instagram Followers
+     - Twitter Followers
+     - Total YouTube Views
+     - Active Since (year)
+   - Monthly Listeners Trend chart (bar chart, 5 months)
+   - Score Breakdown (progress bars showing weight contribution)
+   - Data freshness footer with "Refresh Data" button
+
+**Removed from Artist Detail:**
+- ~~Tier Suggestion banner~~ (moved to Add to Lineup modal)
+- ~~External links in header~~ (moved to Overview tab bottom)
+
+---
+
+### 4. Add to Lineup Modal (Wizard Flow)
+**Purpose:** Add artist to a lineup with tier selection
+
+**Step 1: Select Lineup**
+- Modal title: "Select Lineup"
+- Artist info card (image, name, score)
+- List of available lineups
+- Click lineup to advance to step 2
+
+**Step 2: Select Tier**
+- Back button (chevron) to return to step 1
+- Modal title: "Select Tier"
+- Artist info card shows "Adding to [lineup name]"
+- Tier options as radio buttons:
+  - Headliner
+  - Sub-Headliner
+  - Supporting
+  - Emerging
+  - Local/Regional
+- **Suggested tier is pre-selected** on entry
+- Suggested tier shows "✨ Suggested" badge
+- "Add to Lineup" button
+
+**Success State:**
+- Checkmark animation
+- "Added!" message
+- Shows lineup name and tier
+- Auto-closes after 1.5 seconds
+
+---
+
+### 5. Artist Comparison Modal
+**Purpose:** Compare two artists side-by-side
+
+**Entry:** Click "Compare" button on Artist Detail page
+
+**Step 1: Select Artist to Compare**
+- Search bar to find artists
+- Search results as clickable cards
+- "Suggested comparisons" section showing similar artists
+- Click artist to start comparison
+
+**Step 2: Comparison View**
+- 3-column layout:
+  - Column 1: Metric labels with icons
+  - Column 2: Current artist stats (under their photo/name)
+  - Column 3: Comparison artist stats (under their photo/name)
+- Artist headers with image, name, genre
+- Comparison rows (alternating background):
+  - Artist Score
+  - Monthly Listeners
+  - Spotify Popularity
+  - Spotify Followers
+  - YouTube Subscribers
+  - Instagram Followers
+  - Twitter Followers
+- **Winner highlighting:** Green color + ★ for higher value
+- "Compare with different artist" button to reset
+
+---
+
+### 6. Lineup Detail Page
+**Purpose:** Manage lineup artists, booking pipeline, and schedule
+
+**Header:**
+- Back button
+- Editable lineup name (click to edit)
+- Artist count and last updated
+- Export button
+
+**Tab Bar:**
+- Full-width, spans edge to edge
+- Underline style for active tab (coral accent)
+- Subtle shadow/border separating from content
+- Tabs: Lineup | Booking | Schedule
+
+**Content Area:**
+- Different background color (surface gray)
+- Full-width background extending edge to edge
+
+---
+
+### 6a. Lineup Tab
+**Purpose:** View and organize artists by tier
+
+**Toolbar:**
+- Combined search + actions bar
+- Left: Search input ("Search and add artists...")
+- Divider
+- Right: Stack button, Compare button
+
+**Mode Banners (contextual):**
+- **Stack Mode Banner** (purple)
+  - Shows when stack mode active
+  - Instructions for stacking
+  - "Done Adding" button when stacking artist selected
+  
+- **Compare Mode Banner** (coral)
+  - Shows when compare mode active
+  - Selected artist count and avatars
+  - Clear and Compare buttons
+
+**Tier Sections:**
+- Collapsible tier headers with count
+- Tiers: Headliner, Sub-Headliner, Supporting, Emerging, Local/Regional
+
+**Artist Cards:**
+- Image, name (with status icon to the right of name)
+- Score badge
+- Tier suggestion sparkle (if different from current tier)
+- Hover actions: Stack, Compare, More menu, Remove
+
+**Stacked Artists:**
+- Primary artist shows Layers badge
+- Alternatives nested below with purple left border
+- Smaller cards with promote/remove actions
+
+---
+
+### 6b. Booking Tab
+**Purpose:** Track booking pipeline status
+
+**Kanban Board Layout:**
+- 7 columns representing booking stages:
+  1. **Idea** (purple) - Lightbulb icon
+  2. **Outreach** (blue) - Mail icon
+  3. **Negotiating** (amber) - DollarSign icon
+  4. **Contract Sent** (orange) - FileSignature icon
+  5. **Contract Signed** (cyan) - CheckCircle icon
+  6. **Confirmed** (green) - CheckCircle icon
+  7. **Declined** (red) - AlertCircle icon
+
+**Artist Cards in Pipeline:**
+- Compact card with image, name, tier badge
+- Fee amount (if set)
+- Drag-and-drop between columns
+
+---
+
+### 6c. Schedule Tab
+**Purpose:** Plan performance times on timeline
+
+**Timeline Grid:**
+- Rows: Stages (Main Stage, Second Stage, etc.)
+- Columns: Time slots
+- Artist blocks positioned on grid
+- Visual representation of set times
+
+---
+
+### 7. Organization Settings Page
+**Purpose:** Manage scoring weights and team members
+
+**Scoring Weights Section:**
+- Preset buttons (Balanced, Streaming-Focused, Social Media-Focused)
+- Custom weight sliders:
+  - Spotify Monthly Listeners
+  - Spotify Popularity
+  - YouTube Subscribers
+- Total must equal 100%
+- Save Changes button
+
+**Team Members Section:**
+- Member list with roles (Owner, Admin, Member)
+- Invite member form
+- Role management dropdown
+- Remove member action
+
+---
+
+## Booking Status Configuration
+
+| Status | Color | Icon | Description |
+|--------|-------|------|-------------|
+| Idea | Purple (#8b5cf6) | Lightbulb | Initial consideration |
+| Outreach | Blue (#3b82f6) | Mail | Contact initiated |
+| Negotiating | Amber (#f59e0b) | DollarSign | Discussing terms |
+| Contract Sent | Orange (#f97316) | FileSignature | Contract delivered |
+| Contract Signed | Cyan (#06b6d4) | CheckCircle | Awaiting confirmation |
+| Confirmed | Green (#059669) | CheckCircle | Booking confirmed |
+| Declined | Red (#dc2626) | AlertCircle | Artist declined |
+
+---
+
+## Artist Stacking Feature
+
+**Purpose:** Group alternative artists for the same slot (e.g., "The Weeknd OR Bad Bunny for Sunday headliner")
+
+**Behavior:**
+- Only available on Lineup tab (not Booking/Schedule)
+- Purple color theme for stack-related UI
+- Stack mode toggle in toolbar
+- Click Layers icon on artist card to make it primary
+- Click other artists to add as alternatives
+- Alternatives display nested under primary with indentation
+
+**Stack Management Modal:**
+- Access via "..." menu on stacked primary
+- Shows primary (highlighted) and all alternatives
+- Actions: Make Primary, Remove from stack
+- "Add Another Alternative" button
+- "Dissolve Stack" removes all alternatives
+
+**Data Structure:**
+```javascript
+artistStacks: {
+  [stackId]: {
+    primary: artistId,
+    alternatives: [artistId, artistId],
+    tier: 'headliner'
+  }
+}
+```
+
+---
+
 ## Technical Architecture
 
-**Architecture Pattern:** Hybrid Monolith (Inertia.js + RESTful API)
+*(Unchanged from v1.1 - see original PRD for full technical details)*
 
 ### Backend: Laravel 12
 - **Framework:** Laravel 12.x
@@ -45,11 +402,11 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 - **Web Routes** (`routes/web.php`): Inertia pages (Dashboard, Lineups, etc.)
 - **API Routes** (`routes/api.php`): RESTful JSON endpoints for interactive features
 
-### Database: Laravel Cloud (MySQL)
-- **Platform:** Laravel Cloud (Managed MySQL)
+### Database: Laravel Cloud (PostgreSQL)
+- **Platform:** Laravel Cloud (Serverless PostgreSQL)
 - **Purpose:** Primary data storage with Laravel integration
 - **Key Features:**
-  - Managed MySQL database with automatic backups
+  - Serverless PostgreSQL database with automatic backups
   - Optimized for Laravel applications
   - Built-in database monitoring and performance insights
   - Seamless integration with Laravel migrations and Eloquent ORM
@@ -62,455 +419,74 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 
 ---
 
-## Core Features & Business Requirements
+## Database Schema Updates
 
-### 0. Organization Management & Multi-Tenancy
-**Business Need:** Enable teams/organizations to collaborate on lineups with shared scoring preferences
-
-**Technical Implementation:**
-- Auto-create personal organization on user signup
-- Many-to-many relationship (users can join multiple organizations in future)
-- Three role levels: Owner, Admin, Member
-- Scoring weights stored per-organization
-- Lineups belong to organizations (not individual users)
-
-**Key Features:**
-- **Auto-Organization:** New users automatically get "{Name}'s Organization" created
-- **Role-Based Access Control:**
-  - Owner: Full control (weights, members, lineups, billing)
-  - Admin: Manage weights and members
-  - Member: Create lineups using org weights (read-only on weights)
-- **Weight Presets:** Balanced, Streaming-Focused, Social Media-Focused
-- **Member Invitations:** Owners/Admins can invite team members via email
-- **Organization Settings Page:** Inertia page for managing weights and members
-
-**Success Criteria:**
-- User signup auto-creates organization in < 1 second
-- Weight changes apply to all future lineup calculations
-- Members can only see lineups from their organization(s)
-- Owners/Admins can update scoring weights via settings UI
-- Role-based permissions enforced via Laravel Policies
-
-### 1. Artist Data Aggregation
-**Business Need:** Provide comprehensive, up-to-date artist metrics from multiple sources
-
-**Technical Implementation:**
-- Laravel services to fetch data from Spotify API and YouTube API
-- Laravel database tables: `artists`, `artist_metrics`
-- **24-hour caching layer** to minimize API calls and stay within rate limits
-- Background jobs for periodic data refresh (optional)
-- **Empty database at launch** - artists added on-demand as users search
-
-**Artist Discovery Flow:**
-1. User searches for artist name
-2. Check if artist exists in local database
-3. If not found → Call Spotify API to search and fetch data
-4. Create artist record + metrics record
-5. Cache for 24 hours
-6. Return artist data to user
-
-**Success Criteria:**
-- Artist data cached for 24 hours (minimizes API calls)
-- < 2 second response time for cached data
-- < 5 second response time for new artist lookup (API call)
-- 99% API call success rate with retry logic
-- Artists persist in database after first search (build up artist library over time)
-
-### 2. Artist Scoring Algorithm
-**Business Need:** Objectively rank artists based on quantifiable metrics using customizable weighting
-
-**Technical Implementation:**
-- Laravel service class for score calculation (`ArtistScoringService`)
-- Algorithm considers: Spotify monthly listeners, Spotify popularity, YouTube subscribers, engagement rates
-- **Weights pulled from organization's configuration**
-- Scores calculated dynamically based on org-specific weights
-- Stored in `artist_metrics` table with timestamp (cached for performance)
-- Unit tested with various artist profiles and different weight configurations
-
-**Scoring Weights (Per Organization):**
-- `spotify_monthly_listeners_weight` (0.00 - 1.00)
-- `spotify_popularity_weight` (0.00 - 1.00)
-- `youtube_subscribers_weight` (0.00 - 1.00)
-- `engagement_rate_weight` (0.00 - 1.00)
-- **Validation:** Weights must sum to 1.00
-
-**Preset Configurations (MVP):**
-- **Balanced:** 40% Spotify listeners, 30% Spotify popularity, 30% YouTube
-- **Streaming-Focused:** 55% Spotify listeners, 30% Spotify popularity, 15% YouTube
-- **Social Media-Focused:** 20% Spotify listeners, 15% Spotify popularity, 65% YouTube
-
-**Note:** engagement_rate removed from MVP. When added later, preset weights will need rebalancing.
-
-**Metric Normalization:**
-- Use **logarithmic normalization** to handle extreme range (100 followers → 100M followers)
-- Formula: `normalized_score = (log10(value + 1) / log10(max_expected)) * 100`
-- Max expected values (configurable in `config/artist-tree.php`):
-  - `spotify_monthly_listeners`: 100,000,000 (100M)
-  - `spotify_popularity`: 100 (already normalized 0-100, no transform needed)
-  - `youtube_subscribers`: 50,000,000 (50M)
-- Rationale: Industry standard approach, fair to unknowns and superstars, diminishing returns at scale
-
-**Handling Missing Data:**
-- If artist is missing data for an **enabled** metric → Treat as **zero (0)**
-- Missing data heavily penalizes that metric's contribution to overall score
-- Organizations can **disable** metrics to avoid penalizing artists without that platform presence
-- Example: Org enables YouTube (30% weight), artist has no channel → Gets 0 for 30% of score
-- Example: Org disables YouTube entirely → Artist not penalized for missing YouTube
-
-**Success Criteria:**
-- Scores normalized to 0-100 scale
-- Reproducible results for same input data + same weights
-- Different organizations can get different scores for same artist based on their weights
-- Owners/Admins can switch between presets or customize weights
-- Weight validation prevents invalid configurations (sum != 1.00)
-- Artists with all NULL/missing data receive score of 0
-
-### 3. Lineup Builder
-**Business Need:** Allow users to create festival lineups with automatic tier assignment
-
-**Technical Implementation:**
-- Laravel database tables: `lineups`, `lineup_artists`
-- Laravel API endpoints for CRUD operations
-- Vue.js drag-and-drop interface
-- Real-time tier recalculation on artist addition/removal
-
-**Success Criteria:**
-- Support 50+ artists per lineup
-- Tier assignments update in < 1 second
-- Lineups persist across sessions
-
-### 4. Tier Classification with Manual Override
-**Business Need:** Suggest tier placement based on artist scores, with ability for users to manually override
-
-**Technical Implementation:**
-- Algorithm calculates **suggested tier** based on relative scores within lineup
-- Users can **manually override** tier via drag-and-drop interface
-- Store both `tier` (current) and `suggested_tier` in `lineup_artists` pivot table
-- `tier_override` boolean tracks manual vs automatic placement
-- Visual indicators show which artists were manually placed
-
-**Suggested Tier Algorithm:**
-- Top 10% of artists → Headliner (minimum 1)
-- Next 20% → Sub-Headliner
-- Next 40% → Mid-Tier
-- Bottom 30% → Undercard
-
-**Override Behavior:**
-- When artist added: `tier = suggested_tier`, `tier_override = false`
-- User drags to new tier: Update `tier`, set `tier_override = true`
-- When lineup changes (add/remove artist):
-  - Recalculate ALL `suggested_tier` values
-  - Auto-placed artists (`tier_override = false`): Update `tier` to new `suggested_tier`
-  - Manual-placed artists (`tier_override = true`): Keep current `tier`, update only `suggested_tier`
-- "Reset to Suggested" button: Copy all `suggested_tier` to `tier`, set `tier_override = false`
-
-**Success Criteria:**
-- Algorithm suggests appropriate tiers based on scores
-- Users can override any tier assignment
-- Manual overrides persist when lineup changes
-- Visual distinction between auto and manual placements
-- Reset functionality restores algorithmic suggestions
-
-### 5. Search & Discovery
-**Business Need:** Enable users to find and add artists efficiently
-
-**Technical Implementation:**
-- Full-text search using Laravel Scout (with database driver or Meilisearch)
-- Vue.js search component with debouncing
-- Autocomplete suggestions
-- Filter by genre, popularity range
-
-**Success Criteria:**
-- Search results appear in < 500ms
-- Support partial name matching
-- Return top 20 relevant results
-
----
-
-## Data Models (Database Schema)
-
-**Primary Key Strategy:** Auto-increment IDs (standard Laravel)
-
-### Organizations Table
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- name (varchar 255)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-
-Note: Scoring weights now stored in metric_weights table for extensibility
+### lineup_artists (updated)
 ```
-
-### Metric Weights Table
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- organization_id (bigint unsigned, foreign key -> organizations.id)
-- metric_name (varchar 100) -- 'spotify_monthly_listeners', 'youtube_subscribers', etc.
-- weight (decimal 3,2) -- 0.00 to 1.00
-- enabled (boolean, default true)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-- UNIQUE KEY (organization_id, metric_name)
-- KEY (enabled)
-- FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
-
-Validation:
-- SUM(weight) WHERE enabled=true must equal 1.00 for each organization
-
-Available Metrics (MVP Launch):
-- spotify_monthly_listeners - Monthly listener count from Spotify
-- spotify_popularity - Spotify's proprietary popularity score (0-100)
-- youtube_subscribers - YouTube channel subscriber count
-
-Future Metrics (Add via INSERT when ready):
-- engagement_rate - Calculate from likes/comments/followers ratio
-- instagram_followers
-- tiktok_followers
-- apple_music_listeners
-- soundcloud_plays
-- bandcamp_sales
-```
-
-### Organization User Table (Pivot)
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- organization_id (bigint unsigned, foreign key -> organizations.id)
-- user_id (bigint unsigned, foreign key -> users.id)
-- role (enum: 'owner', 'admin', 'member', default 'member')
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-- UNIQUE KEY (organization_id, user_id) -- user can only have one role per org
-- KEY (user_id)
-- KEY (role)
-- FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
-- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-```
-
-### Artists Table
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- name (varchar 255)
-- spotify_id (varchar 255, unique, nullable)
-- youtube_channel_id (varchar 255, nullable)
-- genre (json) -- array of genre strings
-- image_url (text, nullable)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-- UNIQUE KEY (spotify_id)
-- FULLTEXT KEY (name) -- for artist search
-```
-
-### Artist Metrics Table
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- artist_id (bigint unsigned, foreign key -> artists.id)
-- score (decimal 5,2) -- 0.00 to 100.00
-- spotify_monthly_listeners (bigint unsigned, nullable)
-- youtube_subscribers (bigint unsigned, nullable)
-- engagement_rate (decimal 5,2, nullable)
-- last_refreshed (timestamp, nullable)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-- KEY (artist_id)
-- KEY (score DESC) -- for sorting by popularity
-- FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
-```
-
-### Lineups Table
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- organization_id (bigint unsigned, foreign key -> organizations.id)
-- created_by_user_id (bigint unsigned, foreign key -> users.id, nullable)
-- name (varchar 255)
-- description (text, nullable)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-Indexes:
-- PRIMARY KEY (id)
-- KEY (organization_id)
-- KEY (created_by_user_id)
-- FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
-- FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
-```
-
-### Lineup Artists Table (Pivot)
-```sql
-- id (bigint unsigned, primary key, auto-increment)
-- lineup_id (bigint unsigned, foreign key -> lineups.id)
-- artist_id (bigint unsigned, foreign key -> artists.id)
-- tier (enum: 'headliner', 'sub_headliner', 'mid_tier', 'undercard') -- current tier
-- suggested_tier (enum: 'headliner', 'sub_headliner', 'mid_tier', 'undercard') -- algorithm suggestion
-- tier_override (boolean, default false) -- true if user manually changed tier
-- position (integer, nullable) -- for manual ordering within tier
-- added_at (timestamp, default CURRENT_TIMESTAMP)
-
-Indexes:
-- PRIMARY KEY (id)
-- UNIQUE KEY (lineup_id, artist_id) -- prevent duplicate artists
-- KEY (lineup_id)
-- KEY (tier)
-- KEY (tier_override) -- filter manual vs auto placements
-- FOREIGN KEY (lineup_id) REFERENCES lineups(id) ON DELETE CASCADE
-- FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
-
-Tier Override Behavior:
-- When artist added: tier = suggested_tier, tier_override = false
-- User drags to new tier: tier = new_tier, tier_override = true
-- When lineup changes: recalculate suggested_tier for all artists
-  - If tier_override = false: update tier to new suggested_tier
-  - If tier_override = true: keep current tier, only update suggested_tier
+- id (primary key)
+- lineup_id (foreign key)
+- artist_id (foreign key)
+- tier (enum: headliner, sub_headliner, supporting, emerging, local)
+- suggested_tier (enum)
+- tier_override (boolean)
+- booking_status (enum: idea, outreach, negotiating, contract_sent, contract_signed, confirmed, declined)
+- booking_fee (decimal, nullable)
+- stack_id (uuid, nullable) - Groups stacked artists
+- is_stack_primary (boolean, default false)
+- added_at (timestamp)
 ```
 
 ---
 
-## API Endpoints (Laravel Routes)
+## User Flows (Updated)
 
-### Organization Endpoints (Inertia Pages)
-- `GET /organizations/{id}/settings` - Organization settings page (Inertia)
-- `GET /organizations/{id}/members` - Manage members page (Inertia)
+### Add Artist to Lineup Flow
+1. User views artist detail page
+2. Clicks "Add to Lineup" button
+3. **Step 1:** Modal shows lineup selection
+4. User selects lineup → advances to step 2
+5. **Step 2:** Modal shows tier selection with suggestion pre-selected
+6. User confirms or changes tier
+7. Clicks "Add to Lineup"
+8. Success animation shows
+9. Modal auto-closes
 
-### Organization API Endpoints
-- `GET /api/organizations/{id}/metrics` - List all metric weights for organization
-- `PUT /api/organizations/{id}/metrics/{metric_name}` - Update single metric weight
-- `POST /api/organizations/{id}/metrics/preset` - Apply preset (balanced, streaming_focused, etc.)
-- `POST /api/organizations/{id}/metrics` - Add new metric (e.g., instagram_followers)
-- `DELETE /api/organizations/{id}/metrics/{metric_name}` - Disable metric
-- `POST /api/organizations/{id}/members` - Invite member
-- `DELETE /api/organizations/{id}/members/{userId}` - Remove member
-- `PUT /api/organizations/{id}/members/{userId}/role` - Update member role
+### Compare Artists Flow
+1. User views artist detail page
+2. Clicks "Compare" button
+3. Modal shows search + suggested similar artists
+4. User selects comparison artist
+5. Side-by-side comparison displays
+6. Winner highlighted for each metric
+7. User can change comparison or close
 
-### Artist Endpoints
-- `GET /api/artists` - List all artists (paginated)
-- `GET /api/artists/{id}` - Get single artist with metrics
-- `GET /api/artists/search?q={query}` - Search artists
-- `POST /api/artists/{id}/refresh` - Refresh artist data
-
-### Lineup Endpoints
-- `GET /api/lineups` - List organization's lineups
-- `POST /api/lineups` - Create new lineup (in current organization)
-- `GET /api/lineups/{id}` - Get lineup with artists and tier suggestions
-- `PUT /api/lineups/{id}` - Update lineup details
-- `DELETE /api/lineups/{id}` - Delete lineup
-- `POST /api/lineups/{id}/artists` - Add artist to lineup (auto-calculates suggested tier)
-- `DELETE /api/lineups/{id}/artists/{artistId}` - Remove artist from lineup
-- `PUT /api/lineups/{id}/artists/{artistId}/tier` - Manually override artist tier (sets tier_override=true)
-- `POST /api/lineups/{id}/reset-tiers` - Reset all artists to suggested tiers (clears overrides)
-
----
-
-## User Flows
-
-### 1. Browse Artists Flow
-1. User lands on dashboard (`GET /dashboard`)
-2. **Inertia** renders `Dashboard.vue` with initial artist data (SSR)
-3. Vue component displays artists from props
-4. User types in search box → debounced API call to `GET /api/artists/search`
-5. Vue updates artist list with API response (no page reload)
-
-### 2. Create Lineup Flow
-1. User clicks "Create Lineup" button
-2. Inertia `<Form>` component submits to `POST /api/lineups`
-3. Laravel creates lineup record in database
-4. Returns JSON with new lineup ID
-5. **Inertia navigates** to `GET /lineups/{id}` (page load with lineup data)
-6. Lineup builder page rendered with Vue components
-
-### 3. Add Artist to Lineup Flow
-1. User searches for artist in lineup builder
-2. Vue component debounces search, calls `GET /api/artists/search?q={query}`
-3. Laravel queries database with Laravel Scout (full-text search)
-4. API returns top 20 results as JSON
-5. User selects artist from dropdown
-6. Vue calls `POST /api/lineups/{id}/artists` with artist_id
-7. Laravel adds to `lineup_artists` table
-8. **TierCalculationService** recalculates all tiers for the lineup
-9. API returns updated lineup with new tier assignments (JSON)
-10. Vue updates UI reactively with new tiers (smooth animation, no page reload)
-
-### 4. View Lineup Flow
-1. User clicks lineup from list (`GET /lineups/{id}`)
-2. **Inertia** loads lineup page with server-side data
-3. Vue renders lineup builder with artists grouped by tier
-4. Interactive features (drag-and-drop, remove artist) use API calls
-5. Tier labels update in real-time via API responses
-
----
-
-## AI-Human Collaboration Guidelines
-
-### For AI Agents (Claude)
-- **Code Generation:** Use Laravel Eloquent patterns, Inertia.js patterns, Vue Composition API with `<script setup>`
-- **API Design:** Follow RESTful conventions, return JSON API resources
-- **Testing:** Write Pest/PHPUnit tests for Laravel backend, Vue component logic
-- **Naming:** Use Laravel conventions (snake_case for DB, camelCase for JS)
-- **Documentation:** Add PHPDoc blocks, JSDoc comments for complex functions
-- **Architecture:** Use Inertia for page navigation, API calls for interactivity
-- **Service Layer:** Always delegate business logic to service classes (never in controllers)
-
-### For Human Developers
-- **Review:** Validate business logic in scoring algorithms and tier calculations
-- **UX Design:** Provide wireframes/mockups for Vue/Inertia pages
-- **API Keys:** Configure Spotify and YouTube API credentials in `.env`
-- **Deployment:** Set up Laravel Cloud for monolithic deployment
-- **QA:** Manual testing of edge cases, cross-browser compatibility
-- **Scoring Weights:** Approve/adjust algorithm weights in `config/artist-tree.php`
-
----
-
-## Non-Functional Requirements
-
-### Performance
-- API response time: < 2 seconds (95th percentile)
-- Page load time: < 3 seconds
-- Support 100 concurrent users
-
-### Security
-- Laravel authentication via Fortify/Sanctum (cookie-based)
-- Laravel authorization policies for lineup ownership
-- Rate limiting on API endpoints (60 req/min per user)
-- Input validation via Form Request classes
-- API key security (Spotify/YouTube in .env, never exposed to frontend)
-
-### Scalability
-- Laravel Cloud automatic scaling
-- Managed database scaling with Laravel Cloud
-- Asset optimization via Vite (code splitting, lazy loading)
-- Cache layer (Redis) for external API responses
-
-### Reliability
-- 99.5% uptime target
-- Automated error tracking (Sentry)
-- Database backups (Laravel Cloud automatic)
+### Stack Artists Flow
+1. User on Lineup tab clicks "Stack" button
+2. Stack mode activates (purple banner)
+3. User clicks Layers icon on primary artist
+4. Banner updates with primary artist name
+5. User clicks other artists to add as alternatives
+6. Alternatives nest under primary
+7. User clicks "Done Adding" or "Exit Stack"
 
 ---
 
 ## Success Metrics
 
+*(Updated)*
+
 1. **Technical Metrics:**
    - API error rate < 1%
    - Average API response time < 1s
+   - Modal interactions < 300ms
    - Zero critical security vulnerabilities
 
 2. **User Metrics:**
    - Users can create a lineup in < 5 minutes
    - 80% task completion rate
    - < 5% bounce rate on artist search
+   - Artist comparison used in 30%+ of sessions
+   - Stacking feature adoption > 20% for multi-artist lineups
 
 3. **Data Quality:**
    - 95% of artists have complete metrics
@@ -519,24 +495,10 @@ Tier Override Behavior:
 
 ---
 
-## Risks & Mitigations
+## Revision History
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| API rate limits (Spotify/YouTube) | High | Implement 24-hour caching, request throttling, exponential backoff, background queue jobs |
-| Laravel Cloud resource limits | Medium | Monitor usage, optimize N+1 queries with eager loading, upgrade plan proactively |
-| Scoring algorithm accuracy | High | Unit tests with edge cases, configurable weights in config file, user feedback loop |
-| Data staleness | Medium | 24-hour cache TTL, manual "refresh metrics" button, automated daily job |
-| Tier calculation performance | Medium | Optimize query (sort by score DESC), limit lineup size to 100 artists, cache results |
-
----
-
-## Future Enhancements
-
-1. **Public API:** Expose existing API with token authentication for third-party developers
-2. **Mobile App:** Native iOS/Android app using existing RESTful API
-3. **Machine Learning:** Predictive tier suggestions based on festival genre and historical data
-4. **Social Features:** Share lineups publicly, collaborative editing with multiple users
-5. **Analytics Dashboard:** Historical trends, genre distribution, artist popularity over time
-6. **Advanced Search:** Filter by genre, popularity range, location, availability
-7. **Integrations:** Ticketing platforms (Eventbrite), venue databases, booking agents
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2025-12-20 | Initial PRD |
+| 1.1 | 2025-12-21 | Added technical architecture details |
+| 2.0 | 2025-12-23 | Major UI/UX updates: Dashboard lineup stats, Search page redesign, Artist detail tabs, Add to Lineup wizard, Artist comparison modal, Stacking feature, Booking pipeline, Full-width tabs layout |
