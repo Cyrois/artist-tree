@@ -48,6 +48,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
 
                 if ($exists) {
                     $alreadyExistCount++;
+
                     continue;
                 }
 
