@@ -46,14 +46,25 @@ export function useAsyncSpotifyData<T>(baseUrl: string): AsyncState<T> {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Map HTTP status codes to user-friendly messages
+                const statusMessages: Record<number, string> = {
+                    401: 'Please log in again to continue.',
+                    403: 'You do not have permission to view this content.',
+                    404: 'Artist not found.',
+                    429: 'Too many requests. Please wait a moment and try again.',
+                    500: 'Service temporarily unavailable. Please try again later.',
+                    503: 'Service temporarily unavailable. Please try again later.',
+                };
+
+                const message = statusMessages[response.status] || `Unable to load data (Error ${response.status})`;
+                throw new Error(message);
             }
 
             const result = await response.json();
             data.value = result.data as T;
             meta.value = result.meta ?? null;
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'An error occurred';
+            error.value = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
             data.value = null;
         } finally {
             loading.value = false;

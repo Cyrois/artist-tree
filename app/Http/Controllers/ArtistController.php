@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\SpotifyApiException;
+use App\Http\Requests\GetArtistAlbumsRequest;
+use App\Http\Requests\GetArtistTopTracksRequest;
 use App\Http\Requests\SearchArtistsRequest;
 use App\Http\Requests\SelectArtistRequest;
 use App\Http\Resources\ArtistResource;
@@ -27,6 +29,11 @@ class ArtistController extends Controller
 
     /**
      * Handle Spotify API errors with standardized response.
+     *
+     * @param  SpotifyApiException|\Exception  $e  The exception to handle
+     * @param  string  $context  Description of what operation failed (for logging)
+     * @param  array<string, mixed>  $logData  Additional data to include in logs
+     * @return JsonResponse Always returns 200 with empty data for graceful degradation
      */
     private function handleSpotifyError(SpotifyApiException|\Exception $e, string $context, array $logData = []): JsonResponse
     {
@@ -170,12 +177,13 @@ class ArtistController extends Controller
     /**
      * Get artist's top tracks from Spotify.
      *
-     * GET /api/artists/{id}/top-tracks
+     * GET /api/artists/{id}/top-tracks?limit=5
      */
-    public function topTracks(int $id): JsonResponse
+    public function topTracks(int $id, GetArtistTopTracksRequest $request): JsonResponse
     {
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
+        $limit = $request->validated('limit', 5);
 
         if (! $spotifyId) {
             return response()->json([
@@ -185,7 +193,7 @@ class ArtistController extends Controller
         }
 
         try {
-            $tracks = $this->spotifyService->getArtistTopTracks($spotifyId);
+            $tracks = $this->spotifyService->getArtistTopTracks($spotifyId, limit: $limit);
 
             return response()->json([
                 'data' => array_map(fn ($track) => $track->toArray(), $tracks),
@@ -203,12 +211,11 @@ class ArtistController extends Controller
      *
      * GET /api/artists/{id}/albums?limit=5
      */
-    public function albums(int $id, Request $request): JsonResponse
+    public function albums(int $id, GetArtistAlbumsRequest $request): JsonResponse
     {
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
-
-        $limit = max(1, min((int) $request->query('limit', 5), 20));
+        $limit = $request->validated('limit', 5);
 
         if (! $spotifyId) {
             return response()->json([

@@ -72,6 +72,9 @@ const getAlbumTypeLabel = (type: string): string => {
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
+                :aria-label="isLoadingMore ? 'Loading more albums' : 'Show all albums'"
+                aria-controls="albums-grid"
+                :aria-expanded="false"
                 @click="handleViewAll"
             >
                 <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
@@ -83,6 +86,9 @@ const getAlbumTypeLabel = (type: string): string => {
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
+                :aria-label="isLoadingMore ? 'Loading' : 'Show fewer albums'"
+                aria-controls="albums-grid"
+                :aria-expanded="true"
                 @click="handleShowLess"
             >
                 <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
@@ -113,7 +119,7 @@ const getAlbumTypeLabel = (type: string): string => {
             </div>
 
             <!-- Albums Grid -->
-            <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div v-else id="albums-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <a
                     v-for="album in albums"
                     :key="album.spotify_id"

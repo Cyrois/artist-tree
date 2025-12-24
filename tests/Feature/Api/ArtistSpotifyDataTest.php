@@ -338,26 +338,40 @@ class ArtistSpotifyDataTest extends TestCase
             ]),
         ]);
 
-        // Test minimum limit (should be clamped to 1)
+        // Test minimum limit (should fail validation)
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$this->artist->id}/albums?limit=0");
 
-        $response->assertOk()
-            ->assertJsonPath('meta.limit', 1);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['limit']);
 
-        // Test invalid limit (should default to 1)
+        // Test negative limit (should fail validation)
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$this->artist->id}/albums?limit=-5");
 
-        $response->assertOk()
-            ->assertJsonPath('meta.limit', 1);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['limit']);
 
-        // Test non-numeric limit (PHP type casting returns 0, clamped to 1)
+        // Test non-numeric limit (should fail validation)
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$this->artist->id}/albums?limit=abc");
 
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['limit']);
+
+        // Test exceeding max limit (should fail validation)
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=999");
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['limit']);
+
+        // Test valid limit within range
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=10");
+
         $response->assertOk()
-            ->assertJsonPath('meta.limit', 1);
+            ->assertJsonPath('meta.limit', 10);
     }
 
     public function test_error_responses_do_not_expose_raw_exceptions(): void

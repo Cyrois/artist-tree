@@ -6,6 +6,7 @@ use App\DataTransferObjects\SpotifyAlbumSimpleDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\DataTransferObjects\SpotifyTrackDTO;
 use App\Exceptions\SpotifyApiException;
+use App\Models\Artist;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -268,10 +269,10 @@ class SpotifyService
      * Returns the spotify_id if found, null otherwise.
      * Caches negative results to prevent repeated API calls.
      *
-     * @param  \App\Models\Artist  $artist  The artist model to resolve
+     * @param  Artist  $artist  The artist model to resolve
      * @return string|null The Spotify ID if found, null otherwise
      */
-    public function resolveSpotifyId(\App\Models\Artist $artist): ?string
+    public function resolveSpotifyId(Artist $artist): ?string
     {
         if ($artist->spotify_id) {
             return $artist->spotify_id;
