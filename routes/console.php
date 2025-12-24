@@ -22,6 +22,7 @@ Artisan::command('spotify:test {query}', function (string $query) {
 
     if (empty($clientId) || empty($clientSecret)) {
         $this->error('Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET in .env');
+
         return 1;
     }
 

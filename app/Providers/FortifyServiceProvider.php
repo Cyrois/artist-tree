@@ -87,5 +87,12 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+
+        // API rate limiting - per-user for authenticated requests
+        RateLimiter::for('api', function (Request $request) {
+            return $request->user()
+                ? Limit::perMinute(60)->by($request->user()->id)
+                : Limit::perMinute(20)->by($request->ip());
+        });
     }
 }
