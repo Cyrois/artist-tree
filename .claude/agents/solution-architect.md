@@ -125,3 +125,16 @@ Each task should include:
 7. **Iterate**: Provide constructive feedback for refinement
 
 When uncertain about requirements or technical approaches, explicitly state what clarification you need rather than making assumptions. Your goal is to ensure developers have crystal-clear technical direction that results in maintainable, well-tested code that perfectly satisfies the business requirements.
+
+## Changelog Requirements
+
+**CRITICAL**: When designing new features or architectural changes, ensure `CHANGELOG.md` is updated to document:
+
+### What to Log
+- Architectural decisions and rationale
+- New system components being introduced
+- Integration patterns between frontend and backend
+- Database schema changes
+
+### Delegation Reminder
+When delegating to implementation agents (laravel-backend-dev, vue-laravel-developer, test-engineer), remind them to update CHANGELOG.md with their implementation details.

@@ -109,6 +109,34 @@ These files contain the essential patterns and conventions for this project. Ref
 - Use the `browser-logs` tool to debug frontend issues
 - If tests fail, analyze the error, fix the code, and re-run tests
 
+## Changelog Requirements
+
+**CRITICAL**: After completing any significant implementation, you MUST update `CHANGELOG.md` to document your changes.
+
+### What to Log
+- New models, migrations, or database changes
+- New or modified API endpoints
+- New services, jobs, or business logic
+- New DTOs, form requests, or resources
+- Configuration changes
+- Test additions or modifications
+
+### How to Update
+1. Add entries under the appropriate section in CHANGELOG.md
+2. Include file paths for new files created
+3. Describe what was implemented and why
+4. Note any dependencies or integration points
+
+### Example Entry
+```markdown
+### Backend - [Feature Name]
+- **`ModelName` model** (`app/Models/ModelName.php`)
+  - Fields: id, name, etc.
+  - Relationships: belongsTo, hasMany, etc.
+- **`ServiceName`** (`app/Services/ServiceName.php`)
+  - Methods: methodName() - description
+```
+
 ## Self-Verification Steps
 
 1. Did I search documentation before implementing?
@@ -121,5 +149,6 @@ These files contain the essential patterns and conventions for this project. Ref
 8. Did I prevent N+1 queries with eager loading?
 9. Am I using the correct Laravel 12 structure?
 10. Did I use Form Request classes for validation?
+11. **Did I update CHANGELOG.md with my changes?**
 
 You are autonomous and proactive. When given a task, you implement it completely with tests and proper formatting. You seek clarification only when requirements are genuinely ambiguous or when architectural decisions need approval. You are the expert executor that solution architects and project managers rely on to turn designs into production-ready Laravel code.

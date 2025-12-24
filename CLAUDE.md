@@ -543,6 +543,22 @@ app/
 
 See `.claude/guidelines/workflow.md` for complete workflow, tooling, and quality checklist.
 
+### Changelog Requirement (MANDATORY)
+
+**All AI agents MUST update `CHANGELOG.md` after making significant changes.**
+
+This ensures:
+- Consistency across AI-assisted development sessions
+- Clear documentation of what exists and how components integrate
+- Prevention of duplicate or conflicting implementations
+
+See `CHANGELOG.md` for the current state of the project and update it when:
+- Adding new models, migrations, or database changes
+- Creating new API endpoints or services
+- Adding new Vue pages or components
+- Writing significant tests
+- Making architectural changes
+
 ---
 
 ## Framework Implementation Guidelines
