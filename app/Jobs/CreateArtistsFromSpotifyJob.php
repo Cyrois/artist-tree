@@ -37,41 +37,28 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
             return;
         }
 
-        // Extract Spotify IDs to check for existing artists
-        $spotifyIds = array_map(
-            fn (SpotifyArtistDTO $dto) => $dto->spotifyId,
-            $this->spotifyArtists
-        );
+        $createdCount = 0;
+        $alreadyExistCount = 0;
 
-        // Get existing artists by Spotify ID
-        $existingSpotifyIds = Artist::whereIn('spotify_id', $spotifyIds)
-            ->pluck('spotify_id')
-            ->toArray();
+        // Create artists with metrics in transaction (existence check inside)
+        DB::transaction(function () use (&$createdCount, &$alreadyExistCount) {
+            foreach ($this->spotifyArtists as $spotifyArtist) {
+                // Check if artist already exists (inside transaction for atomicity)
+                $exists = Artist::where('spotify_id', $spotifyArtist->spotifyId)->exists();
 
-        // Filter out artists that already exist
-        $newArtists = array_filter(
-            $this->spotifyArtists,
-            fn (SpotifyArtistDTO $dto) => ! in_array($dto->spotifyId, $existingSpotifyIds)
-        );
+                if ($exists) {
+                    $alreadyExistCount++;
+                    continue;
+                }
 
-        if (empty($newArtists)) {
-            Log::info('CreateArtistsFromSpotifyJob: No new artists to create', [
-                'total_submitted' => count($this->spotifyArtists),
-                'already_exist' => count($existingSpotifyIds),
-            ]);
-
-            return;
-        }
-
-        // Create new artists with metrics in transaction
-        DB::transaction(function () use ($newArtists) {
-            foreach ($newArtists as $spotifyArtist) {
                 $this->createArtist($spotifyArtist);
+                $createdCount++;
             }
         });
 
-        Log::info('CreateArtistsFromSpotifyJob: Artists created successfully', [
-            'created_count' => count($newArtists),
+        Log::info('CreateArtistsFromSpotifyJob: Job completed', [
+            'created_count' => $createdCount,
+            'already_exist' => $alreadyExistCount,
             'total_submitted' => count($this->spotifyArtists),
         ]);
     }

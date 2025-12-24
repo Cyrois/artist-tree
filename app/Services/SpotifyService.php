@@ -230,14 +230,14 @@ class SpotifyService
      * Get artist's albums.
      *
      * @param  string  $spotifyId  Artist's Spotify ID
-     * @param  int  $limit  Number of albums to return (max 50)
+     * @param  int  $limit  Number of albums to return (max 20)
      * @return array<SpotifyAlbumSimpleDTO>
      *
      * @throws SpotifyApiException
      */
     public function getArtistAlbums(string $spotifyId, int $limit = 10): array
     {
-        $limit = min(max($limit, 1), 50);
+        $limit = min(max($limit, 1), 20);
         $cacheKey = "spotify_albums:{$spotifyId}:{$limit}";
 
         return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId, $limit) {
@@ -298,16 +298,32 @@ class SpotifyService
             }
 
             // No match found - cache this failure for 24 hours
+            // This is a permanent "not found" situation, not an error
             Cache::put($cacheKey, true, $this->searchCacheTtl);
-        } catch (\Exception $e) {
-            Log::warning('Failed to resolve Spotify ID', [
+        } catch (SpotifyApiException $e) {
+            // Spotify API error - could be transient (rate limit, downtime)
+            // Cache for shorter duration to allow retries after API recovers
+            Log::warning('Spotify API error while resolving artist ID', [
                 'artist_id' => $artist->id,
                 'artist_name' => $artist->name,
+                'status_code' => $e->statusCode ?? 'unknown',
                 'error' => $e->getMessage(),
             ]);
 
-            // Cache failure to prevent retry storms during API issues
-            Cache::put($cacheKey, true, 3600); // 1 hour for errors
+            // Cache transient errors for 1 hour
+            Cache::put($cacheKey, true, 3600);
+        } catch (\Exception $e) {
+            // Unexpected error (network, database, etc.) - likely transient
+            // Cache for shorter duration to allow retries
+            Log::error('Unexpected error while resolving Spotify ID', [
+                'artist_id' => $artist->id,
+                'artist_name' => $artist->name,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ]);
+
+            // Cache general errors for 30 minutes (shorter than API errors)
+            Cache::put($cacheKey, true, 1800);
         }
 
         return null;

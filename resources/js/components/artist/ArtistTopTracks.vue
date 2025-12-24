@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Loader2, Music, AlertCircle, ExternalLink, Play } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import { trans } from 'laravel-vue-i18n';
 
 interface Track {
     spotify_id: string;
@@ -42,7 +43,7 @@ const formatDuration = (ms: number): string => {
         <CardHeader>
             <CardTitle class="flex items-center gap-2">
                 <Music class="w-5 h-5" />
-                Top Tracks
+                {{ trans('artists.show_top_tracks_title') }}
             </CardTitle>
         </CardHeader>
         <CardContent>
@@ -50,7 +51,7 @@ const formatDuration = (ms: number): string => {
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3">
                     <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">Loading top tracks...</p>
+                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_loading') }}</p>
                 </div>
             </div>
 
@@ -58,13 +59,13 @@ const formatDuration = (ms: number): string => {
             <div v-else-if="error" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3 text-center">
                     <AlertCircle class="h-8 w-8 text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">Unable to load top tracks</p>
+                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_error') }}</p>
                 </div>
             </div>
 
             <!-- Empty State -->
             <div v-else-if="!tracks || tracks.length === 0" class="flex items-center justify-center py-12">
-                <p class="text-sm text-muted-foreground">No top tracks available</p>
+                <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_empty') }}</p>
             </div>
 
             <!-- Tracks List -->

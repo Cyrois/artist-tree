@@ -19,6 +19,61 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### PR Review Issues Fixed (2025-12-24)
+
+**Summary:** Addressed all medium and low priority issues identified in PR #7 code review to improve code quality, security, internationalization, and robustness.
+
+#### Changes Made
+
+**Issue 1: Form Request Validation** ✅ Already Implemented
+- `GetArtistAlbumsRequest` and `GetArtistTopTracksRequest` with proper validation rules
+
+**Issue 2: Fixed Race Condition in Background Job** (`app/Jobs/CreateArtistsFromSpotifyJob.php`)
+- Moved artist existence check **inside database transaction** for atomicity
+- Prevents duplicate artist creation when multiple jobs run concurrently
+- Changed from bulk `whereIn()` check to per-artist check within transaction
+- More robust handling of concurrent job execution
+
+**Issue 3: Complete i18n Implementation** (Vue Components)
+- Added 9 new translation keys to `lang/en.json`:
+  - `artists.show_albums_view_all`, `artists.show_albums_show_less`
+  - `artists.show_albums_loading`, `artists.show_albums_loading_more`, `artists.show_albums_loading_progress`
+  - `artists.show_albums_error`, `artists.show_albums_empty`
+  - `artists.show_top_tracks_loading`, `artists.show_top_tracks_error`, `artists.show_top_tracks_empty`
+- Updated `ArtistAlbums.vue` - All hardcoded strings replaced with `trans()` calls
+- Updated `ArtistTopTracks.vue` - All hardcoded strings replaced with `trans()` calls
+- Project now ready for future internationalization
+
+**Issue 4: Error Type Discrimination** (`app/Services/SpotifyService.php`)
+- Enhanced `resolveSpotifyId()` to differentiate error types with appropriate cache TTLs:
+  - **Artist not found on Spotify**: Cache for 24 hours (permanent situation)
+  - **SpotifyApiException** (rate limits, API downtime): Cache for 1 hour (transient)
+  - **General exceptions** (network, database): Cache for 30 minutes (likely transient)
+- Improved error logging with context (status codes, exception classes)
+- Better handling of API failures and recovery
+
+**Issue 5: Service/Controller Limit Alignment** (`app/Services/SpotifyService.php`)
+- Changed `getArtistAlbums()` max limit from 50 to 20
+- Now consistent with `GetArtistAlbumsRequest` validation (max:20)
+- Updated PHPDoc to reflect correct maximum
+- Ensures validation consistency across all layers
+
+**Files Modified:**
+- `app/Jobs/CreateArtistsFromSpotifyJob.php` - Transaction-safe existence checks
+- `app/Services/SpotifyService.php` - Error discrimination, limit alignment
+- `lang/en.json` - i18n translation keys
+- `resources/js/components/artist/ArtistAlbums.vue` - i18n strings
+- `resources/js/components/artist/ArtistTopTracks.vue` - i18n strings
+
+**Impact:**
+- Improved concurrency safety for background jobs
+- Better error handling with appropriate retry strategies
+- Full internationalization support ready
+- More consistent validation across application layers
+- More maintainable codebase
+
+---
+
 ### Code Quality Improvements (2025-12-24)
 
 **Summary:** Implemented PR review feedback to improve type safety, validation consistency, accessibility, error messaging, and documentation.

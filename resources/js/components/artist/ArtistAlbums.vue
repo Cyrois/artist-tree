@@ -72,28 +72,28 @@ const getAlbumTypeLabel = (type: string): string => {
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
-                :aria-label="isLoadingMore ? 'Loading more albums' : 'Show all albums'"
+                :aria-label="isLoadingMore ? trans('artists.show_albums_loading_more') : trans('artists.show_albums_view_all')"
                 aria-controls="albums-grid"
                 :aria-expanded="false"
                 @click="handleViewAll"
             >
                 <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
                 <ChevronDown v-else class="h-4 w-4 mr-1" />
-                View All
+                {{ trans('artists.show_albums_view_all') }}
             </Button>
             <Button
                 v-else-if="isExpanded && !loading"
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
-                :aria-label="isLoadingMore ? 'Loading' : 'Show fewer albums'"
+                :aria-label="isLoadingMore ? trans('artists.show_albums_loading_progress') : trans('artists.show_albums_show_less')"
                 aria-controls="albums-grid"
                 :aria-expanded="true"
                 @click="handleShowLess"
             >
                 <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
                 <ChevronUp v-else class="h-4 w-4 mr-1" />
-                Show Less
+                {{ trans('artists.show_albums_show_less') }}
             </Button>
         </CardHeader>
         <CardContent>
@@ -101,7 +101,7 @@ const getAlbumTypeLabel = (type: string): string => {
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3">
                     <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">Loading albums...</p>
+                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_loading') }}</p>
                 </div>
             </div>
 
@@ -109,13 +109,13 @@ const getAlbumTypeLabel = (type: string): string => {
             <div v-else-if="error" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3 text-center">
                     <AlertCircle class="h-8 w-8 text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">Unable to load albums</p>
+                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_error') }}</p>
                 </div>
             </div>
 
             <!-- Empty State -->
             <div v-else-if="!albums || albums.length === 0" class="flex items-center justify-center py-12">
-                <p class="text-sm text-muted-foreground">No albums available</p>
+                <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_empty') }}</p>
             </div>
 
             <!-- Albums Grid -->
