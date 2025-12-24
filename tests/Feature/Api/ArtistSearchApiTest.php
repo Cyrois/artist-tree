@@ -234,9 +234,10 @@ it('handles Spotify API errors gracefully when selecting artist', function () {
             'artist_id' => $artist->id,
         ]);
 
-    // Should return error status with error message
-    expect($response->status())->toBeGreaterThanOrEqual(400);
-    $response->assertJsonStructure(['message']);
+    // Should return 200 with empty data due to graceful degradation
+    $response->assertStatus(200)
+        ->assertJsonStructure(['message', 'data'])
+        ->assertJsonPath('message', 'An unexpected error occurred. Please try again later.');
 });
 
 it('refreshes artist data from Spotify', function () {
@@ -278,7 +279,10 @@ it('returns error when refreshing artist without Spotify ID', function () {
     $response = $this->actingAs($this->user)
         ->postJson("/api/artists/{$artist->id}/refresh");
 
-    $response->assertStatus(400)
+    // Graceful degradation - returns 200 with empty data and user-friendly message
+    $response->assertStatus(200)
+        ->assertJsonStructure(['message', 'data'])
+        ->assertJsonPath('data', [])
         ->assertJsonPath('message', 'Artist does not have a Spotify ID');
 });
 
@@ -287,4 +291,153 @@ it('returns 404 when refreshing non-existent artist', function () {
         ->postJson('/api/artists/99999/refresh');
 
     $response->assertStatus(404);
+});
+
+// New tests for spotify_id in search response and artist detail endpoints
+
+it('includes spotify_id in search response', function () {
+    Artist::factory()
+        ->has(ArtistMetric::factory())
+        ->create([
+            'name' => 'Test Artist',
+            'spotify_id' => 'test_spotify_123',
+            'genres' => ['rock'],
+        ]);
+
+    Http::fake([
+        'https://accounts.spotify.com/api/token' => Http::response([
+            'access_token' => 'test_token',
+            'expires_in' => 3600,
+        ]),
+        'https://api.spotify.com/v1/search*' => Http::response([
+            'artists' => ['items' => []],
+        ]),
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists/search?q=test');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'spotify_id',
+                    'name',
+                    'genres',
+                    'image_url',
+                    'exists_in_database',
+                    'source',
+                ],
+            ],
+        ])
+        ->assertJsonPath('data.0.spotify_id', 'test_spotify_123');
+});
+
+it('gets artist by database ID', function () {
+    $artist = Artist::factory()
+        ->has(ArtistMetric::factory([
+            'spotify_popularity' => 85,
+            'spotify_followers' => 100000,
+        ]))
+        ->create([
+            'name' => 'Test Artist',
+            'spotify_id' => 'spotify123',
+            'genres' => ['rock', 'indie'],
+        ]);
+
+    $response = $this->actingAs($this->user)
+        ->getJson("/api/artists/{$artist->id}");
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                'id',
+                'spotify_id',
+                'name',
+                'genres',
+                'image_url',
+                'metrics',
+                'created_at',
+                'updated_at',
+            ],
+        ])
+        ->assertJsonPath('data.id', $artist->id)
+        ->assertJsonPath('data.spotify_id', 'spotify123')
+        ->assertJsonPath('data.name', 'Test Artist')
+        ->assertJsonPath('data.genres', ['rock', 'indie'])
+        ->assertJsonPath('data.metrics.spotify_popularity', 85)
+        ->assertJsonPath('data.metrics.spotify_followers', 100000);
+});
+
+it('gets artist by Spotify ID', function () {
+    $artist = Artist::factory()
+        ->has(ArtistMetric::factory([
+            'spotify_popularity' => 90,
+            'spotify_followers' => 200000,
+        ]))
+        ->create([
+            'name' => 'Another Artist',
+            'spotify_id' => 'spotify456',
+            'genres' => ['pop'],
+        ]);
+
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists?spotify_id=spotify456');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                'id',
+                'spotify_id',
+                'name',
+                'genres',
+                'image_url',
+                'metrics',
+                'created_at',
+                'updated_at',
+            ],
+        ])
+        ->assertJsonPath('data.id', $artist->id)
+        ->assertJsonPath('data.spotify_id', 'spotify456')
+        ->assertJsonPath('data.name', 'Another Artist')
+        ->assertJsonPath('data.metrics.spotify_popularity', 90);
+});
+
+it('returns 404 when artist not found by database ID', function () {
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists/99999');
+
+    $response->assertStatus(404)
+        ->assertJsonPath('message', 'Artist not found with ID: 99999');
+});
+
+it('returns 404 when artist not found by Spotify ID', function () {
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists?spotify_id=nonexistent');
+
+    $response->assertStatus(404)
+        ->assertJsonPath('message', 'Artist not found with Spotify ID: nonexistent');
+});
+
+it('requires authentication to get artist by ID', function () {
+    $artist = Artist::factory()->create();
+
+    $response = $this->getJson("/api/artists/{$artist->id}");
+
+    $response->assertStatus(401);
+});
+
+it('requires authentication to get artist by Spotify ID', function () {
+    $response = $this->getJson('/api/artists?spotify_id=test123');
+
+    $response->assertStatus(401);
+});
+
+it('returns 400 when neither ID nor spotify_id provided', function () {
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists');
+
+    $response->assertStatus(400)
+        ->assertJsonPath('message', 'Artist ID or spotify_id parameter required');
 });

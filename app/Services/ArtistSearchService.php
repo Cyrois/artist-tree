@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DataTransferObjects\ArtistSearchResultDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
+use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -89,6 +90,7 @@ class ArtistSearchService
      * Merge local and Spotify results, deduplicate by Spotify ID.
      *
      * Priority: Local results come first, Spotify results fill in gaps.
+     * Dispatches background job to create missing artists from Spotify.
      *
      * @param  Collection<Artist>  $localResults
      * @param  array<SpotifyArtistDTO>  $spotifyResults
@@ -110,6 +112,9 @@ class ArtistSearchService
             }
         }
 
+        // Track Spotify artists that don't exist in local database
+        $missingArtists = [];
+
         // Add Spotify results that aren't already in local database
         foreach ($spotifyResults as $spotifyArtist) {
             if (isset($seenSpotifyIds[$spotifyArtist->spotifyId])) {
@@ -121,6 +126,20 @@ class ArtistSearchService
 
             $merged->push(ArtistSearchResultDTO::fromSpotifyArtist($spotifyArtist, $localArtist));
             $seenSpotifyIds[$spotifyArtist->spotifyId] = true;
+
+            // Track artists that need to be created
+            if (! $localArtist) {
+                $missingArtists[] = $spotifyArtist;
+            }
+        }
+
+        // Dispatch background job to create missing artists
+        if (! empty($missingArtists)) {
+            CreateArtistsFromSpotifyJob::dispatch($missingArtists);
+
+            Log::info('Dispatched CreateArtistsFromSpotifyJob', [
+                'artists_count' => count($missingArtists),
+            ]);
         }
 
         // Limit final results

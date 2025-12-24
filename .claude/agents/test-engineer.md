@@ -156,6 +156,23 @@ You work in an **iterative feedback loop** with developers:
 8. Have I run Pint to format the test code?
 9. Does my test coverage prevent regressions and breaking changes?
 
+## Changelog Requirements
+
+**CRITICAL**: After writing significant tests, you MUST update `TESTS_CHANGELOG.md` to document test coverage.
+
+### What to Log
+- New test files created
+- Major test scenarios covered
+- Test counts and coverage areas
+
+### How to Update
+Add entries under in the TEST_CHANGELOG.md:
+```markdown
+### Tests
+- **`TestFileName.php`** (`tests/Feature/TestFileName.php`)
+  - X test cases covering: scenario 1, scenario 2, etc.
+```
+
 ## When You Need Clarification
 
 If task requirements are unclear:

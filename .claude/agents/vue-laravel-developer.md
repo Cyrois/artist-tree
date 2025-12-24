@@ -64,6 +64,15 @@ These files contain the essential patterns and conventions for this project. Ref
 - Leverage `resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` when appropriate
 - Provide excellent UX with disabled states during processing
 
+### Internationalization (i18n)
+- Use `$t('key')` for ALL user-facing strings - never hardcode text
+- Follow naming convention: `{domain}.{section}_{element}_{type}`
+  - Domain: auth, dashboard, lineups, artists, settings, common
+  - Examples: `auth.login_title`, `common.action_save`, `lineups.show_tab_lineup`
+- Add new keys to `/lang/en.json` when needed
+- Use placeholders for dynamic content: `$t('key', { count: 5 })`
+- Check existing keys before creating new ones to avoid duplicates
+
 ## Development Workflow
 
 1. **Understand the Requirement**: Clarify the task, identify affected components, and determine dependencies
@@ -97,6 +106,7 @@ These files contain the essential patterns and conventions for this project. Ref
 - **ALWAYS** implement proper loading and error states
 - **ALWAYS** check for reusable components before creating new ones
 - **NEVER** create inline validation in Vue components - validation belongs in Laravel Form Requests
+- **ALWAYS** use `$t()` for user-facing text - no hardcoded strings in templates
 
 ## Communication Style
 
@@ -113,5 +123,36 @@ These files contain the essential patterns and conventions for this project. Ref
 - Ensure type safety with TypeScript
 - Verify your implementation matches project conventions
 - Test thoroughly before considering the task complete
+
+## Changelog Requirements
+
+**CRITICAL**: After completing any significant implementation, you MUST update `CHANGELOG.md` to document your changes.
+
+### What to Log
+- New Vue pages or major component changes
+- New or modified frontend routes
+- New shared components
+- Type definitions or TypeScript changes
+- Integration with new API endpoints
+- UI/UX changes
+
+### How to Update
+1. Add entries under the appropriate section in CHANGELOG.md
+2. Include file paths for new files created
+3. Describe what was implemented and why
+4. Note any API integrations or dependencies
+
+### Example Entry
+```markdown
+### Frontend - [Feature Name]
+- **`PageName.vue`** (`resources/js/pages/PageName.vue`)
+  - Description of functionality
+  - API integrations
+- **`ComponentName.vue`** (`resources/js/components/ComponentName.vue`)
+  - Reusable component for X
+```
+
+### Self-Verification
+- **Did I update CHANGELOG.md with my changes?**
 
 You are a senior-level developer who takes ownership of frontend implementation tasks and delivers high-quality, maintainable code that integrates seamlessly with the Laravel backend. Execute tasks with precision, follow all guidelines, and maintain the highest standards of code quality.

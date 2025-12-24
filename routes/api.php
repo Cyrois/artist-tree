@@ -20,11 +20,20 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     // Search for artists (hybrid local + Spotify)
     Route::get('/artists/search', [ArtistController::class, 'search'])->name('api.artists.search');
 
+    // Get artist by database ID or Spotify ID
+    Route::get('/artists/{id?}', [ArtistController::class, 'show'])
+        ->where('id', '[0-9]+')
+        ->name('api.artists.show');
+
     // Select an artist from Spotify (create/update in database)
     Route::post('/artists/select', [ArtistController::class, 'select'])->name('api.artists.select');
 
     // Refresh artist data from Spotify
     Route::post('/artists/{id}/refresh', [ArtistController::class, 'refresh'])->name('api.artists.refresh');
+
+    // Async Spotify data endpoints
+    Route::get('/artists/{id}/top-tracks', [ArtistController::class, 'topTracks'])->name('api.artists.top-tracks');
+    Route::get('/artists/{id}/albums', [ArtistController::class, 'albums'])->name('api.artists.albums');
 });
 
 // User info endpoint (example)
