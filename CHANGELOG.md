@@ -67,9 +67,6 @@ The Spotify Related Artists API endpoint (`/v1/artists/{id}/related-artists`) wa
   - Properties: `spotifyId`, `name`, `albumType`, `releaseDate`, `totalTracks`, `imageUrl`, `externalUrl`
   - Factory method: `fromSpotifyResponse(array $album)`
 
-- **`SpotifyAlbumDTO`** (`app/DataTransferObjects/SpotifyAlbumDTO.php`)
-  - Extends `SpotifyAlbumSimpleDTO` for future track listing support
-
 **SpotifyService Methods:**
 - `getArtistTopTracks(string $spotifyId, string $market = 'US', int $limit = 5)` - Returns top tracks (max 10)
 - `getArtistAlbums(string $spotifyId, int $limit = 10)` - Returns albums and singles (max 50)
@@ -147,7 +144,6 @@ GET /api/artists/{id}/related-artists → ArtistController@relatedArtists
 ```
 app/DataTransferObjects/SpotifyTrackDTO.php
 app/DataTransferObjects/SpotifyAlbumSimpleDTO.php
-app/DataTransferObjects/SpotifyAlbumDTO.php
 resources/js/composables/useAsyncSpotifyData.ts
 resources/js/components/artist/ArtistTopTracks.vue
 resources/js/components/artist/ArtistAlbums.vue
