@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Disc, AlertCircle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import { trans } from 'laravel-vue-i18n';
 
 interface Album {
     spotify_id: string;
@@ -64,7 +65,7 @@ const getAlbumTypeLabel = (type: string): string => {
         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="flex items-center gap-2">
                 <Disc class="w-5 h-5" />
-                Albums & Singles
+                {{ trans('artists.show_albums_singles_title') }}
             </CardTitle>
             <Button
                 v-if="meta?.has_more && !isExpanded && !loading"
