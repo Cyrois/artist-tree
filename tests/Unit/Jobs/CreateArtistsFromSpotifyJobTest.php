@@ -129,8 +129,9 @@ test('it creates artist with metrics in transaction', function () {
 
 test('it logs creation information', function () {
     Log::shouldReceive('debug')->once();
-    Log::shouldReceive('info')->once()->with('CreateArtistsFromSpotifyJob: Artists created successfully', [
+    Log::shouldReceive('info')->once()->with('CreateArtistsFromSpotifyJob: Job completed', [
         'created_count' => 1,
+        'already_exist' => 0,
         'total_submitted' => 1,
     ]);
 
