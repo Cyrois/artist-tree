@@ -37,35 +37,40 @@ class ArtistController extends Controller
     }
 
     /**
-     * Select an artist from Spotify (creates or updates in database).
+     * Select an artist (refreshes data from Spotify if available).
      *
      * POST /api/artists/select
-     * Body: { "spotify_id": "..." }
+     * Body: { "artist_id": 123 }
      */
     public function select(SelectArtistRequest $request): JsonResponse
     {
-        $spotifyId = $request->validated('spotify_id');
+        $artistId = $request->validated('artist_id');
 
         try {
-            $artist = $this->searchService->getOrCreateFromSpotify($spotifyId);
+            $artist = \App\Models\Artist::with('metrics')->findOrFail($artistId);
+
+            // If artist has a Spotify ID, refresh their data
+            if ($artist->spotify_id) {
+                $artist = $this->searchService->refreshArtistFromSpotify($artist);
+            }
 
             return response()->json([
                 'message' => 'Artist selected successfully',
                 'data' => new ArtistResource($artist->load('metrics')),
             ], 200);
         } catch (SpotifyApiException $e) {
-            Log::error('Failed to fetch artist from Spotify', [
-                'spotify_id' => $spotifyId,
+            Log::error('Failed to refresh artist from Spotify', [
+                'artist_id' => $artistId,
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to fetch artist from Spotify',
+                'message' => 'Failed to refresh artist from Spotify',
                 'error' => $e->getMessage(),
             ], $e->statusCode ?? 500);
         } catch (\Exception $e) {
             Log::error('Unexpected error selecting artist', [
-                'spotify_id' => $spotifyId,
+                'artist_id' => $artistId,
                 'error' => $e->getMessage(),
             ]);
 

@@ -19,14 +19,11 @@ class ArtistSearchResultResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'spotify_id' => $this->spotifyId,
+            'id' => $this->databaseId,
             'name' => $this->name,
             'genres' => $this->genres,
             'image_url' => $this->imageUrl,
-            'popularity' => $this->popularity,
-            'followers' => $this->followers,
             'exists_in_database' => $this->existsInDatabase,
-            'database_id' => $this->databaseId,
             'source' => $this->source,
 
             // Human-readable follower count

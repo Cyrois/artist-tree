@@ -23,8 +23,8 @@ return new class extends Migration
             $table->unsignedBigInteger('youtube_subscribers')->nullable();
 
             // Future platforms - add columns via migration:
-            // $table->unsignedBigInteger('instagram_followers')->nullable();
-            // $table->unsignedBigInteger('tiktok_followers')->nullable();
+            $table->unsignedBigInteger('instagram_followers')->nullable();
+            $table->unsignedBigInteger('tiktok_followers')->nullable();
 
             $table->timestamp('refreshed_at')->nullable();
             $table->timestamps();

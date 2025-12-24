@@ -16,12 +16,13 @@ class ArtistFactory extends Factory
      */
     public function definition(): array
     {
-        $genres = ['rock', 'indie', 'electronic', 'pop', 'hip-hop', 'jazz', 'metal', 'folk', 'r&b', 'country', 'alternative', 'punk', 'soul', 'reggae', 'blues'];
-
         return [
             'spotify_id' => fake()->unique()->uuid(),
             'name' => fake()->firstName().' '.fake()->randomElement(['and the', '&']).' '.fake()->word(),
-            'genres' => fake()->randomElements($genres, rand(1, 3)),
+            'genres' => fake()->randomElements(
+                ['rock', 'indie', 'electronic', 'pop', 'hip-hop', 'jazz', 'metal', 'folk', 'r&b', 'country', 'alternative', 'punk', 'soul', 'reggae', 'blues'],
+                rand(1, 3)
+            ),
             'image_url' => fake()->imageUrl(640, 640, 'music', true, 'artist'),
         ];
     }

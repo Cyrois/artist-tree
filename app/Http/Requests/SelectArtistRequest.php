@@ -25,7 +25,7 @@ class SelectArtistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'spotify_id' => ['required', 'string', 'max:255'],
+            'artist_id' => ['required', 'integer', 'exists:artists,id'],
         ];
     }
 
@@ -35,7 +35,7 @@ class SelectArtistRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'spotify_id' => 'Spotify artist ID',
+            'artist_id' => 'artist ID',
         ];
     }
 
@@ -45,7 +45,8 @@ class SelectArtistRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'spotify_id.required' => 'Spotify artist ID is required.',
+            'artist_id.required' => 'Artist ID is required.',
+            'artist_id.exists' => 'The selected artist does not exist.',
         ];
     }
 }
