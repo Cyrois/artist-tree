@@ -7,6 +7,8 @@ import { ArrowLeft, Loader2, AlertCircle } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { show as artistShowRoute } from '@/routes/api/artists';
+import ArtistTopTracks from '@/components/artist/ArtistTopTracks.vue';
+import ArtistAlbums from '@/components/artist/ArtistAlbums.vue';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -135,6 +137,12 @@ const pageTitle = computed(() =>
                     </div>
                 </CardContent>
             </Card>
+
+            <!-- Async Spotify Features -->
+            <div class="space-y-6">
+                <ArtistTopTracks :artist-id="props.id" />
+                <ArtistAlbums :artist-id="props.id" />
+            </div>
         </div>
 
         <!-- Not Found (fallback) -->

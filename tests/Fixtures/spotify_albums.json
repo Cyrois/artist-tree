@@ -1,0 +1,89 @@
+{
+  "items": [
+    {
+      "id": "album1",
+      "name": "Latest Album",
+      "album_type": "album",
+      "release_date": "2024-03-15",
+      "total_tracks": 14,
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b273album1",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/album1"
+      }
+    },
+    {
+      "id": "album2",
+      "name": "Greatest Hits",
+      "album_type": "compilation",
+      "release_date": "2023-11-20",
+      "total_tracks": 20,
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b273album2",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/album2"
+      }
+    },
+    {
+      "id": "single1",
+      "name": "New Single",
+      "album_type": "single",
+      "release_date": "2024-01-10",
+      "total_tracks": 1,
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b273single1",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/single1"
+      }
+    },
+    {
+      "id": "album3",
+      "name": "Sophomore Album",
+      "album_type": "album",
+      "release_date": "2022-06-05",
+      "total_tracks": 12,
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b273album3",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/album3"
+      }
+    },
+    {
+      "id": "album4",
+      "name": "Debut Album",
+      "album_type": "album",
+      "release_date": "2020-09-18",
+      "total_tracks": 10,
+      "images": [
+        {
+          "url": "https://i.scdn.co/image/ab67616d0000b273album4",
+          "height": 640,
+          "width": 640
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/album4"
+      }
+    }
+  ]
+}

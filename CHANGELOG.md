@@ -19,6 +19,138 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Test Cleanup - Deprecated Related Artists (2025-12-23)
+
+**Summary:** Removed tests for the deprecated Spotify Related Artists endpoint (deprecated by Spotify in November 2024).
+
+#### Changes Made
+- **`ArtistSpotifyDataTest.php`** (`tests/Feature/Api/ArtistSpotifyDataTest.php`)
+  - Removed `test_related_artists_endpoint_returns_artists_with_database_flags` test method
+  - Removed related-artists authentication test from `test_endpoints_require_authentication`
+  - Test suite reduced from 7 to 6 test cases
+  - All remaining tests pass successfully (120 total tests passing)
+
+#### Rationale
+The Spotify Related Artists API endpoint (`/v1/artists/{id}/related-artists`) was deprecated in November 2024 and returns 404 errors in production. Since the endpoint is no longer functional, maintaining tests for it creates confusion and test coverage for non-existent functionality.
+
+---
+
+### Async Spotify Features (2025-12-23)
+
+**Summary:** Added 3 async-loading features to Artist Detail page: Top Tracks, Albums, and Related Artists. Each section loads independently via AJAX after page render, with graceful error handling and automatic Spotify ID resolution.
+
+#### Backend Changes
+
+**New DTOs:**
+- **`SpotifyTrackDTO`** (`app/DataTransferObjects/SpotifyTrackDTO.php`)
+  - Properties: `spotifyId`, `name`, `albumName`, `albumImageUrl`, `durationMs`, `previewUrl`, `externalUrl`, `artists`
+  - Factory method: `fromSpotifyResponse(array $track)`
+
+- **`SpotifyAlbumSimpleDTO`** (`app/DataTransferObjects/SpotifyAlbumSimpleDTO.php`)
+  - Properties: `spotifyId`, `name`, `albumType`, `releaseDate`, `totalTracks`, `imageUrl`, `externalUrl`
+  - Factory method: `fromSpotifyResponse(array $album)`
+
+- **`SpotifyAlbumDTO`** (`app/DataTransferObjects/SpotifyAlbumDTO.php`)
+  - Extends `SpotifyAlbumSimpleDTO` for future track listing support
+
+**SpotifyService Methods:**
+- `getArtistTopTracks(string $spotifyId, string $market = 'US', int $limit = 5)` - Returns top tracks (max 10)
+- `getArtistAlbums(string $spotifyId, int $limit = 10)` - Returns albums and singles (max 50)
+- `getRelatedArtists(string $spotifyId)` - Returns up to 10 similar artists (**Note:** Deprecated by Spotify in November 2024, returns empty data)
+- All methods use 24-hour caching and respect rate limits
+
+**ArtistController Methods:**
+- `topTracks(int $id)` - GET `/api/artists/{id}/top-tracks`
+- `albums(int $id)` - GET `/api/artists/{id}/albums`
+- `relatedArtists(int $id)` - GET `/api/artists/{id}/related-artists`
+- Private helper: `resolveSpotifyId(Artist $artist)` - Auto-resolves missing `spotify_id` via exact Spotify name match and persists it
+- Graceful error handling: Returns 200 with empty `data: []` on Spotify API errors
+- Related artists include `exists_in_database` and `database_id` flags for navigation
+
+**Routes Added:**
+```php
+GET /api/artists/{id}/top-tracks      → ArtistController@topTracks
+GET /api/artists/{id}/albums          → ArtistController@albums
+GET /api/artists/{id}/related-artists → ArtistController@relatedArtists
+```
+
+#### Frontend Changes
+
+**New Composable:**
+- **`useAsyncSpotifyData.ts`** (`resources/js/composables/useAsyncSpotifyData.ts`)
+  - Generic composable for async data loading with loading/error states
+  - Returns: `{ data, loading, error, load() }`
+
+**New Components:**
+- **`ArtistTopTracks.vue`** (`resources/js/components/artist/ArtistTopTracks.vue`)
+  - Displays top 5 tracks with album art, duration, preview, and Spotify links
+  - Skeleton loading state, error state, empty state
+
+- **`ArtistAlbums.vue`** (`resources/js/components/artist/ArtistAlbums.vue`)
+  - Grid display of albums and singles with cover art
+  - Shows release date and album type
+  - Links to Spotify with hover overlay
+
+- **`ArtistRelatedArtists.vue`** (`resources/js/components/artist/ArtistRelatedArtists.vue`)
+  - Circular artist avatars in grid layout
+  - Green indicator for artists already in database
+  - Click to navigate to artist detail page (local or Spotify-based)
+
+**Page Updates:**
+- **`Artist/Show.vue`** - Integrated 3 async components below artist header
+  - Each component loads independently on mount
+  - Separate loading/error states for each section
+
+#### Tests
+
+**New Test Suite:**
+- **`ArtistSpotifyDataTest.php`** (`tests/Feature/Api/ArtistSpotifyDataTest.php`)
+  - 7 test cases covering:
+    - Top tracks endpoint returns tracks
+    - Albums endpoint returns albums
+    - Related artists with database existence flags
+    - Spotify ID resolution for artists missing `spotify_id`
+    - Empty data when artist has no Spotify ID
+    - Graceful error handling for Spotify API failures
+    - Authentication requirements
+
+**Test Fixtures:**
+- `tests/Fixtures/spotify_top_tracks.json` - Mock Spotify top tracks response
+- `tests/Fixtures/spotify_albums.json` - Mock Spotify albums response
+- `tests/Fixtures/spotify_related_artists.json` - Mock Spotify related artists response
+
+#### Integration Points
+
+- **Spotify ID Fallback:** If artist missing `spotify_id`, controller automatically searches Spotify for exact name match and persists it
+- **Graceful Degradation:** All endpoints return 200 with empty data on errors, preventing page breakage
+- **Independent Loading:** Each feature loads separately with individual error handling
+- **Database-Aware Navigation:** Related artists check local database and provide proper navigation URLs
+
+#### Files Created
+```
+app/DataTransferObjects/SpotifyTrackDTO.php
+app/DataTransferObjects/SpotifyAlbumSimpleDTO.php
+app/DataTransferObjects/SpotifyAlbumDTO.php
+resources/js/composables/useAsyncSpotifyData.ts
+resources/js/components/artist/ArtistTopTracks.vue
+resources/js/components/artist/ArtistAlbums.vue
+resources/js/components/artist/ArtistRelatedArtists.vue
+tests/Feature/Api/ArtistSpotifyDataTest.php
+tests/Fixtures/spotify_top_tracks.json
+tests/Fixtures/spotify_albums.json
+tests/Fixtures/spotify_related_artists.json
+```
+
+#### Files Modified
+```
+app/Services/SpotifyService.php - Added 3 methods + imports
+app/Http/Controllers/ArtistController.php - Added 3 endpoints + helper method + SpotifyService injection
+routes/api.php - Added 3 routes
+resources/js/Pages/Artist/Show.vue - Integrated 3 async components
+```
+
+---
+
 ### Infrastructure & Setup
 
 #### Database Configuration

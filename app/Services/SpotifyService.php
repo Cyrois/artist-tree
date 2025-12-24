@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\DataTransferObjects\SpotifyAlbumSimpleDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
+use App\DataTransferObjects\SpotifyTrackDTO;
 use App\Exceptions\SpotifyApiException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
@@ -185,5 +187,108 @@ class SpotifyService
     {
         $cacheKey = "spotify_artist:{$spotifyId}";
         Cache::forget($cacheKey);
+    }
+
+    /**
+     * Get artist's top tracks.
+     *
+     * @param  string  $spotifyId  Artist's Spotify ID
+     * @param  string  $market  ISO 3166-1 alpha-2 country code (default: US)
+     * @param  int  $limit  Number of tracks to return (max 10)
+     * @return array<SpotifyTrackDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function getArtistTopTracks(string $spotifyId, string $market = 'US', int $limit = 5): array
+    {
+        $limit = min(max($limit, 1), 10);
+        $cacheKey = "spotify_top_tracks:{$spotifyId}:{$market}:{$limit}";
+
+        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId, $market, $limit) {
+            $this->checkRateLimit();
+
+            $response = $this->makeAuthenticatedRequest()
+                ->get(self::BASE_URL."/artists/{$spotifyId}/top-tracks", [
+                    'market' => $market,
+                ]);
+
+            if (! $response->successful()) {
+                throw SpotifyApiException::fromResponse($response, 'Get top tracks failed');
+            }
+
+            $tracks = array_slice($response->json('tracks', []), 0, $limit);
+
+            return array_map(
+                fn (array $track) => SpotifyTrackDTO::fromSpotifyResponse($track),
+                $tracks
+            );
+        });
+    }
+
+    /**
+     * Get artist's albums.
+     *
+     * @param  string  $spotifyId  Artist's Spotify ID
+     * @param  int  $limit  Number of albums to return (max 50)
+     * @return array<SpotifyAlbumSimpleDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function getArtistAlbums(string $spotifyId, int $limit = 10): array
+    {
+        $limit = min(max($limit, 1), 50);
+        $cacheKey = "spotify_albums:{$spotifyId}:{$limit}";
+
+        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId, $limit) {
+            $this->checkRateLimit();
+
+            $response = $this->makeAuthenticatedRequest()
+                ->get(self::BASE_URL."/artists/{$spotifyId}/albums", [
+                    'include_groups' => 'album,single',
+                    'limit' => $limit,
+                ]);
+
+            if (! $response->successful()) {
+                throw SpotifyApiException::fromResponse($response, 'Get albums failed');
+            }
+
+            $albums = $response->json('items', []);
+
+            return array_map(
+                fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyResponse($album),
+                $albums
+            );
+        });
+    }
+
+    /**
+     * Get related artists.
+     *
+     * @param  string  $spotifyId  Artist's Spotify ID
+     * @return array<SpotifyArtistDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function getRelatedArtists(string $spotifyId): array
+    {
+        $cacheKey = "spotify_related_artists:{$spotifyId}";
+
+        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId) {
+            $this->checkRateLimit();
+
+            $response = $this->makeAuthenticatedRequest()
+                ->get(self::BASE_URL."/artists/{$spotifyId}/related-artists");
+
+            if (! $response->successful()) {
+                throw SpotifyApiException::fromResponse($response, 'Get related artists failed');
+            }
+
+            $artists = array_slice($response->json('artists', []), 0, 10); // Limit to 10
+
+            return array_map(
+                fn (array $artist) => SpotifyArtistDTO::fromSpotifyResponse($artist),
+                $artists
+            );
+        });
     }
 }

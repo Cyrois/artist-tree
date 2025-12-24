@@ -9,6 +9,7 @@ use App\Http\Resources\ArtistResource;
 use App\Http\Resources\ArtistSearchResultResource;
 use App\Models\Artist;
 use App\Services\ArtistSearchService;
+use App\Services\SpotifyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,6 +22,7 @@ class ArtistController extends Controller
 {
     public function __construct(
         private ArtistSearchService $searchService,
+        private SpotifyService $spotifyService,
     ) {}
 
     /**
@@ -169,5 +171,161 @@ class ArtistController extends Controller
         return response()->json([
             'data' => new ArtistResource($artist),
         ], 200);
+    }
+
+    /**
+     * Get artist's top tracks from Spotify.
+     *
+     * GET /api/artists/{id}/top-tracks
+     */
+    public function topTracks(int $id): JsonResponse
+    {
+        $artist = Artist::findOrFail($id);
+        $spotifyId = $this->resolveSpotifyId($artist);
+
+        if (! $spotifyId) {
+            return response()->json([
+                'message' => 'Artist does not have a Spotify ID',
+                'data' => [],
+            ], 200);
+        }
+
+        try {
+            $tracks = $this->spotifyService->getArtistTopTracks($spotifyId);
+
+            return response()->json([
+                'data' => array_map(fn ($track) => $track->toArray(), $tracks),
+            ], 200);
+        } catch (SpotifyApiException|\Exception $e) {
+            Log::error('Failed to fetch top tracks', [
+                'artist_id' => $id,
+                'spotify_id' => $spotifyId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to fetch top tracks',
+                'data' => [],
+            ], 200);
+        }
+    }
+
+    /**
+     * Get artist's albums from Spotify.
+     *
+     * GET /api/artists/{id}/albums
+     */
+    public function albums(int $id): JsonResponse
+    {
+        $artist = Artist::findOrFail($id);
+        $spotifyId = $this->resolveSpotifyId($artist);
+
+        if (! $spotifyId) {
+            return response()->json([
+                'message' => 'Artist does not have a Spotify ID',
+                'data' => [],
+            ], 200);
+        }
+
+        try {
+            $albums = $this->spotifyService->getArtistAlbums($spotifyId);
+
+            return response()->json([
+                'data' => array_map(fn ($album) => $album->toArray(), $albums),
+            ], 200);
+        } catch (SpotifyApiException|\Exception $e) {
+            Log::error('Failed to fetch albums', [
+                'artist_id' => $id,
+                'spotify_id' => $spotifyId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to fetch albums',
+                'data' => [],
+            ], 200);
+        }
+    }
+
+    /**
+     * Get related artists from Spotify.
+     *
+     * GET /api/artists/{id}/related-artists
+     */
+    public function relatedArtists(int $id): JsonResponse
+    {
+        $artist = Artist::findOrFail($id);
+        $spotifyId = $this->resolveSpotifyId($artist);
+
+        if (! $spotifyId) {
+            return response()->json([
+                'message' => 'Artist does not have a Spotify ID',
+                'data' => [],
+            ], 200);
+        }
+
+        try {
+            $relatedArtists = $this->spotifyService->getRelatedArtists($spotifyId);
+
+            // Check if each related artist exists in local database
+            $artistsWithDbInfo = array_map(function ($spotifyArtist) {
+                $localArtist = Artist::where('spotify_id', $spotifyArtist->spotifyId)->first();
+
+                $data = $spotifyArtist->toArray();
+                $data['exists_in_database'] = $localArtist !== null;
+                $data['database_id'] = $localArtist?->id;
+
+                return $data;
+            }, $relatedArtists);
+
+            return response()->json([
+                'data' => $artistsWithDbInfo,
+            ], 200);
+        } catch (SpotifyApiException|\Exception $e) {
+            Log::error('Failed to fetch related artists', [
+                'artist_id' => $id,
+                'spotify_id' => $spotifyId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to fetch related artists',
+                'data' => [],
+            ], 200);
+        }
+    }
+
+    /**
+     * Resolve Spotify ID for an artist.
+     *
+     * If artist is missing spotify_id, search Spotify for exact match and persist.
+     */
+    private function resolveSpotifyId(Artist $artist): ?string
+    {
+        if ($artist->spotify_id) {
+            return $artist->spotify_id;
+        }
+
+        // Search Spotify for exact name match
+        try {
+            $results = $this->spotifyService->searchArtists($artist->name, limit: 5);
+
+            foreach ($results as $spotifyArtist) {
+                if (strcasecmp($spotifyArtist->name, $artist->name) === 0) {
+                    // Exact match found - update artist record
+                    $artist->update(['spotify_id' => $spotifyArtist->spotifyId]);
+
+                    return $spotifyArtist->spotifyId;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to resolve Spotify ID', [
+                'artist_id' => $artist->id,
+                'artist_name' => $artist->name,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return null;
     }
 }

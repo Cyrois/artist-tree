@@ -1,0 +1,133 @@
+{
+  "tracks": [
+    {
+      "id": "track1",
+      "name": "Popular Song 1",
+      "album": {
+        "name": "Greatest Hits",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b273example1",
+            "height": 640,
+            "width": 640
+          }
+        ]
+      },
+      "duration_ms": 215000,
+      "preview_url": "https://p.scdn.co/mp3-preview/example1",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/track1"
+      },
+      "artists": [
+        {
+          "name": "Test Artist",
+          "id": "artist123"
+        }
+      ]
+    },
+    {
+      "id": "track2",
+      "name": "Popular Song 2",
+      "album": {
+        "name": "Latest Album",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b273example2",
+            "height": 640,
+            "width": 640
+          }
+        ]
+      },
+      "duration_ms": 198000,
+      "preview_url": "https://p.scdn.co/mp3-preview/example2",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/track2"
+      },
+      "artists": [
+        {
+          "name": "Test Artist",
+          "id": "artist123"
+        },
+        {
+          "name": "Featured Artist",
+          "id": "artist456"
+        }
+      ]
+    },
+    {
+      "id": "track3",
+      "name": "Popular Song 3",
+      "album": {
+        "name": "Greatest Hits",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b273example1",
+            "height": 640,
+            "width": 640
+          }
+        ]
+      },
+      "duration_ms": 242000,
+      "preview_url": null,
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/track3"
+      },
+      "artists": [
+        {
+          "name": "Test Artist",
+          "id": "artist123"
+        }
+      ]
+    },
+    {
+      "id": "track4",
+      "name": "Popular Song 4",
+      "album": {
+        "name": "Debut Album",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b273example3",
+            "height": 640,
+            "width": 640
+          }
+        ]
+      },
+      "duration_ms": 189000,
+      "preview_url": "https://p.scdn.co/mp3-preview/example4",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/track4"
+      },
+      "artists": [
+        {
+          "name": "Test Artist",
+          "id": "artist123"
+        }
+      ]
+    },
+    {
+      "id": "track5",
+      "name": "Popular Song 5",
+      "album": {
+        "name": "Latest Album",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d0000b273example2",
+            "height": 640,
+            "width": 640
+          }
+        ]
+      },
+      "duration_ms": 223000,
+      "preview_url": "https://p.scdn.co/mp3-preview/example5",
+      "external_urls": {
+        "spotify": "https://open.spotify.com/track/track5"
+      },
+      "artists": [
+        {
+          "name": "Test Artist",
+          "id": "artist123"
+        }
+      ]
+    }
+  ]
+}
