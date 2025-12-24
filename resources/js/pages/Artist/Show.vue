@@ -2,19 +2,27 @@
 import { Head, router } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
-import ArtistCard from '@/components/artist/ArtistCard.vue';
-import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import MiniChart from '@/components/chart/MiniChart.vue';
-import ScoreBreakdown from '@/components/chart/ScoreBreakdown.vue';
-import { getArtistById, getSimilarArtists } from '@/data/artists';
-import { formatNumber } from '@/data/constants';
-import type { Artist } from '@/data/types';
-import { ArrowLeft, Plus, Scale, Globe, Calendar, Disc, TrendingUp, RefreshCw, Music, Instagram, Twitter, Youtube } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Loader2, AlertCircle } from 'lucide-vue-next';
+import { ref, onMounted, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import { show as artistShowRoute } from '@/routes/api/artists';
+
+// API response type matching backend structure
+interface ApiArtist {
+    id: number;
+    spotify_id: string;
+    name: string;
+    genres: string[];
+    image_url: string | null;
+    metrics: {
+        spotify_monthly_listeners: number | null;
+        spotify_popularity: number | null;
+        youtube_subscribers: number | null;
+    } | null;
+    created_at: string;
+    updated_at: string;
+}
 
 interface Props {
     id: number;
@@ -22,311 +30,114 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const artist = computed(() => getArtistById(props.id));
-const similarArtists = computed(() => artist.value ? getSimilarArtists(props.id) : []);
+// State
+const artist = ref<ApiArtist | null>(null);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
 
-const activeTab = ref<'overview' | 'data'>('overview');
+// Fetch artist details on mount
+onMounted(async () => {
+    try {
+        const response = await fetch(artistShowRoute.url(props.id), {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
 
-// Mock score breakdown
-const scoreBreakdown = computed(() => {
-    if (!artist.value) return [];
-    return [
-        { label: trans('artists.show_monthly_listeners'), value: artist.value.spotifyListeners, weight: 0.4, contribution: (artist.value.score * 0.4) },
-        { label: trans('artists.show_spotify_popularity'), value: artist.value.spotifyPopularity, weight: 0.3, contribution: (artist.value.score * 0.3) },
-        { label: trans('artists.show_youtube_subscribers'), value: artist.value.youtubeSubscribers, weight: 0.3, contribution: (artist.value.score * 0.3) },
-    ];
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Artist not found');
+            }
+            throw new Error(`Failed to load artist: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        artist.value = data.data;
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'An error occurred while loading artist';
+    } finally {
+        isLoading.value = false;
+    }
 });
-
-function handleArtistClick(a: Artist) {
-    router.visit(`/artist/${a.id}`);
-}
 
 const breadcrumbs = computed(() => [
     { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
     { title: trans('common.breadcrumb_search_artists'), href: '/search' },
     { title: artist.value?.name ?? trans('artists.show_page_title'), href: `/artist/${props.id}` },
 ]);
+
+const pageTitle = computed(() =>
+    artist.value ? `${artist.value.name} - Artist-Tree` : 'Artist - Artist-Tree'
+);
 </script>
 
 <template>
-    <Head :title="`${artist?.name ?? $t('artists.show_page_title')} - Artist-Tree`" />
+    <Head :title="pageTitle" />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div v-if="artist" class="space-y-8">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex items-center justify-center py-24">
+            <div class="flex flex-col items-center gap-4">
+                <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+                <p class="text-muted-foreground">Loading artist...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="flex items-center justify-center py-24">
+            <div class="flex flex-col items-center gap-4 text-center">
+                <AlertCircle class="h-12 w-12 text-destructive" />
+                <div>
+                    <p class="font-medium text-destructive">{{ error }}</p>
+                    <p class="text-sm text-muted-foreground mt-1">Please try again later</p>
+                </div>
+                <Button variant="outline" @click="router.visit('/search')">
+                    <ArrowLeft class="w-4 h-4 mr-2" />
+                    Back to Search
+                </Button>
+            </div>
+        </div>
+
+        <!-- Artist Content -->
+        <div v-else-if="artist" class="space-y-8">
             <!-- Back button -->
             <Button variant="ghost" size="sm" @click="router.visit('/search')">
                 <ArrowLeft class="w-4 h-4 mr-2" />
                 {{ $t('artists.show_back_button') }}
             </Button>
 
-            <!-- Header -->
-            <div class="flex flex-col md:flex-row gap-6">
-                <ArtistAvatar :artist="artist" size="xl" />
-
-                <div class="flex-1 space-y-4">
-                    <div>
-                        <div class="flex items-center gap-4">
-                            <h1 class="text-3xl font-bold">{{ artist.name }}</h1>
-                            <ScoreBadge :score="artist.score" size="lg" />
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <Badge v-for="genre in artist.genre" :key="genre" variant="secondary">
-                                {{ genre }}
-                            </Badge>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <div class="flex items-center gap-1">
-                            <Globe class="w-4 h-4" />
-                            {{ artist.country }}
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <Calendar class="w-4 h-4" />
-                            Since {{ artist.formedYear }}
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <Disc class="w-4 h-4" />
-                            {{ artist.label }}
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <Button>
-                            <Plus class="w-4 h-4 mr-2" />
-                            {{ $t('artists.show_add_to_lineup_button') }}
-                        </Button>
-                        <Button variant="outline">
-                            <Scale class="w-4 h-4 mr-2" />
-                            {{ $t('artists.show_compare_button') }}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="border-b">
-                <div class="flex gap-6">
-                    <button
-                        :class="[
-                            'pb-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                        ]"
-                        @click="activeTab = 'overview'"
-                    >
-                        {{ $t('artists.show_tab_overview') }}
-                    </button>
-                    <button
-                        :class="[
-                            'pb-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === 'data' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                        ]"
-                        @click="activeTab = 'data'"
-                    >
-                        {{ $t('artists.show_tab_data') }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- Overview Tab -->
-            <div v-if="activeTab === 'overview'" class="space-y-8">
-                <!-- Bio -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_about_title') }}</h2>
-                    <p class="text-muted-foreground">{{ artist.bio }}</p>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_monthly_listeners') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyListeners) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_popularity') }}</p>
-                            <p class="text-2xl font-bold">{{ artist.spotifyPopularity }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_subs') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeSubscribers) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_instagram') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.instagramFollowers) }}</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <!-- Top Tracks -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_top_tracks_title') }}</h2>
-                    <div class="space-y-2">
-                        <div
-                            v-for="(track, index) in artist.topTracks"
-                            :key="track"
-                            class="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
-                        >
-                            <span class="w-6 text-center text-muted-foreground">{{ index + 1 }}</span>
-                            <Music class="w-4 h-4 text-muted-foreground" />
-                            <span>{{ track }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Albums -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_discography_title') }}</h2>
-                    <div class="flex flex-wrap gap-2">
-                        <Badge v-for="album in artist.albums" :key="album" variant="outline" class="py-1.5 px-3">
-                            {{ album }}
-                        </Badge>
-                    </div>
-                </div>
-
-                <!-- Similar Artists -->
-                <div v-if="similarArtists.length > 0">
-                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_similar_artists_title') }}</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <ArtistCard
-                            v-for="a in similarArtists"
-                            :key="a.id"
-                            :artist="a"
-                            compact
-                            @click="handleArtistClick"
-                        />
-                    </div>
-                </div>
-
-                <!-- External Links -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-3">{{ $t('artists.show_listen_follow_title') }}</h2>
-                    <div class="flex flex-wrap gap-3">
-                        <Button variant="outline" class="bg-[hsl(var(--spotify))]/10 border-[hsl(var(--spotify))]/30 hover:bg-[hsl(var(--spotify))]/20">
-                            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                            </svg>
-                            Spotify
-                        </Button>
-                        <Button variant="outline" class="bg-[hsl(var(--youtube))]/10 border-[hsl(var(--youtube))]/30 hover:bg-[hsl(var(--youtube))]/20">
-                            <Youtube class="w-4 h-4 mr-2" />
-                            YouTube
-                        </Button>
-                        <Button variant="outline" class="bg-[hsl(var(--instagram))]/10 border-[hsl(var(--instagram))]/30 hover:bg-[hsl(var(--instagram))]/20">
-                            <Instagram class="w-4 h-4 mr-2" />
-                            Instagram
-                        </Button>
-                        <Button variant="outline">
-                            <Twitter class="w-4 h-4 mr-2" />
-                            Twitter
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data & Metrics Tab -->
-            <div v-if="activeTab === 'data'" class="space-y-8">
-                <!-- Metrics Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
-                        <CardContent class="pt-6">
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-sm text-muted-foreground">{{ $t('artists.show_monthly_listeners') }}</p>
-                                <TrendingUp class="w-4 h-4 text-[hsl(var(--score-high))]" />
+            <!-- Artist Header - Simple: just name and image -->
+            <Card>
+                <CardContent class="pt-6">
+                    <div class="flex flex-col items-center gap-6 md:flex-row md:items-start">
+                        <!-- Artist Image -->
+                        <div class="shrink-0">
+                            <img
+                                v-if="artist.image_url"
+                                :src="artist.image_url"
+                                :alt="artist.name"
+                                class="h-48 w-48 rounded-lg object-cover shadow-lg"
+                            />
+                            <div
+                                v-else
+                                class="flex h-48 w-48 items-center justify-center rounded-lg bg-muted"
+                            >
+                                <span class="text-4xl font-bold text-muted-foreground">
+                                    {{ artist.name.charAt(0).toUpperCase() }}
+                                </span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyListeners) }}</p>
-                            <p class="text-xs text-[hsl(var(--score-high))]">+12.4% from last month</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_popularity') }}</p>
-                            <p class="text-2xl font-bold">{{ artist.spotifyPopularity }}/100</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_spotify_followers') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.spotifyFollowers) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_subscribers') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeSubscribers) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_instagram_followers') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.instagramFollowers) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_twitter_followers') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.twitterFollowers) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_youtube_views') }}</p>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.youtubeViews) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="pt-6">
-                            <p class="text-sm text-muted-foreground">{{ $t('artists.show_active_since') }}</p>
-                            <p class="text-2xl font-bold">{{ artist.formedYear }}</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                        </div>
 
-                <!-- Listeners Trend Chart -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{{ $t('artists.show_listeners_trend_title') }}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <MiniChart
-                            :data="artist.metricsHistory.listeners"
-                            :labels="artist.metricsHistory.months"
-                            :height="120"
-                            :show-labels="true"
-                        />
-                    </CardContent>
-                </Card>
-
-                <!-- Score Breakdown -->
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{{ $t('artists.show_score_breakdown_title') }}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ScoreBreakdown :metrics="scoreBreakdown" />
-                    </CardContent>
-                </Card>
-
-                <!-- Data Freshness -->
-                <div class="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                    <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <RefreshCw class="w-4 h-4" />
-                        <span>{{ $t('artists.show_last_updated') }} {{ artist.lastUpdated }}</span>
+                        <!-- Artist Name -->
+                        <div class="flex-1 text-center md:text-left">
+                            <h1 class="text-3xl font-bold">{{ artist.name }}</h1>
+                        </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                        <RefreshCw class="w-4 h-4 mr-2" />
-                        {{ $t('artists.show_refresh_data_button') }}
-                    </Button>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
 
-        <!-- Not Found -->
+        <!-- Not Found (fallback) -->
         <div v-else class="text-center py-12">
             <p class="text-muted-foreground">{{ $t('artists.show_not_found') }}</p>
             <Button class="mt-4" @click="router.visit('/search')">

@@ -20,6 +20,7 @@ class ArtistSearchResultResource extends JsonResource
     {
         return [
             'id' => $this->databaseId,
+            'spotify_id' => $this->spotifyId,
             'name' => $this->name,
             'genres' => $this->genres,
             'image_url' => $this->imageUrl,

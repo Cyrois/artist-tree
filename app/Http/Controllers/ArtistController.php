@@ -7,8 +7,10 @@ use App\Http\Requests\SearchArtistsRequest;
 use App\Http\Requests\SelectArtistRequest;
 use App\Http\Resources\ArtistResource;
 use App\Http\Resources\ArtistSearchResultResource;
+use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
 
@@ -87,7 +89,7 @@ class ArtistController extends Controller
      */
     public function refresh(int $id): JsonResponse
     {
-        $artist = \App\Models\Artist::findOrFail($id);
+        $artist = Artist::findOrFail($id);
 
         if (! $artist->spotify_id) {
             return response()->json([
@@ -123,5 +125,49 @@ class ArtistController extends Controller
                 'message' => 'An unexpected error occurred',
             ], 500);
         }
+    }
+
+    /**
+     * Get artist by database ID or Spotify ID.
+     *
+     * GET /api/artists/{id} - Get by database ID
+     * GET /api/artists?spotify_id=abc123 - Get by Spotify ID
+     */
+    public function show(Request $request, ?int $id = null): JsonResponse
+    {
+        // Check if querying by Spotify ID
+        if ($request->has('spotify_id')) {
+            $spotifyId = $request->input('spotify_id');
+            $artist = Artist::where('spotify_id', $spotifyId)->with('metrics')->first();
+
+            if (! $artist) {
+                return response()->json([
+                    'message' => 'Artist not found with Spotify ID: '.$spotifyId,
+                ], 404);
+            }
+
+            return response()->json([
+                'data' => new ArtistResource($artist),
+            ], 200);
+        }
+
+        // Query by database ID
+        if ($id === null) {
+            return response()->json([
+                'message' => 'Artist ID or spotify_id parameter required',
+            ], 400);
+        }
+
+        $artist = Artist::with('metrics')->find($id);
+
+        if (! $artist) {
+            return response()->json([
+                'message' => 'Artist not found with ID: '.$id,
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => new ArtistResource($artist),
+        ], 200);
     }
 }

@@ -8,12 +8,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
-import { getArtists, getTrendingArtists, getSimilarArtists, searchArtists } from '@/data/artists';
+import { getTrendingArtists, getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, ChevronDown, TrendingUp } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { Search, SlidersHorizontal, ChevronDown, TrendingUp, Loader2, AlertCircle } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import { useDebounceFn } from '@vueuse/core';
+import { search as artistSearchRoute } from '@/routes/api/artists';
+
+// API response type matching backend structure
+interface ApiArtist {
+    id: number | null;
+    spotify_id: string;
+    name: string;
+    genres: string[];
+    image_url: string | null;
+    exists_in_database: boolean;
+    source: 'local' | 'spotify';
+}
 
 // State
 const searchQuery = ref('');
@@ -23,18 +36,88 @@ const scoreMax = ref(100);
 const sortBy = ref<'score' | 'name' | 'listeners'>('score');
 const showFilters = ref(false);
 
-// Get all artists initially
-const allArtists = getArtists();
+// API state
+const searchResults = ref<ApiArtist[]>([]);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+const hasSearched = ref(false);
+
+// Get trending artists for initial display
 const trendingArtists = getTrendingArtists(10);
 
-// Filtered artists
-const filteredArtists = computed(() => {
-    let results = [...allArtists];
-
-    // Text search
-    if (searchQuery.value.length >= 2) {
-        results = searchArtists(searchQuery.value);
+// Debounced search function (300ms as per CLAUDE.md)
+const performSearch = useDebounceFn(async (query: string) => {
+    if (!query || query.length < 2) {
+        searchResults.value = [];
+        hasSearched.value = false;
+        return;
     }
+
+    isLoading.value = true;
+    error.value = null;
+    hasSearched.value = true;
+
+    try {
+        const response = await fetch(artistSearchRoute.url({ query: { q: query } }), {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Search failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        searchResults.value = data.data || [];
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'An error occurred while searching';
+        searchResults.value = [];
+    } finally {
+        isLoading.value = false;
+    }
+}, 300);
+
+// Watch search query and trigger debounced search
+watch(searchQuery, (newValue) => {
+    if (newValue.length >= 2) {
+        isLoading.value = true; // Show loading immediately for better UX
+    }
+    performSearch(newValue);
+});
+
+// Convert API artists to display format for filtering/sorting
+const filteredArtists = computed(() => {
+    // Map API results to the Artist type expected by components
+    let results: Artist[] = searchResults.value.map((apiArtist) => ({
+        id: apiArtist.id ?? 0,
+        name: apiArtist.name,
+        genre: apiArtist.genres,
+        score: 0, // Score not available in search results
+        spotifyListeners: 0,
+        spotifyPopularity: 0,
+        spotifyFollowers: 0,
+        youtubeSubscribers: 0,
+        youtubeViews: 0,
+        instagramFollowers: 0,
+        twitterFollowers: 0,
+        lastUpdated: '',
+        country: '',
+        formedYear: 0,
+        label: '',
+        bio: '',
+        topTracks: [],
+        albums: [],
+        metricsHistory: { listeners: [], months: [] },
+        tierSuggestion: 'mid_tier' as const,
+        similarArtists: [],
+        image: apiArtist.image_url ?? undefined,
+        // Store extra data for navigation
+        _spotifyId: apiArtist.spotify_id,
+        _existsInDatabase: apiArtist.exists_in_database,
+        _source: apiArtist.source,
+    })) as (Artist & { _spotifyId: string; _existsInDatabase: boolean; _source: string })[];
 
     // Genre filter
     if (selectedGenres.value.length > 0) {
@@ -43,7 +126,7 @@ const filteredArtists = computed(() => {
         );
     }
 
-    // Score range filter
+    // Score range filter (only applicable if we have scores)
     results = results.filter(a => a.score >= scoreMin.value && a.score <= scoreMax.value);
 
     // Sort
@@ -91,8 +174,13 @@ function clearFilters() {
     scoreMax.value = 100;
 }
 
-function handleArtistClick(artist: Artist) {
-    router.visit(`/artist/${artist.id}`);
+function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
+    // Navigate using database ID if available, otherwise use Spotify ID
+    if (artist.id && artist.id > 0) {
+        router.visit(`/artist/${artist.id}`);
+    } else if (artist._spotifyId) {
+        router.visit(`/artist?spotify_id=${artist._spotifyId}`);
+    }
 }
 
 const sortOptions = [
@@ -219,15 +307,37 @@ const breadcrumbs = [
                 </CardContent>
             </Card>
 
+            <!-- Loading State -->
+            <div v-if="isLoading" class="flex items-center justify-center py-12">
+                <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+                <span class="ml-3 text-muted-foreground">{{ $t('common.loading') }}</span>
+            </div>
+
+            <!-- Error State -->
+            <Card v-else-if="error" class="border-destructive">
+                <CardContent class="flex items-center gap-3 pt-6 text-destructive">
+                    <AlertCircle class="h-5 w-5" />
+                    <p>{{ error }}</p>
+                </CardContent>
+            </Card>
+
             <!-- Results Count -->
-            <div class="flex items-center justify-between">
+            <div v-else-if="hasSearched" class="flex items-center justify-between">
                 <p class="text-muted-foreground">
                     <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> {{ $t('artists.search_results_count') }}
                 </p>
             </div>
 
+            <!-- No Results Message -->
+            <div v-if="hasSearched && !isLoading && !error && filteredArtists.length === 0" class="py-12 text-center">
+                <Search class="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <h3 class="mt-4 text-lg font-medium">{{ $t('artists.search_no_results_title') }}</h3>
+                <p class="mt-2 text-muted-foreground">{{ $t('artists.search_no_results_description') }}</p>
+            </div>
+
             <!-- Results Grid -->
             <ArtistCardGrid
+                v-if="!isLoading && !error && filteredArtists.length > 0"
                 :artists="filteredArtists"
                 :columns="4"
                 @select-artist="handleArtistClick"

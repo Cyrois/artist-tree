@@ -55,10 +55,12 @@ Routes:
 └── api.php (RESTful JSON API)
     ├── GET /api/artists → JSON (paginated list)
     ├── GET /api/artists/search?q=... → JSON (autocomplete)
+    ├── GET /api/artists/{id} → JSON (artist details by database ID)
+    ├── GET /api/artists?spotify_id=... → JSON (artist details by Spotify ID)
+    ├── POST /api/artists/{id}/refresh → JSON (refresh metrics)
     ├── POST /api/lineups → JSON (create lineup)
     ├── POST /api/lineups/{id}/artists → JSON (add artist, recalculate tiers)
-    ├── DELETE /api/lineups/{id}/artists/{artistId} → JSON
-    └── POST /api/artists/{id}/refresh → JSON (refresh metrics)
+    └── DELETE /api/lineups/{id}/artists/{artistId} → JSON
 ```
 
 ### Frontend Pattern
@@ -259,6 +261,17 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 ],
 ```
 
+**Artist Auto-Creation from Spotify:**
+- Artists returned from Spotify search are considered verified/real artists
+- When search returns Spotify results not in local database:
+  1. Return search results immediately to frontend (don't block)
+  2. Dispatch background job to create missing artists in database
+  3. Job creates artist record + initial metrics from Spotify data
+- This ensures artists are available locally for future searches
+- Job class: `App\Jobs\CreateArtistsFromSpotifyJob`
+- Job should be idempotent (check if artist exists before creating)
+- Use `spotify_id` as unique identifier to prevent duplicates
+
 #### YouTube API
 **Service:** `App\Services\YouTubeService`
 
@@ -349,6 +362,24 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 - Response time target: <500ms
 - **Debounce frontend input** (300ms minimum) to reduce API calls
 - Search across: artist name, genres (if user enables genre search)
+
+**Search Response Structure:**
+```json
+{
+  "id": 123,              // Database ID (null if not yet in DB)
+  "spotify_id": "abc123", // Spotify ID (always present)
+  "name": "Artist Name",
+  "genres": ["rock", "indie"],
+  "image_url": "https://...",
+  "exists_in_database": true,
+  "source": "local"       // "local" or "spotify"
+}
+```
+
+**Artist Details Lookup:**
+- Frontend uses `id` if available: `GET /api/artists/{id}`
+- Frontend uses `spotify_id` as fallback: `GET /api/artists?spotify_id={spotifyId}`
+- Both return the same response structure (full artist details with metrics)
 
 **Frontend Vue Component:**
 ```vue

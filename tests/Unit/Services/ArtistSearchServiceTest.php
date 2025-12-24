@@ -7,6 +7,7 @@ use App\Models\ArtistMetric;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
@@ -230,4 +231,101 @@ it('respects search limit', function () {
     $results = $this->searchService->search('Test', 10);
 
     expect($results)->toHaveCount(10);
+});
+
+it('dispatches job to create missing artists from Spotify', function () {
+    Queue::fake();
+
+    // Create one local artist
+    Artist::factory()
+        ->has(ArtistMetric::factory())
+        ->create(['name' => 'Local Artist', 'spotify_id' => 'local123']);
+
+    // Mock Spotify to return one existing and one new artist
+    $spotifyResults = [
+        new SpotifyArtistDTO(
+            spotifyId: 'local123',
+            name: 'Local Artist',
+            genres: ['rock'],
+            imageUrl: 'https://example.com/local.jpg',
+            popularity: 80,
+            followers: 50000,
+        ),
+        new SpotifyArtistDTO(
+            spotifyId: 'new456',
+            name: 'New Artist',
+            genres: ['pop'],
+            imageUrl: 'https://example.com/new.jpg',
+            popularity: 85,
+            followers: 75000,
+        ),
+    ];
+
+    $this->spotifyService->shouldReceive('searchArtists')
+        ->once()
+        ->andReturn($spotifyResults);
+
+    $results = $this->searchService->search('Artist', 20);
+
+    // Should have 2 results
+    expect($results)->toHaveCount(2);
+
+    // Should dispatch job with only the new artist
+    Queue::assertPushed(\App\Jobs\CreateArtistsFromSpotifyJob::class, function ($job) {
+        $reflection = new \ReflectionClass($job);
+        $property = $reflection->getProperty('spotifyArtists');
+        $property->setAccessible(true);
+        $artists = $property->getValue($job);
+
+        // Verify only the missing artist is in the job
+        expect($artists)->toHaveCount(1)
+            ->and($artists[0]->spotifyId)->toBe('new456')
+            ->and($artists[0]->name)->toBe('New Artist');
+
+        return true;
+    });
+});
+
+it('does not dispatch job when all Spotify results exist locally', function () {
+    Queue::fake();
+
+    // Create local artists
+    Artist::factory()
+        ->has(ArtistMetric::factory())
+        ->create(['name' => 'Artist 1', 'spotify_id' => 'spotify1']);
+    Artist::factory()
+        ->has(ArtistMetric::factory())
+        ->create(['name' => 'Artist 2', 'spotify_id' => 'spotify2']);
+
+    // Mock Spotify to return only existing artists
+    $spotifyResults = [
+        new SpotifyArtistDTO(
+            spotifyId: 'spotify1',
+            name: 'Artist 1',
+            genres: ['rock'],
+            imageUrl: 'https://example.com/1.jpg',
+            popularity: 80,
+            followers: 50000,
+        ),
+        new SpotifyArtistDTO(
+            spotifyId: 'spotify2',
+            name: 'Artist 2',
+            genres: ['pop'],
+            imageUrl: 'https://example.com/2.jpg',
+            popularity: 85,
+            followers: 75000,
+        ),
+    ];
+
+    $this->spotifyService->shouldReceive('searchArtists')
+        ->once()
+        ->andReturn($spotifyResults);
+
+    $results = $this->searchService->search('Artist', 20);
+
+    // Should have 2 results
+    expect($results)->toHaveCount(2);
+
+    // Should NOT dispatch job since all artists exist
+    Queue::assertNotPushed(\App\Jobs\CreateArtistsFromSpotifyJob::class);
 });
