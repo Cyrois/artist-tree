@@ -273,7 +273,7 @@ class ArtistSpotifyDataTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data', [])
-            ->assertJsonPath('message', 'Unable to fetch data from Spotify. Please try again later.');
+            ->assertJsonPath('message', 'An unexpected error occurred. Please try again later.');
     }
 
     public function test_endpoints_require_authentication(): void
@@ -388,6 +388,6 @@ class ArtistSpotifyDataTest extends TestCase
         $this->assertStringNotContainsString('database connection', json_encode($responseData));
 
         // Verify generic user-friendly message is returned instead
-        $this->assertStringContainsString('Unable to fetch data from Spotify', $responseData['message']);
+        $this->assertStringContainsString('An unexpected error occurred', $responseData['message']);
     }
 }

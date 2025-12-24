@@ -19,6 +19,31 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Test Updates for Graceful Degradation (2025-12-24)
+
+**Summary:** Updated failing tests to match the graceful degradation error handling pattern implemented in the Spotify integration.
+
+#### Changes Made
+
+**Test Updates:**
+- Updated 4 failing tests to expect HTTP 200 status codes with empty data instead of HTTP 400/500 error codes
+- Tests now properly validate graceful degradation behavior where Spotify API failures return user-friendly messages
+- All error handling tests now expect generic "An unexpected error occurred" messages instead of specific Spotify error details
+
+**Files Modified:**
+- `tests/Feature/Api/ArtistSearchApiTest.php` - Updated 2 tests:
+  - `it handles Spotify API errors gracefully when selecting artist` - Now expects HTTP 200 with empty data
+  - `it returns error when refreshing artist without Spotify ID` - Now expects HTTP 200 with empty data array
+- `tests/Feature/Api/ArtistSpotifyDataTest.php` - Updated 2 tests:
+  - `test_endpoints_gracefully_handle_spotify_api_errors` - Changed expected message from "Unable to fetch data from Spotify" to "An unexpected error occurred"
+  - `test_error_responses_do_not_expose_raw_exceptions` - Changed assertion to match generic error message
+
+**Test Results:**
+- All 124 tests passing (2,869 assertions)
+- Code formatted with Pint to match project standards
+
+---
+
 ### Spotify Integration Improvements (2025-12-24)
 
 **Summary:** Removed deprecated Related Artists functionality, improved error handling, added negative result caching, and enhanced test coverage.

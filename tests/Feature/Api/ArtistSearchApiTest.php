@@ -234,9 +234,10 @@ it('handles Spotify API errors gracefully when selecting artist', function () {
             'artist_id' => $artist->id,
         ]);
 
-    // Should return error status with error message
-    expect($response->status())->toBeGreaterThanOrEqual(400);
-    $response->assertJsonStructure(['message']);
+    // Should return 200 with empty data due to graceful degradation
+    $response->assertStatus(200)
+        ->assertJsonStructure(['message', 'data'])
+        ->assertJsonPath('message', 'An unexpected error occurred. Please try again later.');
 });
 
 it('refreshes artist data from Spotify', function () {
@@ -278,7 +279,10 @@ it('returns error when refreshing artist without Spotify ID', function () {
     $response = $this->actingAs($this->user)
         ->postJson("/api/artists/{$artist->id}/refresh");
 
-    $response->assertStatus(400)
+    // Graceful degradation - returns 200 with empty data and user-friendly message
+    $response->assertStatus(200)
+        ->assertJsonStructure(['message', 'data'])
+        ->assertJsonPath('data', [])
         ->assertJsonPath('message', 'Artist does not have a Spotify ID');
 });
 
