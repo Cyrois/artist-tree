@@ -119,7 +119,6 @@ These files contain the essential patterns and conventions for this project. Ref
 - New services, jobs, or business logic
 - New DTOs, form requests, or resources
 - Configuration changes
-- Test additions or modifications
 
 ### How to Update
 1. Add entries under the appropriate section in CHANGELOG.md

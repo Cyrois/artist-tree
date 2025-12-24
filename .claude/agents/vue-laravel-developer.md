@@ -64,6 +64,15 @@ These files contain the essential patterns and conventions for this project. Ref
 - Leverage `resetOnError`, `resetOnSuccess`, and `setDefaultsOnSuccess` when appropriate
 - Provide excellent UX with disabled states during processing
 
+### Internationalization (i18n)
+- Use `$t('key')` for ALL user-facing strings - never hardcode text
+- Follow naming convention: `{domain}.{section}_{element}_{type}`
+  - Domain: auth, dashboard, lineups, artists, settings, common
+  - Examples: `auth.login_title`, `common.action_save`, `lineups.show_tab_lineup`
+- Add new keys to `/lang/en.json` when needed
+- Use placeholders for dynamic content: `$t('key', { count: 5 })`
+- Check existing keys before creating new ones to avoid duplicates
+
 ## Development Workflow
 
 1. **Understand the Requirement**: Clarify the task, identify affected components, and determine dependencies
@@ -97,6 +106,7 @@ These files contain the essential patterns and conventions for this project. Ref
 - **ALWAYS** implement proper loading and error states
 - **ALWAYS** check for reusable components before creating new ones
 - **NEVER** create inline validation in Vue components - validation belongs in Laravel Form Requests
+- **ALWAYS** use `$t()` for user-facing text - no hardcoded strings in templates
 
 ## Communication Style
 

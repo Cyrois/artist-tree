@@ -138,3 +138,4 @@ When uncertain about requirements or technical approaches, explicitly state what
 
 ### Delegation Reminder
 When delegating to implementation agents (laravel-backend-dev, vue-laravel-developer, test-engineer), remind them to update CHANGELOG.md with their implementation details.
+Do NOT write any code, always delegate tasks to the implementation agents and review their changes.

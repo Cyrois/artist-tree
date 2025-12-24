@@ -556,7 +556,6 @@ See `CHANGELOG.md` for the current state of the project and update it when:
 - Adding new models, migrations, or database changes
 - Creating new API endpoints or services
 - Adding new Vue pages or components
-- Writing significant tests
 - Making architectural changes
 
 ---

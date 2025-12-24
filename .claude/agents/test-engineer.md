@@ -158,7 +158,7 @@ You work in an **iterative feedback loop** with developers:
 
 ## Changelog Requirements
 
-**CRITICAL**: After writing significant tests, you MUST update `CHANGELOG.md` to document test coverage.
+**CRITICAL**: After writing significant tests, you MUST update `TESTS_CHANGELOG.md` to document test coverage.
 
 ### What to Log
 - New test files created
@@ -166,7 +166,7 @@ You work in an **iterative feedback loop** with developers:
 - Test counts and coverage areas
 
 ### How to Update
-Add entries under the Tests section in CHANGELOG.md:
+Add entries under in the TEST_CHANGELOG.md:
 ```markdown
 ### Tests
 - **`TestFileName.php`** (`tests/Feature/TestFileName.php`)
