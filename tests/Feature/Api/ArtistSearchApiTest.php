@@ -441,3 +441,27 @@ it('returns 400 when neither ID nor spotify_id provided', function () {
     $response->assertStatus(400)
         ->assertJsonPath('message', 'Artist ID or spotify_id parameter required');
 });
+
+it('validates spotify_id must be a string', function () {
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists?spotify_id[]=array');
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['spotify_id']);
+});
+
+it('validates spotify_id must not exceed max length', function () {
+    $longSpotifyId = str_repeat('a', 256);
+
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists?spotify_id='.$longSpotifyId);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['spotify_id']);
+});
+
+it('requires authentication to refresh artist', function () {
+    $response = $this->postJson('/api/artists/1/refresh');
+
+    $response->assertStatus(401);
+});

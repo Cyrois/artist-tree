@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use App\Exceptions\SpotifyApiException;
 use App\Http\Requests\GetArtistAlbumsRequest;
 use App\Http\Requests\GetArtistTopTracksRequest;
+use App\Http\Requests\RefreshArtistRequest;
 use App\Http\Requests\SearchArtistsRequest;
 use App\Http\Requests\SelectArtistRequest;
+use App\Http\Requests\ShowArtistRequest;
 use App\Http\Resources\ArtistResource;
 use App\Http\Resources\ArtistSearchResultResource;
 use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
 
@@ -104,7 +105,7 @@ class ArtistController extends Controller
      *
      * POST /api/artists/{id}/refresh
      */
-    public function refresh(int $id): JsonResponse
+    public function refresh(int $id, RefreshArtistRequest $request): JsonResponse
     {
         $artist = Artist::findOrFail($id);
 
@@ -136,11 +137,11 @@ class ArtistController extends Controller
      * GET /api/artists/{id} - Get by database ID
      * GET /api/artists?spotify_id=abc123 - Get by Spotify ID
      */
-    public function show(Request $request, ?int $id = null): JsonResponse
+    public function show(ShowArtistRequest $request, ?int $id = null): JsonResponse
     {
         // Check if querying by Spotify ID
         if ($request->has('spotify_id')) {
-            $spotifyId = $request->input('spotify_id');
+            $spotifyId = $request->validated('spotify_id');
             $artist = Artist::where('spotify_id', $spotifyId)->with('metrics')->first();
 
             if (! $artist) {
