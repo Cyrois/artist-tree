@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppearance } from '@/composables/useAppearance';
 import { Sun, Moon, Monitor } from 'lucide-vue-next';
+import { trans } from 'laravel-vue-i18n';
 
 const { appearance, updateAppearance } = useAppearance();
 </script>
@@ -10,9 +11,9 @@ const { appearance, updateAppearance } = useAppearance();
     <div class="space-y-6 max-w-2xl">
         <Card>
             <CardHeader>
-                <CardTitle>Theme</CardTitle>
+                <CardTitle>{{ trans('settings.theme_title') }}</CardTitle>
                 <CardDescription>
-                    Choose your preferred color scheme for the application.
+                    {{ trans('settings.theme_subtitle') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -29,8 +30,8 @@ const { appearance, updateAppearance } = useAppearance();
                         <div class="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
                             <Sun class="w-6 h-6 text-amber-600" />
                         </div>
-                        <span class="font-medium">Light</span>
-                        <span class="text-xs text-muted-foreground">Bright and clean</span>
+                        <span class="font-medium">{{ trans('settings.theme_light') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ trans('settings.theme_light_description') }}</span>
                     </button>
 
                     <button
@@ -45,8 +46,8 @@ const { appearance, updateAppearance } = useAppearance();
                         <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
                             <Moon class="w-6 h-6 text-indigo-600" />
                         </div>
-                        <span class="font-medium">Dark</span>
-                        <span class="text-xs text-muted-foreground">Easy on the eyes</span>
+                        <span class="font-medium">{{ trans('settings.theme_dark') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ trans('settings.theme_dark_description') }}</span>
                     </button>
 
                     <button
@@ -61,8 +62,8 @@ const { appearance, updateAppearance } = useAppearance();
                         <div class="p-3 rounded-full bg-gray-100 dark:bg-gray-800">
                             <Monitor class="w-6 h-6 text-gray-600" />
                         </div>
-                        <span class="font-medium">System</span>
-                        <span class="text-xs text-muted-foreground">Match device</span>
+                        <span class="font-medium">{{ trans('settings.theme_system') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ trans('settings.theme_system_description') }}</span>
                     </button>
                 </div>
             </CardContent>

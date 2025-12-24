@@ -7,6 +7,7 @@ import WeightSlider from '@/components/settings/WeightSlider.vue';
 import { metricPresets } from '@/data/constants';
 import { Music, Youtube, TrendingUp, AlertCircle, Check } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 // Weights state
 const weights = ref({
@@ -32,16 +33,15 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
     <div class="space-y-6 max-w-3xl">
         <Card>
             <CardHeader>
-                <CardTitle>Metric Weights</CardTitle>
+                <CardTitle>{{ trans('settings.scoring_weights_title') }}</CardTitle>
                 <CardDescription>
-                    Adjust how much each metric contributes to the overall artist score.
-                    Weights must add up to 100%.
+                    {{ trans('settings.scoring_weights_subtitle') }}
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-6">
                 <!-- Presets -->
                 <div>
-                    <p class="text-sm font-medium mb-3">Quick Presets</p>
+                    <p class="text-sm font-medium mb-3">{{ trans('settings.scoring_presets_title') }}</p>
                     <div class="flex flex-wrap gap-2">
                         <Button
                             v-for="(preset, key) in metricPresets"
@@ -61,17 +61,17 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
                 <div class="space-y-6">
                     <WeightSlider
                         v-model="weights.spotifyListeners"
-                        label="Spotify Monthly Listeners"
+                        :label="trans('settings.scoring_spotify_listeners')"
                         :icon="Music"
                     />
                     <WeightSlider
                         v-model="weights.spotifyPopularity"
-                        label="Spotify Popularity"
+                        :label="trans('settings.scoring_spotify_popularity')"
                         :icon="TrendingUp"
                     />
                     <WeightSlider
                         v-model="weights.youtubeSubscribers"
-                        label="YouTube Subscribers"
+                        :label="trans('settings.scoring_youtube_subscribers')"
                         :icon="Youtube"
                     />
                 </div>
@@ -80,7 +80,7 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
 
                 <!-- Total -->
                 <div class="flex items-center justify-between">
-                    <span class="font-medium">Total Weight</span>
+                    <span class="font-medium">{{ trans('settings.scoring_total_weight') }}</span>
                     <div class="flex items-center gap-2">
                         <span
                             :class="[
@@ -98,14 +98,14 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
                 <Alert v-if="!isValidTotal" variant="destructive">
                     <AlertCircle class="h-4 w-4" />
                     <AlertDescription>
-                        Weights must add up to 100%. Current total: {{ Math.round(totalWeight * 100) }}%
+                        {{ trans('settings.scoring_weights_error', { total: Math.round(totalWeight * 100) }) }}
                     </AlertDescription>
                 </Alert>
 
                 <!-- Save Button -->
                 <div class="flex justify-end">
                     <Button :disabled="!isValidTotal">
-                        Save Changes
+                        {{ trans('settings.scoring_save_button') }}
                     </Button>
                 </div>
             </CardContent>

@@ -272,5 +272,29 @@
     "common.navigation_artists": "Artists",
     "common.navigation_search": "Search",
     "common.navigation_settings": "Settings",
-    "common.navigation_logout": "Log out"
+    "common.navigation_logout": "Log out",
+    "common.sidebar_platform": "Platform",
+    "common.error_try_again": "Please try again later",
+
+    "lineups.card_artists": "artists",
+    "lineups.card_avg": "Avg",
+    "lineups.card_confirmed": "confirmed",
+    "lineups.card_pending": "pending",
+    "lineups.card_budget": "Budget:",
+    "lineups.card_updated": "Updated",
+    "lineups.tier_add_to_stack": "Add to Stack",
+    "lineups.tier_compare_artist": "Compare Artist",
+    "lineups.tier_remove_from_lineup": "Remove from Lineup",
+    "lineups.tier_empty_state": "No artists in this tier yet.",
+
+    "artists.search_no_results_title": "No results found",
+    "artists.search_no_results_description": "Try adjusting your search or filters.",
+
+    "settings.delete_account_title": "Delete Account",
+    "settings.delete_account_subtitle": "Delete your account and all of its resources",
+    "settings.delete_account_warning": "Warning",
+    "settings.delete_account_warning_description": "Please proceed with caution, this cannot be undone.",
+    "settings.delete_account_button": "Delete account",
+    "settings.delete_account_confirm_title": "Are you sure you want to delete your account?",
+    "settings.delete_account_confirm_description": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
 }

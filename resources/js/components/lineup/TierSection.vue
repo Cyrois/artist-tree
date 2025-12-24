@@ -16,6 +16,7 @@ import type { Artist, TierType, ArtistStatus } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronRight, Sparkles, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     tier: TierType;
@@ -132,16 +133,16 @@ function isSelected(artistId: number) {
                         <DropdownMenuContent align="end" @click.stop>
                             <DropdownMenuItem @click="emit('select-artist', artist)">
                                 <Layers class="w-4 h-4 mr-2" />
-                                Add to Stack
+                                {{ trans('lineups.tier_add_to_stack') }}
                             </DropdownMenuItem>
                             <DropdownMenuItem @click="emit('select-artist', artist)">
                                 <Scale class="w-4 h-4 mr-2" />
-                                Compare Artist
+                                {{ trans('lineups.tier_compare_artist') }}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', artist)">
                                 <Trash2 class="w-4 h-4 mr-2" />
-                                Remove from Lineup
+                                {{ trans('lineups.tier_remove_from_lineup') }}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -149,7 +150,7 @@ function isSelected(artistId: number) {
 
                 <!-- Empty state -->
                 <div v-if="artists.length === 0" class="p-8 text-center text-muted-foreground">
-                    No artists in this tier yet.
+                    {{ trans('lineups.tier_empty_state') }}
                 </div>
             </div>
         </CollapsibleContent>
