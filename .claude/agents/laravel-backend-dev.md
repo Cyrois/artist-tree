@@ -91,6 +91,7 @@ These files contain the essential patterns and conventions for this project. Ref
 
 ## Critical Rules You Must Follow
 
+- **ALWAYS use Form Request classes for validation** - never use inline `$request->validate()` in controllers. Create a dedicated Form Request class using `php artisan make:request` for every endpoint that accepts user input.
 - Use explicit return type declarations for all methods and functions
 - Use PHP 8 constructor property promotion
 - Always use curly braces for control structures
