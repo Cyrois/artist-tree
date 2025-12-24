@@ -273,7 +273,7 @@ class ArtistSpotifyDataTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data', [])
-            ->assertJsonPath('message', 'Failed to fetch top tracks');
+            ->assertJsonPath('message', 'Unable to fetch data from Spotify. Please try again later.');
     }
 
     public function test_endpoints_require_authentication(): void
@@ -283,5 +283,111 @@ class ArtistSpotifyDataTest extends TestCase
 
         $response = $this->getJson("/api/artists/{$this->artist->id}/albums");
         $response->assertUnauthorized();
+    }
+
+    public function test_resolve_spotify_id_caches_negative_results(): void
+    {
+        $artistWithoutSpotifyId = Artist::factory()->create([
+            'name' => 'Unknown Artist',
+            'spotify_id' => null,
+        ]);
+
+        Http::fake([
+            'https://accounts.spotify.com/api/token' => Http::response([
+                'access_token' => 'mock_token',
+                'token_type' => 'Bearer',
+                'expires_in' => 3600,
+            ]),
+            // Mock search with no results
+            'https://api.spotify.com/v1/search*' => Http::response([
+                'artists' => ['items' => []],
+            ]),
+        ]);
+
+        // First request - should hit Spotify API
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$artistWithoutSpotifyId->id}/top-tracks");
+
+        $response->assertOk()
+            ->assertJsonPath('data', []);
+
+        // Verify API was called once
+        Http::assertSentCount(2); // 1 token + 1 search
+
+        // Second request - should use cached negative result and NOT call Spotify
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$artistWithoutSpotifyId->id}/top-tracks");
+
+        $response->assertOk()
+            ->assertJsonPath('data', []);
+
+        // Verify no additional API calls were made
+        Http::assertSentCount(2); // Still just 1 token + 1 search (cached)
+    }
+
+    public function test_albums_limit_parameter_validation(): void
+    {
+        Http::fake([
+            'https://accounts.spotify.com/api/token' => Http::response([
+                'access_token' => 'mock_token',
+                'token_type' => 'Bearer',
+                'expires_in' => 3600,
+            ]),
+            'https://api.spotify.com/v1/artists/test_spotify_id/albums*' => Http::response([
+                'items' => [],
+            ]),
+        ]);
+
+        // Test minimum limit (should be clamped to 1)
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=0");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 1);
+
+        // Test invalid limit (should default to 1)
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=-5");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 1);
+
+        // Test non-numeric limit (PHP type casting returns 0, clamped to 1)
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=abc");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 1);
+    }
+
+    public function test_error_responses_do_not_expose_raw_exceptions(): void
+    {
+        Http::fake([
+            'https://accounts.spotify.com/api/token' => Http::response([
+                'access_token' => 'mock_token',
+                'token_type' => 'Bearer',
+                'expires_in' => 3600,
+            ]),
+            // Simulate API error with detailed error message
+            'https://api.spotify.com/v1/artists/test_spotify_id/top-tracks*' => Http::sequence()
+                ->push(['error' => ['status' => 500, 'message' => 'Internal database connection failed at 192.168.1.100:5432']], 500)
+                ->push(['error' => ['status' => 500, 'message' => 'Internal database connection failed at 192.168.1.100:5432']], 500)
+                ->push(['error' => ['status' => 500, 'message' => 'Internal database connection failed at 192.168.1.100:5432']], 500)
+                ->push(['error' => ['status' => 500, 'message' => 'Internal database connection failed at 192.168.1.100:5432']], 500),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/top-tracks");
+
+        $response->assertOk()
+            ->assertJsonPath('data', []);
+
+        // Verify the response does NOT contain raw error details
+        $responseData = $response->json();
+        $this->assertStringNotContainsString('192.168.1.100', json_encode($responseData));
+        $this->assertStringNotContainsString('database connection', json_encode($responseData));
+
+        // Verify generic user-friendly message is returned instead
+        $this->assertStringContainsString('Unable to fetch data from Spotify', $responseData['message']);
     }
 }

@@ -262,41 +262,11 @@ class SpotifyService
     }
 
     /**
-     * Get related artists.
-     *
-     * @param  string  $spotifyId  Artist's Spotify ID
-     * @return array<SpotifyArtistDTO>
-     *
-     * @throws SpotifyApiException
-     */
-    public function getRelatedArtists(string $spotifyId): array
-    {
-        $cacheKey = "spotify_related_artists:{$spotifyId}";
-
-        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId) {
-            $this->checkRateLimit();
-
-            $response = $this->makeAuthenticatedRequest()
-                ->get(self::BASE_URL."/artists/{$spotifyId}/related-artists");
-
-            if (! $response->successful()) {
-                throw SpotifyApiException::fromResponse($response, 'Get related artists failed');
-            }
-
-            $artists = array_slice($response->json('artists', []), 0, 10); // Limit to 10
-
-            return array_map(
-                fn (array $artist) => SpotifyArtistDTO::fromSpotifyResponse($artist),
-                $artists
-            );
-        });
-    }
-
-    /**
      * Resolve Spotify ID for an artist.
      *
      * If artist is missing spotify_id, search Spotify for exact match and persist.
      * Returns the spotify_id if found, null otherwise.
+     * Caches negative results to prevent repeated API calls.
      *
      * @param  \App\Models\Artist  $artist  The artist model to resolve
      * @return string|null The Spotify ID if found, null otherwise
@@ -305,6 +275,12 @@ class SpotifyService
     {
         if ($artist->spotify_id) {
             return $artist->spotify_id;
+        }
+
+        // Check if we've already tried and failed to resolve this artist
+        $cacheKey = "spotify_resolve_failed:{$artist->id}";
+        if (Cache::has($cacheKey)) {
+            return null;
         }
 
         // Search Spotify for exact name match
@@ -319,12 +295,18 @@ class SpotifyService
                     return $spotifyArtist->spotifyId;
                 }
             }
+
+            // No match found - cache this failure for 24 hours
+            Cache::put($cacheKey, true, $this->searchCacheTtl);
         } catch (\Exception $e) {
             Log::warning('Failed to resolve Spotify ID', [
                 'artist_id' => $artist->id,
                 'artist_name' => $artist->name,
                 'error' => $e->getMessage(),
             ]);
+
+            // Cache failure to prevent retry storms during API issues
+            Cache::put($cacheKey, true, 3600); // 1 hour for errors
         }
 
         return null;

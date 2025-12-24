@@ -34,7 +34,6 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     // Async Spotify data endpoints
     Route::get('/artists/{id}/top-tracks', [ArtistController::class, 'topTracks'])->name('api.artists.top-tracks');
     Route::get('/artists/{id}/albums', [ArtistController::class, 'albums'])->name('api.artists.albums');
-    Route::get('/artists/{id}/related-artists', [ArtistController::class, 'relatedArtists'])->name('api.artists.related-artists');
 });
 
 // User info endpoint (example)

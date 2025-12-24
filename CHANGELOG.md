@@ -19,6 +19,50 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Spotify Integration Improvements (2025-12-24)
+
+**Summary:** Removed deprecated Related Artists functionality, improved error handling, added negative result caching, and enhanced test coverage.
+
+#### Changes Made
+
+**Removed Deprecated Features:**
+- Removed `SpotifyService::getRelatedArtists()` method (deprecated by Spotify November 2024)
+- Removed `ArtistController::relatedArtists()` endpoint
+- Removed route `GET /api/artists/{id}/related-artists`
+- Removed test fixture `tests/Fixtures/spotify_related_artists.json`
+- Created GitHub issue #[TBD] for implementing alternative related artists feature using Spotify Recommendations API or genre-based matching
+
+**Performance Improvements:**
+- `SpotifyService::resolveSpotifyId()` now caches negative results (24 hours) to prevent repeated API calls for artists not on Spotify
+- Failed resolution attempts are cached for 1 hour during API errors to prevent retry storms
+
+**Error Handling:**
+- Added `ArtistController::handleSpotifyError()` helper method to standardize error responses
+- Error responses no longer expose raw exception messages in production (security improvement)
+- All Spotify API errors return 200 status with empty data for graceful degradation
+- Consolidated duplicate error handling code across all async endpoints
+
+**Validation:**
+- `albums()` endpoint now validates limit parameter: min 1, max 20 (prevents invalid values like 0, negative, or non-numeric)
+
+**Test Coverage:**
+- Added `test_resolve_spotify_id_caches_negative_results()` - verifies caching prevents redundant API calls
+- Added `test_albums_limit_parameter_validation()` - tests edge cases (0, negative, non-numeric values)
+- Added `test_error_responses_do_not_expose_raw_exceptions()` - ensures production security
+- All 149+ tests passing
+
+#### Files Modified
+- `app/Services/SpotifyService.php` - Added negative result caching, removed deprecated method
+- `app/Http/Controllers/ArtistController.php` - Standardized error handling, improved validation
+- `routes/api.php` - Removed deprecated route
+- `tests/Feature/Api/ArtistSpotifyDataTest.php` - Added 3 new test cases
+- `tests/Fixtures/spotify_related_artists.json` - Removed (no longer needed)
+
+#### Migration Notes
+- Frontend components referencing `/api/artists/{id}/related-artists` endpoint will need updating when alternative implementation is added
+
+---
+
 ### Albums "View All" Feature (2025-12-23)
 
 **Summary:** Added expand/collapse functionality to the Albums component on the Artist Detail page.
