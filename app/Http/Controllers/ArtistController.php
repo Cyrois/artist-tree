@@ -181,7 +181,7 @@ class ArtistController extends Controller
     public function topTracks(int $id): JsonResponse
     {
         $artist = Artist::findOrFail($id);
-        $spotifyId = $this->resolveSpotifyId($artist);
+        $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
 
         if (! $spotifyId) {
             return response()->json([
@@ -218,7 +218,7 @@ class ArtistController extends Controller
     public function albums(int $id, Request $request): JsonResponse
     {
         $artist = Artist::findOrFail($id);
-        $spotifyId = $this->resolveSpotifyId($artist);
+        $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
 
         $limit = min((int) $request->query('limit', 5), 20);
 
@@ -264,7 +264,7 @@ class ArtistController extends Controller
     public function relatedArtists(int $id): JsonResponse
     {
         $artist = Artist::findOrFail($id);
-        $spotifyId = $this->resolveSpotifyId($artist);
+        $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
 
         if (! $spotifyId) {
             return response()->json([
@@ -302,39 +302,5 @@ class ArtistController extends Controller
                 'data' => [],
             ], 200);
         }
-    }
-
-    /**
-     * Resolve Spotify ID for an artist.
-     *
-     * If artist is missing spotify_id, search Spotify for exact match and persist.
-     */
-    private function resolveSpotifyId(Artist $artist): ?string
-    {
-        if ($artist->spotify_id) {
-            return $artist->spotify_id;
-        }
-
-        // Search Spotify for exact name match
-        try {
-            $results = $this->spotifyService->searchArtists($artist->name, limit: 5);
-
-            foreach ($results as $spotifyArtist) {
-                if (strcasecmp($spotifyArtist->name, $artist->name) === 0) {
-                    // Exact match found - update artist record
-                    $artist->update(['spotify_id' => $spotifyArtist->spotifyId]);
-
-                    return $spotifyArtist->spotifyId;
-                }
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to resolve Spotify ID', [
-                'artist_id' => $artist->id,
-                'artist_name' => $artist->name,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return null;
     }
 }

@@ -291,4 +291,42 @@ class SpotifyService
             );
         });
     }
+
+    /**
+     * Resolve Spotify ID for an artist.
+     *
+     * If artist is missing spotify_id, search Spotify for exact match and persist.
+     * Returns the spotify_id if found, null otherwise.
+     *
+     * @param  \App\Models\Artist  $artist  The artist model to resolve
+     * @return string|null The Spotify ID if found, null otherwise
+     */
+    public function resolveSpotifyId(\App\Models\Artist $artist): ?string
+    {
+        if ($artist->spotify_id) {
+            return $artist->spotify_id;
+        }
+
+        // Search Spotify for exact name match
+        try {
+            $results = $this->searchArtists($artist->name, limit: 5);
+
+            foreach ($results as $spotifyArtist) {
+                if (strcasecmp($spotifyArtist->name, $artist->name) === 0) {
+                    // Exact match found - update artist record
+                    $artist->update(['spotify_id' => $spotifyArtist->spotifyId]);
+
+                    return $spotifyArtist->spotifyId;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to resolve Spotify ID', [
+                'artist_id' => $artist->id,
+                'artist_name' => $artist->name,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return null;
+    }
 }
