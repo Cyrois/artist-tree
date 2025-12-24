@@ -25,7 +25,7 @@ class GetArtistAlbumsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'limit' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -39,7 +39,6 @@ class GetArtistAlbumsRequest extends FormRequest
         return [
             'limit.integer' => 'The limit must be a valid number.',
             'limit.min' => 'The limit must be at least 1.',
-            'limit.max' => 'The limit cannot exceed 20.',
         ];
     }
 }

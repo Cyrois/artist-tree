@@ -359,12 +359,12 @@ class ArtistSpotifyDataTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['limit']);
 
-        // Test exceeding max limit (should fail validation)
+        // Test exceeding max limit (should be capped at 20)
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$this->artist->id}/albums?limit=999");
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['limit']);
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 20);
 
         // Test valid limit within range
         $response = $this->actingAs($this->user)

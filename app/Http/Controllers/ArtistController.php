@@ -215,7 +215,7 @@ class ArtistController extends Controller
     {
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
-        $limit = $request->validated('limit', 5);
+        $limit = min((int) $request->validated('limit', 5), 20);
 
         if (! $spotifyId) {
             return response()->json([
@@ -249,5 +249,4 @@ class ArtistController extends Controller
             return response()->json($data, 200);
         }
     }
-
 }
