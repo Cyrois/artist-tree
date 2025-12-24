@@ -24,6 +24,7 @@ const props = defineProps<Props>();
 const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
     `/api/artists/${props.artistId}/top-tracks`
 );
+// Note: meta is available but not used for top tracks (always shows 5)
 
 onMounted(() => {
     load();

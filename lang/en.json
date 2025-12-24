@@ -247,6 +247,7 @@
     "common.confirm_delete_message": "This action cannot be undone.",
     "common.confirm_delete_confirm": "Yes, delete",
     "common.confirm_delete_cancel": "No, keep it",
+    "common.loading": "Loading...",
     "common.pagination_previous": "Previous",
     "common.pagination_next": "Next",
     "common.pagination_showing": "Showing :from to :to of :total results",

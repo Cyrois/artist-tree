@@ -116,8 +116,52 @@ class ArtistSpotifyDataTest extends TestCase
                         'external_url',
                     ],
                 ],
+                'meta' => [
+                    'limit',
+                    'max_limit',
+                    'has_more',
+                ],
             ])
-            ->assertJsonPath('data.0.name', 'Test Album');
+            ->assertJsonPath('data.0.name', 'Test Album')
+            ->assertJsonPath('meta.limit', 5)
+            ->assertJsonPath('meta.max_limit', 20);
+    }
+
+    public function test_albums_endpoint_respects_limit_parameter(): void
+    {
+        Http::fake([
+            'https://accounts.spotify.com/api/token' => Http::response([
+                'access_token' => 'mock_token',
+                'token_type' => 'Bearer',
+                'expires_in' => 3600,
+            ]),
+            'https://api.spotify.com/v1/artists/test_spotify_id/albums*' => Http::response([
+                'items' => array_map(fn ($i) => [
+                    'id' => "album{$i}",
+                    'name' => "Album {$i}",
+                    'album_type' => 'album',
+                    'release_date' => '2024-01-01',
+                    'total_tracks' => 10,
+                    'images' => [['url' => 'https://example.com/album.jpg']],
+                    'external_urls' => ['spotify' => "https://open.spotify.com/album/album{$i}"],
+                ], range(1, 10)),
+            ]),
+        ]);
+
+        // Test with limit=10
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=10");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 10)
+            ->assertJsonPath('meta.has_more', true);
+
+        // Test max limit is capped at 20
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$this->artist->id}/albums?limit=100");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.limit', 20);
     }
 
     public function test_endpoints_resolve_missing_spotify_id(): void

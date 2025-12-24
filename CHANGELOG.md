@@ -19,6 +19,23 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Albums "View All" Feature (2025-12-23)
+
+**Summary:** Added expand/collapse functionality to the Albums component on the Artist Detail page.
+
+#### Changes
+- **Backend:** `ArtistController::albums()` now accepts `?limit=N` query parameter (default 5, max 20) and returns `meta` object with `has_more` flag
+- **Frontend:** `useAsyncSpotifyData` composable enhanced to support query params and return metadata
+- **UI:** Albums section shows 5 items by default with "View All" button to fetch up to 20
+
+#### Files Modified
+- `app/Http/Controllers/ArtistController.php`
+- `resources/js/composables/useAsyncSpotifyData.ts`
+- `resources/js/components/artist/ArtistAlbums.vue`
+- `tests/Feature/Api/ArtistSpotifyDataTest.php`
+
+---
+
 ### Test Cleanup - Deprecated Related Artists (2025-12-23)
 
 **Summary:** Removed tests for the deprecated Spotify Related Artists endpoint (deprecated by Spotify in November 2024).

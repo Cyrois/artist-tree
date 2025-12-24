@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, Disc, AlertCircle, ExternalLink } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { Loader2, Disc, AlertCircle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 
 interface Album {
@@ -20,13 +21,30 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { data: albums, loading, error, load } = useAsyncSpotifyData<Album[]>(
+const isExpanded = ref(false);
+const isLoadingMore = ref(false);
+
+const { data: albums, loading, error, meta, load } = useAsyncSpotifyData<Album[]>(
     `/api/artists/${props.artistId}/albums`
 );
 
 onMounted(() => {
-    load();
+    load({ limit: 5 });
 });
+
+const handleViewAll = async () => {
+    isLoadingMore.value = true;
+    await load({ limit: 20 });
+    isExpanded.value = true;
+    isLoadingMore.value = false;
+};
+
+const handleShowLess = async () => {
+    isLoadingMore.value = true;
+    await load({ limit: 5 });
+    isExpanded.value = false;
+    isLoadingMore.value = false;
+};
 
 const formatReleaseDate = (date: string): string => {
     if (!date) return 'Unknown';
@@ -43,11 +61,33 @@ const getAlbumTypeLabel = (type: string): string => {
 
 <template>
     <Card>
-        <CardHeader>
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="flex items-center gap-2">
                 <Disc class="w-5 h-5" />
                 Albums & Singles
             </CardTitle>
+            <Button
+                v-if="meta?.has_more && !isExpanded && !loading"
+                variant="ghost"
+                size="sm"
+                :disabled="isLoadingMore"
+                @click="handleViewAll"
+            >
+                <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
+                <ChevronDown v-else class="h-4 w-4 mr-1" />
+                View All
+            </Button>
+            <Button
+                v-else-if="isExpanded && !loading"
+                variant="ghost"
+                size="sm"
+                :disabled="isLoadingMore"
+                @click="handleShowLess"
+            >
+                <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
+                <ChevronUp v-else class="h-4 w-4 mr-1" />
+                Show Less
+            </Button>
         </CardHeader>
         <CardContent>
             <!-- Loading State -->

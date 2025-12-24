@@ -213,25 +213,33 @@ class ArtistController extends Controller
     /**
      * Get artist's albums from Spotify.
      *
-     * GET /api/artists/{id}/albums
+     * GET /api/artists/{id}/albums?limit=5
      */
-    public function albums(int $id): JsonResponse
+    public function albums(int $id, Request $request): JsonResponse
     {
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->resolveSpotifyId($artist);
+
+        $limit = min((int) $request->query('limit', 5), 20);
 
         if (! $spotifyId) {
             return response()->json([
                 'message' => 'Artist does not have a Spotify ID',
                 'data' => [],
+                'meta' => ['limit' => $limit, 'max_limit' => 20, 'has_more' => false],
             ], 200);
         }
 
         try {
-            $albums = $this->spotifyService->getArtistAlbums($spotifyId);
+            $albums = $this->spotifyService->getArtistAlbums($spotifyId, $limit);
 
             return response()->json([
                 'data' => array_map(fn ($album) => $album->toArray(), $albums),
+                'meta' => [
+                    'limit' => $limit,
+                    'max_limit' => 20,
+                    'has_more' => count($albums) === $limit && $limit < 20,
+                ],
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             Log::error('Failed to fetch albums', [
@@ -243,6 +251,7 @@ class ArtistController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch albums',
                 'data' => [],
+                'meta' => ['limit' => $limit, 'max_limit' => 20, 'has_more' => false],
             ], 200);
         }
     }

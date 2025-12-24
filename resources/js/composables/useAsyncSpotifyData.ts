@@ -1,29 +1,44 @@
 import { ref, type Ref } from 'vue';
 
+interface Meta {
+    limit: number;
+    max_limit: number;
+    has_more: boolean;
+}
+
 interface AsyncState<T> {
     data: Ref<T | null>;
     loading: Ref<boolean>;
     error: Ref<string | null>;
-    load: () => Promise<void>;
+    meta: Ref<Meta | null>;
+    load: (params?: Record<string, unknown>) => Promise<void>;
 }
 
 /**
  * Composable for loading async Spotify data with loading/error states.
  *
- * @param url - API endpoint URL
- * @returns Object with data, loading, error refs and load function
+ * @param baseUrl - API endpoint base URL
+ * @returns Object with data, loading, error, meta refs and load function
  */
-export function useAsyncSpotifyData<T>(url: string): AsyncState<T> {
+export function useAsyncSpotifyData<T>(baseUrl: string): AsyncState<T> {
     const data = ref<T | null>(null);
     const loading = ref(false);
     const error = ref<string | null>(null);
+    const meta = ref<Meta | null>(null);
 
-    const load = async () => {
+    const load = async (params?: Record<string, unknown>) => {
         loading.value = true;
         error.value = null;
 
         try {
-            const response = await fetch(url, {
+            const url = new URL(baseUrl, window.location.origin);
+            if (params) {
+                Object.entries(params).forEach(([key, value]) => {
+                    url.searchParams.set(key, String(value));
+                });
+            }
+
+            const response = await fetch(url.toString(), {
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
@@ -36,6 +51,7 @@ export function useAsyncSpotifyData<T>(url: string): AsyncState<T> {
 
             const result = await response.json();
             data.value = result.data as T;
+            meta.value = result.meta ?? null;
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'An error occurred';
             data.value = null;
@@ -48,6 +64,7 @@ export function useAsyncSpotifyData<T>(url: string): AsyncState<T> {
         data: data as Ref<T | null>,
         loading,
         error,
+        meta: meta as Ref<Meta | null>,
         load,
     };
 }
