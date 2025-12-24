@@ -434,12 +434,12 @@ it('requires authentication to get artist by Spotify ID', function () {
     $response->assertStatus(401);
 });
 
-it('returns 400 when neither ID nor spotify_id provided', function () {
+it('returns 422 validation error when neither ID nor spotify_id provided', function () {
     $response = $this->actingAs($this->user)
         ->getJson('/api/artists');
 
-    $response->assertStatus(400)
-        ->assertJsonPath('message', 'Artist ID or spotify_id parameter required');
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['spotify_id']);
 });
 
 it('validates spotify_id must be a string', function () {

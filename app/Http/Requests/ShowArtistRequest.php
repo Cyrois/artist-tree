@@ -25,8 +25,23 @@ class ShowArtistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'spotify_id' => ['sometimes', 'string', 'max:255'],
+            'spotify_id' => [
+                'required_without:id',
+                'string',
+                'max:255',
+            ],
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Add route parameter 'id' to the validation data
+        $this->merge([
+            'id' => $this->route('id'),
+        ]);
     }
 
     /**
@@ -45,6 +60,7 @@ class ShowArtistRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'spotify_id.required_without' => 'Either an artist ID or Spotify ID must be provided.',
             'spotify_id.string' => 'The Spotify ID must be a string.',
             'spotify_id.max' => 'The Spotify ID may not be greater than 255 characters.',
         ];

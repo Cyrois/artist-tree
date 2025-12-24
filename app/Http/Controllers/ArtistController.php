@@ -155,13 +155,7 @@ class ArtistController extends Controller
             ], 200);
         }
 
-        // Query by database ID
-        if ($id === null) {
-            return response()->json([
-                'message' => 'Artist ID or spotify_id parameter required',
-            ], 400);
-        }
-
+        // Query by database ID (validation ensures at least one param is provided)
         $artist = Artist::with('metrics')->find($id);
 
         if (! $artist) {

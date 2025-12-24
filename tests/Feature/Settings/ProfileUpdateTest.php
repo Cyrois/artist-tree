@@ -83,3 +83,18 @@ test('correct password must be provided to delete account', function () {
 
     expect($user->fresh())->not->toBeNull();
 });
+
+test('password is required to delete account', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->delete(route('profile.destroy'), []);
+
+    $response
+        ->assertSessionHasErrors('password')
+        ->assertRedirect(route('profile.edit'));
+
+    expect($user->fresh())->not->toBeNull();
+});
