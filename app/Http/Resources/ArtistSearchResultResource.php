@@ -25,29 +25,6 @@ class ArtistSearchResultResource extends JsonResource
             'image_url' => $this->imageUrl,
             'exists_in_database' => $this->existsInDatabase,
             'source' => $this->source,
-
-            // Human-readable follower count
-            'followers_formatted' => $this->formatFollowers($this->followers),
         ];
-    }
-
-    /**
-     * Format follower count for display (e.g., "1.2M", "45.3K").
-     */
-    private function formatFollowers(?int $count): ?string
-    {
-        if ($count === null) {
-            return null;
-        }
-
-        if ($count >= 1_000_000) {
-            return round($count / 1_000_000, 1).'M';
-        }
-
-        if ($count >= 1_000) {
-            return round($count / 1_000, 1).'K';
-        }
-
-        return (string) $count;
     }
 }

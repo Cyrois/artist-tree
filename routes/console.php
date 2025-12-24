@@ -90,8 +90,4 @@ Artisan::command('spotify:test {query}', function (string $query) {
     }
 
     return 0;
-<<<<<<< HEAD
 })->purpose('Test Spotify API connectivity and artist search');
-=======
-})->purpose('Test Spotify API connectivity and artist search');
->>>>>>> 1b2026c (resolve merge conflicts)

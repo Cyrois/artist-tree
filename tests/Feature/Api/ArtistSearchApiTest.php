@@ -61,16 +61,12 @@ it('searches artists successfully with local results', function () {
         ->assertJsonStructure([
             'data' => [
                 '*' => [
-                    'spotify_id',
+                    'id',
                     'name',
                     'genres',
                     'image_url',
-                    'popularity',
-                    'followers',
                     'exists_in_database',
-                    'database_id',
                     'source',
-                    'followers_formatted',
                 ],
             ],
         ])
@@ -106,8 +102,7 @@ it('searches artists with Spotify results', function () {
     $response->assertStatus(200)
         ->assertJsonPath('data.0.name', 'Spotify Artist')
         ->assertJsonPath('data.0.source', 'spotify')
-        ->assertJsonPath('data.0.exists_in_database', false)
-        ->assertJsonPath('data.0.followers_formatted', '100K');
+        ->assertJsonPath('data.0.exists_in_database', false);
 });
 
 it('respects custom limit parameter', function () {
@@ -149,7 +144,15 @@ it('enforces rate limiting on search endpoint', function () {
     }
 });
 
-it('selects artist from Spotify and creates in database', function () {
+it('selects artist from database and refreshes Spotify data', function () {
+    // Create an artist with stale data
+    $artist = Artist::factory()
+        ->has(ArtistMetric::factory()->stale())
+        ->create([
+            'spotify_id' => 'new123',
+            'name' => 'Old Name',
+        ]);
+
     Http::fake([
         'https://accounts.spotify.com/api/token' => Http::response([
             'access_token' => 'test_token',
@@ -166,35 +169,37 @@ it('selects artist from Spotify and creates in database', function () {
 
     $response = $this->actingAs($this->user)
         ->postJson('/api/artists/select', [
-            'spotify_id' => 'new123',
+            'artist_id' => $artist->id,
         ]);
 
     $response->assertStatus(200)
         ->assertJsonPath('message', 'Artist selected successfully')
-        ->assertJsonPath('data.spotify_id', 'new123')
+        ->assertJsonPath('data.id', $artist->id)
         ->assertJsonPath('data.name', 'New Artist')
         ->assertJsonPath('data.metrics.spotify_popularity', 80)
         ->assertJsonPath('data.metrics.spotify_followers', 250000);
 
     $this->assertDatabaseHas('artists', [
+        'id' => $artist->id,
         'spotify_id' => 'new123',
         'name' => 'New Artist',
     ]);
 
     $this->assertDatabaseHas('artist_metrics', [
+        'artist_id' => $artist->id,
         'spotify_popularity' => 80,
         'spotify_followers' => 250000,
     ]);
 });
 
-it('returns existing artist when selecting duplicate', function () {
+it('selects existing artist without refreshing when no Spotify ID', function () {
     $existingArtist = Artist::factory()
         ->has(ArtistMetric::factory()->fresh())
-        ->create(['spotify_id' => 'existing123']);
+        ->create(['spotify_id' => null]);
 
     $response = $this->actingAs($this->user)
         ->postJson('/api/artists/select', [
-            'spotify_id' => 'existing123',
+            'artist_id' => $existingArtist->id,
         ]);
 
     $response->assertStatus(200)
@@ -204,15 +209,19 @@ it('returns existing artist when selecting duplicate', function () {
     expect(Artist::count())->toBe(1);
 });
 
-it('validates spotify_id is required when selecting artist', function () {
+it('validates artist_id is required when selecting artist', function () {
     $response = $this->actingAs($this->user)
         ->postJson('/api/artists/select', []);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['spotify_id']);
+        ->assertJsonValidationErrors(['artist_id']);
 });
 
 it('handles Spotify API errors gracefully when selecting artist', function () {
+    $artist = Artist::factory()
+        ->has(ArtistMetric::factory()->stale())
+        ->create(['spotify_id' => 'bad123']);
+
     Http::fake([
         'https://accounts.spotify.com/api/token' => Http::response(['access_token' => 'test'], 200),
         'https://api.spotify.com/v1/artists/bad123' => Http::response([
@@ -222,7 +231,7 @@ it('handles Spotify API errors gracefully when selecting artist', function () {
 
     $response = $this->actingAs($this->user)
         ->postJson('/api/artists/select', [
-            'spotify_id' => 'bad123',
+            'artist_id' => $artist->id,
         ]);
 
     // Should return error status with error message
