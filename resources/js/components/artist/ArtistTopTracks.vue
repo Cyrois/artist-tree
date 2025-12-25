@@ -69,11 +69,11 @@ const formatDuration = (ms: number): string => {
             </div>
 
             <!-- Tracks List -->
-            <div v-else class="space-y-3">
+            <div v-else class="space-y-0">
                 <div
                     v-for="(track, index) in tracks"
                     :key="track.spotify_id"
-                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
+                    class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors group -mx-6"
                 >
                     <!-- Track Number -->
                     <div class="flex-shrink-0 w-6 text-center text-sm font-medium text-muted-foreground">
