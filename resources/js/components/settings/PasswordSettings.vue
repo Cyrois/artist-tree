@@ -6,15 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 </script>
 
 <template>
     <div class="space-y-6 max-w-2xl">
         <Card>
             <CardHeader>
-                <CardTitle>Update Password</CardTitle>
+                <CardTitle>{{ trans('settings.password_title') }}</CardTitle>
                 <CardDescription>
-                    Ensure your account is using a long, random password to stay secure
+                    {{ trans('settings.password_subtitle') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -33,40 +34,40 @@ import { Form } from '@inertiajs/vue3';
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
             <div class="grid gap-2">
-                <Label for="current_password">Current password</Label>
+                <Label for="current_password">{{ trans('settings.password_current_label') }}</Label>
                 <Input
                     id="current_password"
                     name="current_password"
                     type="password"
                     class="mt-1 block w-full"
                     autocomplete="current-password"
-                    placeholder="Current password"
+                    :placeholder="trans('settings.password_current_placeholder')"
                 />
                 <InputError :message="errors.current_password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">New password</Label>
+                <Label for="password">{{ trans('settings.password_new_label') }}</Label>
                 <Input
                     id="password"
                     name="password"
                     type="password"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="New password"
+                    :placeholder="trans('settings.password_new_placeholder')"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation">{{ trans('settings.password_confirmation_label') }}</Label>
                 <Input
                     id="password_confirmation"
                     name="password_confirmation"
                     type="password"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="Confirm password"
+                    :placeholder="trans('settings.password_confirmation_placeholder')"
                 />
                 <InputError :message="errors.password_confirmation" />
             </div>
@@ -75,7 +76,7 @@ import { Form } from '@inertiajs/vue3';
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"
-                        >Save password</Button>
+                        >{{ trans('settings.password_save_button') }}</Button>
 
                         <Transition
                             enter-active-class="transition ease-in-out"
@@ -87,7 +88,7 @@ import { Form } from '@inertiajs/vue3';
                                 v-show="recentlySuccessful"
                                 class="text-sm text-neutral-600"
                             >
-                                Saved.
+                                {{ trans('settings.password_saved') }}
                             </p>
                         </Transition>
                     </div>
