@@ -40,3 +40,10 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
 Route::middleware(['auth:web'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Spotify OAuth endpoints
+Route::middleware(['auth:web'])->group(function () {
+    Route::get('/spotify/token', [\App\Http\Controllers\SpotifyController::class, 'token'])->name('api.spotify.token');
+    Route::delete('/spotify/token', [\App\Http\Controllers\SpotifyController::class, 'clearToken'])->name('api.spotify.token.clear');
+    Route::get('/spotify/callback', [\App\Http\Controllers\SpotifyController::class, 'callback'])->name('api.spotify.callback');
+});

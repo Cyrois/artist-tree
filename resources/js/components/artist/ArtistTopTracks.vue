@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, Music, AlertCircle, ExternalLink, Play } from 'lucide-vue-next';
+import { Loader2, Music, AlertCircle, ExternalLink, Play, Pause } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
 import { trans } from 'laravel-vue-i18n';
 
 interface Track {
@@ -27,6 +28,20 @@ const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
 );
 // Note: meta is available but not used for top tracks (always shows 5)
 
+const {
+    isReady,
+    isPlaying,
+    currentTrackId,
+    isLoading: isPlaybackLoading,
+    error: playbackError,
+    formattedPosition,
+    formattedDuration,
+    progressPercentage,
+    playTrack,
+    togglePlayPause,
+    isTrackPlaying,
+} = useSpotifyPlayback();
+
 onMounted(() => {
     load();
 });
@@ -35,6 +50,24 @@ const formatDuration = (ms: number): string => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const handlePlayClick = async (track: Track) => {
+    if (isTrackPlaying(track.spotify_id)) {
+        // If this track is playing, toggle pause
+        await togglePlayPause();
+    } else {
+        // Play this track (will stop any currently playing track)
+        await playTrack(track.spotify_id);
+    }
+};
+
+const isCurrentTrack = (trackId: string) => {
+    return currentTrackId.value === trackId;
+};
+
+const showProgress = (trackId: string) => {
+    return isCurrentTrack(trackId) && (isPlaying.value || isPlaybackLoading.value);
 };
 </script>
 
@@ -68,8 +101,16 @@ const formatDuration = (ms: number): string => {
                 <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_empty') }}</p>
             </div>
 
+            <!-- Playback Error State -->
+            <div v-if="playbackError && tracks && tracks.length > 0" class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                <div class="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle class="w-4 h-4" />
+                    <p>{{ playbackError }}</p>
+                </div>
+            </div>
+
             <!-- Tracks List -->
-            <div v-else class="space-y-0">
+            <div v-if="tracks && tracks.length > 0" class="space-y-0">
                 <div
                     v-for="(track, index) in tracks"
                     :key="track.spotify_id"
@@ -103,16 +144,48 @@ const formatDuration = (ms: number): string => {
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex-shrink-0 flex gap-2">
-                        <a
-                            v-if="track.preview_url"
-                            :href="track.preview_url"
-                            target="_blank"
-                            class="p-2 rounded-md hover:bg-muted transition-colors"
-                            title="Preview"
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <!-- Play/Pause Button -->
+                        <button
+                            @click="handlePlayClick(track)"
+                            :disabled="isPlaybackLoading"
+                            class="relative p-2 rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            :title="isTrackPlaying(track.spotify_id) ? 'Pause' : 'Play'"
                         >
-                            <Play class="w-4 h-4" />
-                        </a>
+                            <!-- Loading/Progress Indicator -->
+                            <div
+                                v-if="showProgress(track.spotify_id)"
+                                class="absolute inset-0 rounded-md overflow-hidden"
+                            >
+                                <div
+                                    class="h-full bg-primary/20 transition-all duration-300"
+                                    :style="{ width: `${progressPercentage}%` }"
+                                />
+                            </div>
+                            <!-- Play/Pause Icon -->
+                            <div class="relative flex items-center justify-center">
+                                <Loader2
+                                    v-if="isCurrentTrack(track.spotify_id) && isPlaybackLoading"
+                                    class="w-4 h-4 animate-spin"
+                                />
+                                <Pause
+                                    v-else-if="isTrackPlaying(track.spotify_id)"
+                                    class="w-4 h-4"
+                                />
+                                <Play
+                                    v-else
+                                    class="w-4 h-4"
+                                />
+                            </div>
+                        </button>
+                        <!-- Progress Display (when playing) -->
+                        <div
+                            v-if="showProgress(track.spotify_id)"
+                            class="text-xs text-muted-foreground min-w-[80px] text-right"
+                        >
+                            {{ formattedPosition }} / {{ formattedDuration }}
+                        </div>
+                        <!-- External Link -->
                         <a
                             :href="track.external_url"
                             target="_blank"
