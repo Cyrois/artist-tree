@@ -308,8 +308,7 @@ export function useSpotifyPlayback() {
     const playTrack = async (spotifyTrackId: string) => {
         if (!player.value || !deviceId.value) {
             await initializePlayer();
-            // Wait a bit for connection
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await waitForPlayerReady();
         }
 
         if (!player.value || !deviceId.value) {
