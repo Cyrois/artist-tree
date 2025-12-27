@@ -198,8 +198,6 @@ export function useSpotifyPlayback() {
 
     const createPlayer = async () => {
         try {
-            const token = await fetchAccessToken();
-
             const spotifyPlayer = new window.Spotify.Player({
                 name: 'Artist Tree Web Player',
                 getOAuthToken: (cb) => {

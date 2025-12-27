@@ -37,7 +37,6 @@ const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
 );
 
 const {
-    isReady,
     isPlaying,
     currentTrackId,
     isLoading: isPlaybackLoading,
