@@ -98,6 +98,24 @@ class ArtistSpotifyDataTest extends TestCase
                     ],
                 ],
             ]),
+            'https://api.spotify.com/v1/albums*' => Http::response([
+                'albums' => [
+                    [
+                        'id' => 'album1',
+                        'name' => 'Test Album',
+                        'album_type' => 'album',
+                        'release_date' => '2024-01-01',
+                        'total_tracks' => 12,
+                        'images' => [['url' => 'https://example.com/album1.jpg']],
+                        'external_urls' => ['spotify' => 'https://open.spotify.com/album/album1'],
+                        'tracks' => [
+                            'items' => [
+                                ['duration_ms' => 300000], // Mock track for duration calculation
+                            ],
+                        ],
+                    ],
+                ],
+            ]),
         ]);
 
         $response = $this->actingAs($this->user)
@@ -144,6 +162,18 @@ class ArtistSpotifyDataTest extends TestCase
                     'total_tracks' => 10,
                     'images' => [['url' => 'https://example.com/album.jpg']],
                     'external_urls' => ['spotify' => "https://open.spotify.com/album/album{$i}"],
+                ], range(1, 10)),
+            ]),
+            'https://api.spotify.com/v1/albums*' => Http::response([
+                'albums' => array_map(fn ($i) => [
+                    'id' => "album{$i}",
+                    'name' => "Album {$i}",
+                    'album_type' => 'album',
+                    'release_date' => '2024-01-01',
+                    'total_tracks' => 10,
+                    'images' => [['url' => 'https://example.com/album.jpg']],
+                    'external_urls' => ['spotify' => "https://open.spotify.com/album/album{$i}"],
+                    'tracks' => ['items' => []],
                 ], range(1, 10)),
             ]),
         ]);

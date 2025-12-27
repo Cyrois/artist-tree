@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Artist;
+use App\Services\ArtistScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,12 +19,15 @@ class ArtistResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $scoringService = app(ArtistScoringService::class);
+
         return [
             'id' => $this->id,
             'spotify_id' => $this->spotify_id,
             'name' => $this->name,
             'genres' => $this->genres,
             'image_url' => $this->image_url,
+            'score' => $scoringService->calculateScore($this->resource),
 
             // Include metrics if loaded
             'metrics' => $this->when($this->relationLoaded('metrics'), function () {
@@ -31,6 +35,8 @@ class ArtistResource extends JsonResource
                     'spotify_popularity' => $this->metrics->spotify_popularity,
                     'spotify_followers' => $this->metrics->spotify_followers,
                     'youtube_subscribers' => $this->metrics->youtube_subscribers,
+                    'instagram_followers' => $this->metrics->instagram_followers,
+                    'tiktok_followers' => $this->metrics->tiktok_followers,
                     'refreshed_at' => $this->metrics->refreshed_at?->toISOString(),
                     'is_stale' => $this->metrics->isStale(),
                 ];

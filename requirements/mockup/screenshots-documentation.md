@@ -108,7 +108,7 @@ Artist profile with key information, stats, and actions.
 │                                                             │
 │  ┌──────────┐  Kendrick Lamar                      [94]    │
 │  │          │  [Hip-Hop] [Rap] [West Coast]                │
-│  │  Image   │  🌍 United States  🎵 pgLang / Interscope    │
+│  │  Image   │  🌍 United States                            │
 │  │  160x160 │                                              │
 │  │          │  [Add to Lineup] [Compare]                   │
 │  └──────────┘                                              │

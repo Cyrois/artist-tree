@@ -14,7 +14,6 @@ export interface Artist {
   lastUpdated: string;
   country: string;
   formedYear: number;
-  label: string;
   bio: string;
   topTracks: string[];
   albums: string[];

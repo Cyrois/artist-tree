@@ -18,7 +18,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '2 hours ago',
     country: 'United States',
     formedYear: 2004,
-    label: 'pgLang / Interscope',
     bio: 'Kendrick Lamar is a critically acclaimed rapper and songwriter from Compton, California. Known for his complex lyrics and storytelling.',
     topTracks: ['Not Like Us', 'HUMBLE.', 'All The Stars', 'DNA.', 'Money Trees'],
     albums: [
@@ -52,7 +51,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 hour ago',
     country: 'United States',
     formedYear: 2015,
-    label: 'Darkroom / Interscope',
     bio: 'Billie Eilish is an American singer-songwriter known for her distinctive voice and genre-bending music style.',
     topTracks: ['Birds of a Feather', 'bad guy', 'Lovely', 'Ocean Eyes', 'Therefore I Am'],
     albums: [
@@ -83,7 +81,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '3 hours ago',
     country: 'United Kingdom',
     formedYear: 2019,
-    label: 'Atlantic',
     bio: 'Fred Again.. is a British DJ and producer known for his emotive electronic music and innovative live performances.',
     topTracks: [
       'Leavemealone',
@@ -115,7 +112,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '5 hours ago',
     country: 'Australia',
     formedYear: 2007,
-    label: 'Modular / Interscope',
     bio: 'Tame Impala is a psychedelic music project led by Kevin Parker, blending rock, electronic, and pop influences.',
     topTracks: [
       'The Less I Know the Better',
@@ -147,7 +143,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 day ago',
     country: 'United States',
     formedYear: 2013,
-    label: 'Dead Oceans',
     bio: 'Japanese Breakfast is the solo project of Michelle Zauner, known for dreamy indie pop and her memoir "Crying in H Mart".',
     topTracks: ['Be Sweet', 'Kokomo, IN', 'Everybody Wants to Love You', 'Savage Good Boy', 'Paprika'],
     albums: ['Jubilee (2021)', 'Soft Sounds from Another Planet (2017)', 'Psychopomp (2016)'],
@@ -173,7 +168,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '12 hours ago',
     country: 'South Korea',
     formedYear: 2016,
-    label: 'XL Recordings',
     bio: 'Peggy Gou is a South Korean DJ and producer based in Berlin, known for her distinctive blend of house and techno.',
     topTracks: ['(It Goes Like) Nanana', 'Starry Night', 'I Go', 'Lobster Telephone', 'Han Jan'],
     albums: ['I Hear You (2024)', 'Once EP (2018)', 'Art of War Part 1 EP (2016)'],
@@ -199,7 +193,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '4 hours ago',
     country: 'United Kingdom',
     formedYear: 2017,
-    label: 'Dirty Hit',
     bio: 'beabadoobee is a Filipino-British singer-songwriter known for her nostalgic indie rock sound and candid lyrics.',
     topTracks: ['Glue Song', 'Coffee', 'the perfect pair', 'Talk', 'Care'],
     albums: [
@@ -231,7 +224,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '6 hours ago',
     country: 'United Kingdom',
     formedYear: 2010,
-    label: 'Island / EMI',
     bio: 'Disclosure is an English electronic music duo consisting of brothers Guy and Howard Lawrence.',
     topTracks: ['Latch', 'You & Me', 'White Noise', 'When a Fire Starts to Burn', 'Omen'],
     albums: ['Alchemy (2024)', 'Energy (2020)', 'Caracal (2015)', 'Settle (2013)'],
@@ -257,7 +249,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '30 mins ago',
     country: 'United States',
     formedYear: 2007,
-    label: 'Columbia',
     bio: 'Tyler, the Creator is an American rapper, singer, and record producer known for his creative vision and genre-defying music.',
     topTracks: ['See You Again', 'EARFQUAKE', 'WUSYANAME', 'NEW MAGIC WAND', 'LUMBERJACK'],
     albums: [
@@ -291,7 +282,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 hour ago',
     country: 'United Kingdom',
     formedYear: 2008,
-    label: 'Atlantic',
     bio: 'Charli XCX is a British singer and songwriter at the forefront of the hyperpop movement.',
     topTracks: ['360', 'Apple', 'Speed Drive', 'Boom Clap', 'I Love It'],
     albums: [
@@ -326,7 +316,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '2 days ago',
     country: 'United Kingdom',
     formedYear: 1997,
-    label: 'Text Records',
     bio: 'Four Tet is the stage name of Kieran Hebden, an English musician known for his textural, sample-based electronic music.',
     topTracks: ['Baby', 'Loved', 'Only Human', 'Planet', 'Parallel'],
     albums: [
@@ -361,7 +350,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 day ago',
     country: 'United Kingdom',
     formedYear: 2008,
-    label: 'Ninja Tune',
     bio: 'Floating Points is the stage name of Sam Shepherd, a British electronic musician and neuroscientist.',
     topTracks: ['Silhouettes (I, II & III)', 'Last Bloom', 'Ratio', 'Anasickmodular', 'Birth'],
     albums: ['Cascade (2024)', 'Promises (2021)', 'Crush (2019)', 'Elaenia (2015)'],
@@ -387,7 +375,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 hour ago',
     country: 'Canada',
     formedYear: 2009,
-    label: 'XO / Republic',
     bio: "The Weeknd is a Canadian singer and songwriter known for his distinctive falsetto and dark, brooding R&B sound.",
     topTracks: ['Blinding Lights', 'Starboy', 'Save Your Tears', 'Die For You', 'The Hills'],
     albums: [
@@ -421,7 +408,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '3 hours ago',
     country: 'United Kingdom',
     formedYear: 2015,
-    label: 'Warner Records',
     bio: 'Dua Lipa is a British-Albanian singer and songwriter known for her disco-influenced pop and powerful vocals.',
     topTracks: ['Levitating', "Don't Start Now", 'New Rules', 'Physical', 'One Kiss'],
     albums: ['Radical Optimism (2024)', 'Future Nostalgia (2020)', 'Dua Lipa (2017)'],
@@ -447,7 +433,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '4 hours ago',
     country: 'United States',
     formedYear: 2012,
-    label: 'Cactus Jack / Epic',
     bio: 'Travis Scott is an American rapper and producer known for his auto-tuned vocals and psychedelic production style.',
     topTracks: ['SICKO MODE', 'goosebumps', 'HIGHEST IN THE ROOM', 'Antidote', 'FE!N'],
     albums: [
@@ -478,7 +463,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '2 hours ago',
     country: 'United States',
     formedYear: 2011,
-    label: 'Top Dawg / RCA',
     bio: 'SZA is an American singer and songwriter known for her introspective lyrics and blend of R&B, neo-soul, and hip-hop.',
     topTracks: ['Kill Bill', 'Snooze', 'Good Days', 'Kiss Me More', 'The Weekend'],
     albums: ['SOS Deluxe (2024)', 'SOS (2022)', 'Ctrl (2017)'],
@@ -504,7 +488,6 @@ const artistsData: Omit<Artist, 'image'>[] = [
     lastUpdated: '1 hour ago',
     country: 'Puerto Rico',
     formedYear: 2016,
-    label: 'Rimas Entertainment',
     bio: 'Bad Bunny is a Puerto Rican rapper and singer who has become one of the most influential Latin music artists globally.',
     topTracks: ['Titi Me Pregunto', 'Dakiti', 'Callaita', 'Moscow Mule', 'Me Porto Bonito'],
     albums: [

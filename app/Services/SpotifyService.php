@@ -166,7 +166,7 @@ class SpotifyService
 
         if ($count >= $this->rateLimitPerMinute) {
             Log::warning('Spotify rate limit exceeded', ['count' => $count]);
-            throw new SpotifyApiException('Rate limit exceeded. Please try again later.', null, 429);
+            throw new SpotifyApiException(__('errors.rate_limit_exceeded'), null, 429);
         }
 
         Cache::put($key, $count + 1, 60); // TTL 60 seconds
@@ -188,6 +188,22 @@ class SpotifyService
     {
         $cacheKey = "spotify_artist:{$spotifyId}";
         Cache::forget($cacheKey);
+    }
+
+    /**
+     * Search for artists by genre on Spotify.
+     *
+     * @param  string  $genre  Genre to search for
+     * @param  int  $limit  Maximum number of results (1-50)
+     * @return array<SpotifyArtistDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function searchArtistsByGenre(string $genre, int $limit = 20): array
+    {
+        $query = "genre:\"{$genre}\"";
+
+        return $this->searchArtists($query, $limit);
     }
 
     /**
@@ -231,21 +247,24 @@ class SpotifyService
      *
      * @param  string  $spotifyId  Artist's Spotify ID
      * @param  int  $limit  Number of albums to return (max 20)
+     * @param  string  $type  Comma-separated list of keywords: album, single, compilation, appears_on
      * @return array<SpotifyAlbumSimpleDTO>
      *
      * @throws SpotifyApiException
      */
-    public function getArtistAlbums(string $spotifyId, int $limit = 10): array
+    public function getArtistAlbums(string $spotifyId, int $limit = 10, string $type = 'album,single'): array
     {
         $limit = min(max($limit, 1), 20);
-        $cacheKey = "spotify_albums:{$spotifyId}:{$limit}";
+        // Updated cache key to v2 to force refresh with new data structure (duration)
+        $cacheKey = "spotify_albums_v2:{$spotifyId}:{$limit}:{$type}";
 
-        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId, $limit) {
+        return Cache::remember($cacheKey, $this->searchCacheTtl, function () use ($spotifyId, $limit, $type) {
             $this->checkRateLimit();
 
+            // 1. Get list of albums (Simplified objects)
             $response = $this->makeAuthenticatedRequest()
                 ->get(self::BASE_URL."/artists/{$spotifyId}/albums", [
-                    'include_groups' => 'album,single',
+                    'include_groups' => $type,
                     'limit' => $limit,
                 ]);
 
@@ -253,11 +272,41 @@ class SpotifyService
                 throw SpotifyApiException::fromResponse($response, 'Get albums failed');
             }
 
-            $albums = $response->json('items', []);
+            $items = $response->json('items', []);
+            
+            if (empty($items)) {
+                return [];
+            }
+
+            // 2. Extract IDs for batch fetching full details (to get duration)
+            $ids = array_column($items, 'id');
+            $idsString = implode(',', $ids);
+
+            // 3. Get full album details
+            $this->checkRateLimit();
+            $detailsResponse = $this->makeAuthenticatedRequest()
+                ->get(self::BASE_URL.'/albums', [
+                    'ids' => $idsString,
+                ]);
+
+            if (! $detailsResponse->successful()) {
+                // Fallback to simplified objects if detailed fetch fails
+                Log::warning('Failed to fetch full album details, falling back to simplified objects', [
+                    'artist_id' => $spotifyId,
+                    'ids' => $idsString
+                ]);
+                
+                return array_map(
+                    fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyResponse($album),
+                    $items
+                );
+            }
+
+            $fullAlbums = $detailsResponse->json('albums', []);
 
             return array_map(
-                fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyResponse($album),
-                $albums
+                fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyFullResponse($album),
+                $fullAlbums
             );
         });
     }

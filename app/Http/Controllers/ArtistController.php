@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\SpotifyApiException;
 use App\Http\Requests\GetArtistAlbumsRequest;
 use App\Http\Requests\GetArtistTopTracksRequest;
+use App\Http\Requests\GetSimilarArtistsRequest;
 use App\Http\Requests\RefreshArtistRequest;
 use App\Http\Requests\SearchArtistsRequest;
 use App\Http\Requests\SelectArtistRequest;
@@ -47,8 +48,8 @@ class ArtistController extends Controller
 
         // Never expose raw exception messages in production
         $message = $isSpotifyError
-            ? 'Unable to fetch data from Spotify. Please try again later.'
-            : 'An unexpected error occurred. Please try again later.';
+            ? __('artists.error_spotify_fetch')
+            : __('common.error_unexpected');
 
         return response()->json([
             'message' => $message,
@@ -90,7 +91,7 @@ class ArtistController extends Controller
             }
 
             return response()->json([
-                'message' => 'Artist selected successfully',
+                'message' => __('artists.select_success'),
                 'data' => new ArtistResource($artist->load('metrics')),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
@@ -111,7 +112,7 @@ class ArtistController extends Controller
 
         if (! $artist->spotify_id) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
             ], 200);
         }
@@ -120,7 +121,7 @@ class ArtistController extends Controller
             $refreshedArtist = $this->searchService->refreshArtistFromSpotify($artist);
 
             return response()->json([
-                'message' => 'Artist refreshed successfully',
+                'message' => __('artists.refresh_success'),
                 'data' => new ArtistResource($refreshedArtist),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
@@ -146,7 +147,7 @@ class ArtistController extends Controller
 
             if (! $artist) {
                 return response()->json([
-                    'message' => 'Artist not found with Spotify ID: '.$spotifyId,
+                    'message' => __('artists.error_not_found_spotify', ['id' => $spotifyId]),
                 ], 404);
             }
 
@@ -160,7 +161,7 @@ class ArtistController extends Controller
 
         if (! $artist) {
             return response()->json([
-                'message' => 'Artist not found with ID: '.$id,
+                'message' => __('artists.error_not_found_id', ['id' => $id]),
             ], 404);
         }
 
@@ -182,7 +183,7 @@ class ArtistController extends Controller
 
         if (! $spotifyId) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
             ], 200);
         }
@@ -211,17 +212,18 @@ class ArtistController extends Controller
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
         $limit = min((int) $request->validated('limit', 5), 20);
+        $type = $request->validated('type', 'album,single');
 
         if (! $spotifyId) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
                 'meta' => ['limit' => $limit, 'max_limit' => 20, 'has_more' => false],
             ], 200);
         }
 
         try {
-            $albums = $this->spotifyService->getArtistAlbums($spotifyId, $limit);
+            $albums = $this->spotifyService->getArtistAlbums($spotifyId, $limit, $type);
 
             return response()->json([
                 'data' => array_map(fn ($album) => $album->toArray(), $albums),
@@ -244,4 +246,45 @@ class ArtistController extends Controller
             return response()->json($data, 200);
         }
     }
+
+    /**
+     * Get similar artists from Spotify based on genre.
+     *
+     * GET /api/artists/{id}/similar?limit=10
+     */
+    public function similar(int $id, GetSimilarArtistsRequest $request): JsonResponse
+    {
+        $artist = Artist::findOrFail($id);
+        $limit = $request->validated('limit', 10);
+        $genres = $artist->genres ?? [];
+
+        if (empty($genres)) {
+            return response()->json([
+                'data' => [],
+                'message' => __('artists.error_no_genres'),
+            ], 200);
+        }
+
+        try {
+            // Search using the first genre for the most relevant results
+            $results = $this->spotifyService->searchArtistsByGenre($genres[0], $limit + 1);
+
+            // Filter out the current artist and map to array
+            $similarArtists = collect($results)
+                ->filter(fn ($similar) => $similar->spotifyId !== $artist->spotify_id)
+                ->take($limit)
+                ->map(fn ($similar) => $similar->toArray())
+                ->values();
+
+            return response()->json([
+                'data' => $similarArtists,
+            ], 200);
+        } catch (SpotifyApiException|\Exception $e) {
+            return $this->handleSpotifyError($e, 'Failed to fetch similar artists', [
+                'artist_id' => $id,
+                'genre' => $genres[0],
+            ]);
+        }
+    }
 }
+
