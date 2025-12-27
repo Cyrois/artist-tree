@@ -79,7 +79,6 @@ const {
     formattedPosition,
     formattedDuration,
     isPlaying,
-    progressPercentage,
     initializePlayer
 } = useSpotifyPlayback();
 
@@ -198,12 +197,18 @@ const showProgress = (item: MediaItem) => {
                 <div
                     v-for="(item, index) in items"
                     :key="item.spotify_id"
-                    class="group -mx-6 transition-colors"
+                    class="group -mx-6 transition-all duration-200"
                     :class="{ 
-                        'bg-muted/30 border-t border-border/50': expandedMobileId === item.spotify_id,
-                        'border-t border-transparent': expandedMobileId !== item.spotify_id && index > 0
+                        'bg-muted/40 z-10 relative shadow-sm': expandedMobileId === item.spotify_id,
                     }"
                 >
+                    <!-- Top Divider for Expanded/Active items -->
+                    <div 
+                        v-if="expandedMobileId === item.spotify_id || (index > 0 && items[index-1].spotify_id === expandedMobileId)"
+                        class="h-px bg-border/60 mx-6"
+                    />
+                    <div v-else-if="index > 0" class="h-px bg-border/5 mx-6" />
+
                     <!-- Main Row -->
                     <div 
                         class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer lg:cursor-default"
@@ -239,58 +244,61 @@ const showProgress = (item: MediaItem) => {
                             </p>
                         </div>
 
-                        <!-- Duration (Desktop) -->
-                        <div class="hidden lg:block flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums transition-opacity" :class="{ 'opacity-0 lg:group-hover:opacity-100': !isItemActive(item) }">
-                            <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
-                            <span v-else>{{ formatDuration(item.duration_ms) }}</span>
+                        <!-- Desktop Duration & Actions Panel (Fixed Width only when visible) -->
+                        <div 
+                            class="hidden lg:flex items-center gap-4 flex-shrink-0 ml-4"
+                            v-if="isItemActive(item)"
+                        >
+                            <div class="text-sm text-muted-foreground tabular-nums">
+                                {{ formattedPosition }} / {{ formattedDuration }}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    @click.stop="handlePlayClick(item)"
+                                    :disabled="isPlaybackLoading"
+                                    class="p-2 rounded-md hover:bg-muted transition-colors text-primary"
+                                >
+                                    <Loader2 v-if="isPlaybackLoading" class="w-4 h-4 animate-spin" />
+                                    <Square v-else class="w-4 h-4 fill-current" />
+                                </button>
+                                <a
+                                    :href="item.external_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                    @click.stop
+                                >
+                                    <ExternalLink class="w-4 h-4" />
+                                </a>
+                            </div>
                         </div>
 
-                        <!-- Actions (Desktop) -->
-                        <div class="hidden lg:flex flex-shrink-0 items-center gap-2 transition-opacity" :class="{ 'opacity-0 lg:group-hover:opacity-100 pointer-events-none lg:group-hover:pointer-events-auto': !isItemActive(item) }">
-                            <!-- Play/Stop Button -->
-                            <button
-                                @click.stop="handlePlayClick(item)"
-                                :disabled="isPlaybackLoading"
-                                class="relative p-2 rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                :title="isItemActive(item) ? 'Stop' : 'Play'"
-                            >
-                                 <!-- Loading/Progress Indicator -->
-                                <div
-                                    v-if="showProgress(item)"
-                                    class="absolute inset-0 rounded-md overflow-hidden"
+                        <!-- Hover-only Desktop Actions -->
+                        <div 
+                            class="hidden lg:group-hover:flex items-center gap-4 flex-shrink-0 ml-4"
+                            v-else
+                        >
+                            <div class="text-sm text-muted-foreground tabular-nums">
+                                {{ formatDuration(item.duration_ms) }}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    @click.stop="handlePlayClick(item)"
+                                    :disabled="isPlaybackLoading"
+                                    class="p-2 rounded-md hover:bg-muted transition-colors"
                                 >
-                                    <div
-                                        class="h-full bg-primary/20 transition-all duration-300"
-                                        :style="{ width: `${progressPercentage}%` }"
-                                    />
-                                </div>
-
-                                <div class="relative flex items-center justify-center">
-                                    <Loader2
-                                        v-if="isItemActive(item) && isPlaybackLoading"
-                                        class="w-4 h-4 animate-spin"
-                                    />
-                                    <Square
-                                        v-else-if="isItemActive(item)"
-                                        class="w-4 h-4 fill-current"
-                                    />
-                                    <Play
-                                        v-else
-                                        class="w-4 h-4"
-                                    />
-                                </div>
-                            </button>
-                            <!-- External Link -->
-                            <a
-                                :href="item.external_url"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="p-2 rounded-md hover:bg-muted transition-colors"
-                                title="Open in Spotify"
-                                @click.stop
-                            >
-                                <ExternalLink class="w-4 h-4" />
-                            </a>
+                                    <Play class="w-4 h-4" />
+                                </button>
+                                <a
+                                    :href="item.external_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="p-2 rounded-md hover:bg-muted transition-colors"
+                                    @click.stop
+                                >
+                                    <ExternalLink class="w-4 h-4" />
+                                </a>
+                            </div>
                         </div>
                     </div>
 
