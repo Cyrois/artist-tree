@@ -6,6 +6,7 @@ import { formatCurrency } from '@/data/constants';
 import type { Lineup } from '@/data/types';
 import { Calendar, Check, Clock, DollarSign, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     lineup: Lineup;
@@ -63,32 +64,32 @@ const previewArtists = computed(() => {
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div class="flex items-center gap-2 text-muted-foreground">
                     <Users class="w-4 h-4" />
-                    <span>{{ stats.artistCount }} artists</span>
+                    <span>{{ stats.artistCount }} {{ trans('lineups.card_artists') }}</span>
                 </div>
                 <div class="flex items-center gap-2 text-muted-foreground">
-                    <span class="font-medium text-foreground">Avg {{ stats.avgScore }}</span>
+                    <span class="font-medium text-foreground">{{ trans('lineups.card_avg') }} {{ stats.avgScore }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <Check class="w-4 h-4 text-[hsl(var(--status-confirmed))]" />
-                    <span class="text-[hsl(var(--status-confirmed))]">{{ stats.confirmedCount }} confirmed</span>
+                    <span class="text-[hsl(var(--status-confirmed))]">{{ stats.confirmedCount }} {{ trans('lineups.card_confirmed') }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <Clock class="w-4 h-4 text-[hsl(var(--status-negotiating))]" />
-                    <span class="text-[hsl(var(--status-negotiating))]">{{ stats.pendingCount }} pending</span>
+                    <span class="text-[hsl(var(--status-negotiating))]">{{ stats.pendingCount }} {{ trans('lineups.card_pending') }}</span>
                 </div>
             </div>
 
             <!-- Budget -->
             <div v-if="stats.totalBudget > 0" class="flex items-center gap-2 pt-2 border-t text-sm">
                 <DollarSign class="w-4 h-4 text-muted-foreground" />
-                <span class="text-muted-foreground">Budget:</span>
+                <span class="text-muted-foreground">{{ trans('lineups.card_budget') }}</span>
                 <span class="font-medium">{{ formatCurrency(stats.totalBudget) }}</span>
             </div>
 
             <!-- Last updated -->
             <div class="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
                 <Calendar class="w-3 h-3" />
-                <span>Updated {{ lineup.updatedAt }}</span>
+                <span>{{ trans('lineups.card_updated') }} {{ lineup.updatedAt }}</span>
             </div>
         </CardContent>
     </Card>

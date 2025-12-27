@@ -81,7 +81,7 @@ const pageTitle = computed(() =>
         <div v-if="isLoading" class="flex items-center justify-center py-24">
             <div class="flex flex-col items-center gap-4">
                 <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-                <p class="text-muted-foreground">Loading artist...</p>
+                <p class="text-muted-foreground">{{ $t('common.loading') }}</p>
             </div>
         </div>
 
@@ -91,11 +91,11 @@ const pageTitle = computed(() =>
                 <AlertCircle class="h-12 w-12 text-destructive" />
                 <div>
                     <p class="font-medium text-destructive">{{ error }}</p>
-                    <p class="text-sm text-muted-foreground mt-1">Please try again later</p>
+                    <p class="text-sm text-muted-foreground mt-1">{{ $t('common.error_try_again') }}</p>
                 </div>
                 <Button variant="outline" @click="router.visit('/search')">
                     <ArrowLeft class="w-4 h-4 mr-2" />
-                    Back to Search
+                    {{ $t('artists.show_back_button') }}
                 </Button>
             </div>
         </div>

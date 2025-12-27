@@ -19,6 +19,20 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Race Condition Fix (2025-12-26)
+
+**Summary:** Resolved a persistent race condition in `CreateArtistsFromSpotifyJob` by adopting atomic `firstOrCreate`. This replaces the previous (2025-12-24) attempt which used manual existence checks within a transaction, as that pattern was still susceptible to race conditions under high concurrency.
+
+#### Changes Made
+- **Atomic Implementation:** Refactored `CreateArtistsFromSpotifyJob` to use `Artist::firstOrCreate` for thread-safe artist creation.
+- **Improved Robustness:** The new pattern ensures that even if multiple jobs process the same new artist simultaneously, only one will succeed in creation while others will gracefully handle the "already exists" state.
+- **Documentation Audit:** Updated `GEMINI.md` guidelines to prohibit manual existence checks for idempotent jobs.
+- **Code Cleanup:** Removed the legacy `createArtist` helper method and simplified the transaction block.
+
+**Files Modified:**
+- `app/Jobs/CreateArtistsFromSpotifyJob.php`
+- `GEMINI.md`
+
 ### Test Suite Fixes (2025-12-24)
 
 **Summary:** Fixed failing tests related to albums endpoint limit parameter handling by aligning implementation with expected silent capping behavior.
