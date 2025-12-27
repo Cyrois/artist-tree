@@ -526,6 +526,7 @@ app/
 - ❌ Installing additional dependencies
 - ❌ Changing organization role permissions
 - ❌ Removing auto-org creation on signup
+- ❌ Committing or pushing changes to Git without explicit user instruction
 
 ---
 

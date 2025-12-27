@@ -205,6 +205,11 @@ foreach ($lineup->artists as $artist) {
 
 ## Git Commit Messages
 
+**Commit Policy:**
+- AI agents MUST NOT commit or push changes unless explicitly asked by the user.
+- The user prefers to handle Git commits and pushes manually.
+- When asked to commit, follow the conventional commit format below.
+
 Use conventional commits:
 
 ```

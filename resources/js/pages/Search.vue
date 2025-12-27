@@ -12,7 +12,7 @@ import { getTrendingArtists, getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { Search, SlidersHorizontal, ChevronDown, TrendingUp, Loader2, AlertCircle } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
@@ -44,6 +44,15 @@ const hasSearched = ref(false);
 
 // Get trending artists for initial display
 const trendingArtists = getTrendingArtists(10);
+
+// Initialize search from URL param
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+        searchQuery.value = q;
+    }
+});
 
 // Debounced search function (300ms as per CLAUDE.md)
 const performSearch = useDebounceFn(async (query: string) => {

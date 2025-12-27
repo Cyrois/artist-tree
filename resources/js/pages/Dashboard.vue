@@ -3,21 +3,36 @@ import { Head, router } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import LineupCard from '@/components/lineup/LineupCard.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { getLineups } from '@/data/lineups';
-import { searchArtists, getTrendingArtists } from '@/data/artists';
+import { getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
-import { Search, Music, TrendingUp } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { Search, Music, TrendingUp, ChevronRight } from 'lucide-vue-next';
+import { ref, watch, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import axios from 'axios';
+
+interface ArtistSearchResult {
+    id: number | null;
+    spotify_id: string;
+    name: string;
+    genres: string[];
+    image_url: string | null;
+    exists_in_database: boolean;
+    dummy_score: number;
+}
 
 const lineups = getLineups();
 const trendingArtists = getTrendingArtists(5);
 
 const searchQuery = ref('');
-const searchResults = ref<Artist[]>([]);
+const searchResults = ref<ArtistSearchResult[]>([]);
 const showSearchDropdown = ref(false);
+
+const displayedResults = computed(() => searchResults.value.slice(0, 3));
 
 // Debounced search
 let searchTimeout: ReturnType<typeof setTimeout>;
@@ -28,9 +43,20 @@ watch(searchQuery, (query) => {
         showSearchDropdown.value = false;
         return;
     }
-    searchTimeout = setTimeout(() => {
-        searchResults.value = searchArtists(query).slice(0, 8);
-        showSearchDropdown.value = searchResults.value.length > 0;
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await axios.get('/api/artists/search', {
+                params: { q: query }
+            });
+            searchResults.value = response.data.data.map((artist: any) => ({
+                ...artist,
+                dummy_score: Math.floor(Math.random() * 40) + 60 // Random score 60-100
+            }));
+            showSearchDropdown.value = searchResults.value.length > 0;
+        } catch (error) {
+            console.error('Search failed', error);
+            searchResults.value = [];
+        }
     }, 300);
 });
 
@@ -38,10 +64,29 @@ function handleLineupClick(lineup: Lineup) {
     router.visit(`/lineups/${lineup.id}`);
 }
 
-function handleArtistClick(artist: Artist) {
+async function handleArtistClick(artist: ArtistSearchResult) {
     showSearchDropdown.value = false;
     searchQuery.value = '';
-    router.visit(`/artist/${artist.id}`);
+
+    if (artist.id) {
+        router.visit(`/artist/${artist.id}`);
+    } else {
+        // Artist exists on Spotify but not in DB yet
+        try {
+            const response = await axios.post('/api/artists/select', {
+                spotify_id: artist.spotify_id
+            });
+            const newId = response.data.data.id;
+            router.visit(`/artist/${newId}`);
+        } catch (error) {
+            console.error('Failed to select artist', error);
+        }
+    }
+}
+
+function handleViewAllResults() {
+    showSearchDropdown.value = false;
+    router.visit(route('search'), { data: { q: searchQuery.value } });
 }
 
 function handleSearchFocus() {
@@ -96,24 +141,54 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
                         <!-- Search Dropdown -->
                         <div
                             v-if="showSearchDropdown"
-                            class="absolute top-full left-0 right-0 mt-2 bg-background border rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto"
+                            class="absolute top-full left-0 right-0 mt-2 bg-background border rounded-xl shadow-lg z-50 overflow-hidden"
                         >
-                            <div class="p-2 space-y-1">
+                            <div class="space-y-0">
                                 <div
-                                    v-for="artist in searchResults"
-                                    :key="artist.id"
-                                    class="p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                                    v-for="artist in displayedResults"
+                                    :key="artist.spotify_id"
+                                    class="group px-4 py-3 hover:bg-muted cursor-pointer transition-colors flex items-center gap-4"
                                     @click="handleArtistClick(artist)"
                                 >
-                                    <div class="flex items-center gap-3">
-                                        <img :src="artist.image" :alt="artist.name" class="w-10 h-10 rounded-lg" />
-                                        <div>
-                                            <p class="font-medium">{{ artist.name }}</p>
-                                            <p class="text-sm text-muted-foreground">{{ artist.genre.slice(0, 2).join(', ') }}</p>
+                                    <!-- Image -->
+                                    <img 
+                                        :src="artist.image_url || '/placeholder.png'" 
+                                        :alt="artist.name" 
+                                        class="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted" 
+                                    />
+                                    
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0 text-left">
+                                        <p class="font-semibold text-foreground truncate">{{ artist.name }}</p>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            <Badge 
+                                                v-for="genre in artist.genres.slice(0, 3)" 
+                                                :key="genre"
+                                                variant="secondary"
+                                                class="text-[10px] px-1.5 py-0 h-5"
+                                            >
+                                                {{ genre }}
+                                            </Badge>
                                         </div>
-                                        <span class="ml-auto text-sm font-bold text-primary">{{ artist.score }}</span>
+                                    </div>
+
+                                    <!-- Score & Action -->
+                                    <div class="flex items-center gap-3">
+                                        <ScoreBadge :score="artist.dummy_score" />
+                                        <ChevronRight class="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="border-t bg-muted/30 p-2 text-center">
+                                <button 
+                                    class="text-sm text-primary hover:underline font-medium flex items-center justify-center gap-1 w-full py-2 cursor-pointer"
+                                    @click="handleViewAllResults"
+                                >
+                                    {{ $t('common.view_all_results') }}
+                                    <ChevronRight class="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     </div>
