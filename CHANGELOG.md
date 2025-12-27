@@ -44,8 +44,8 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
    - Single row behavior across all sizes:
      - Mobile: 2 items
      - Tablet (md): 4 items
-     - Large (lg): 8 items
-     - Extra Large (xl): 10 items
+     - Large (lg): 6 items
+     - Extra Large (xl): 8 items
    - Compact card design for better density
    - Uses `useAsyncSpotifyData` composable for independent loading
    - Handles loading, error, and empty states gracefully

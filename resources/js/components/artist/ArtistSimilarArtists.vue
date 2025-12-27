@@ -24,7 +24,7 @@ const { data: artists, loading, error, load } = useAsyncSpotifyData<SimilarArtis
 );
 
 onMounted(() => {
-    load({ limit: 10 });
+    load({ limit: 8 });
 });
 </script>
 
@@ -58,7 +58,7 @@ onMounted(() => {
         </div>
 
         <!-- Grid Layout -->
-        <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-10 gap-3 md:gap-4">
+        <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
             <Card 
                 v-for="similar in artists" 
                 :key="similar.spotify_id" 
@@ -107,22 +107,22 @@ onMounted(() => {
     }
 }
 
-/* Large (lg): Show up to 8 (1 row) */
+/* Large (lg): Show up to 6 (1 row) */
 @media (min-width: 1024px) {
     .similar-artist-card:nth-child(n+5) {
         display: flex;
     }
-    .similar-artist-card:nth-child(n+9) {
+    .similar-artist-card:nth-child(n+7) {
         display: none;
     }
 }
 
-/* Extra Large (xl): Show up to 10 (1 row) */
+/* Extra Large (xl): Show up to 8 (1 row) */
 @media (min-width: 1280px) {
-    .similar-artist-card:nth-child(n+9) {
+    .similar-artist-card:nth-child(n+7) {
         display: flex;
     }
-    .similar-artist-card:nth-child(n+11) {
+    .similar-artist-card:nth-child(n+9) {
         display: none;
     }
 }
