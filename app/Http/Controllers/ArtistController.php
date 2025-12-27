@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\SpotifyApiException;
 use App\Http\Requests\GetArtistAlbumsRequest;
 use App\Http\Requests\GetArtistTopTracksRequest;
+use App\Http\Requests\GetSimilarArtistsRequest;
 use App\Http\Requests\RefreshArtistRequest;
 use App\Http\Requests\SearchArtistsRequest;
 use App\Http\Requests\SelectArtistRequest;
@@ -245,4 +246,45 @@ class ArtistController extends Controller
             return response()->json($data, 200);
         }
     }
+
+    /**
+     * Get similar artists from Spotify based on genre.
+     *
+     * GET /api/artists/{id}/similar?limit=10
+     */
+    public function similar(int $id, GetSimilarArtistsRequest $request): JsonResponse
+    {
+        $artist = Artist::findOrFail($id);
+        $limit = $request->validated('limit', 10);
+        $genres = $artist->genres ?? [];
+
+        if (empty($genres)) {
+            return response()->json([
+                'data' => [],
+                'message' => 'No genres found for this artist to find similar artists.',
+            ], 200);
+        }
+
+        try {
+            // Search using the first genre for the most relevant results
+            $results = $this->spotifyService->searchArtistsByGenre($genres[0], $limit + 1);
+
+            // Filter out the current artist and map to array
+            $similarArtists = collect($results)
+                ->filter(fn ($similar) => $similar->spotifyId !== $artist->spotify_id)
+                ->take($limit)
+                ->map(fn ($similar) => $similar->toArray())
+                ->values();
+
+            return response()->json([
+                'data' => $similarArtists,
+            ], 200);
+        } catch (SpotifyApiException|\Exception $e) {
+            return $this->handleSpotifyError($e, 'Failed to fetch similar artists', [
+                'artist_id' => $id,
+                'genre' => $genres[0],
+            ]);
+        }
+    }
 }
+

@@ -191,6 +191,22 @@ class SpotifyService
     }
 
     /**
+     * Search for artists by genre on Spotify.
+     *
+     * @param  string  $genre  Genre to search for
+     * @param  int  $limit  Maximum number of results (1-50)
+     * @return array<SpotifyArtistDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function searchArtistsByGenre(string $genre, int $limit = 20): array
+    {
+        $query = "genre:\"{$genre}\"";
+
+        return $this->searchArtists($query, $limit);
+    }
+
+    /**
      * Get artist's top tracks.
      *
      * @param  string  $spotifyId  Artist's Spotify ID

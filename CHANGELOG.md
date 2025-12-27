@@ -19,6 +19,55 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Similar Artists Responsive Grid (2025-12-26)
+
+**Summary:** Implemented a "Similar Artists" responsive grid on the Artist Detail page that dynamically fetches artists with similar genres from Spotify.
+
+#### Changes Made
+
+**Backend Implementation:**
+1. **Spotify Service Enhancement** (`app/Services/SpotifyService.php`)
+   - Added `searchArtistsByGenre(string $genre, int $limit = 20)` method
+   - Uses Spotify's search endpoint with `genre:"genre_name"` filter
+2. **New API Endpoint** (`app/Http/Controllers/ArtistController.php`)
+   - Added `similar(int $id, GetSimilarArtistsRequest $request)` method
+   - Fetches artist's genres and searches for similar artists using the primary genre
+   - Filters out the current artist from the results
+3. **Route Registration** (`routes/api.php`)
+   - Added `GET /api/artists/{id}/similar` endpoint
+4. **Validation** (`app/Http/Requests/GetSimilarArtistsRequest.php`)
+   - Added form request for similar artists with limit validation
+
+**Frontend Implementation:**
+1. **New Component** (`resources/js/components/artist/ArtistSimilarArtists.vue`)
+   - Implemented a responsive grid layout replacing the previous carousel
+   - Adaptive columns: 2 (mobile), 4 (medium), 5 (large)
+   - Dynamic visibility: Shows up to 6, 8, or 10 items based on screen size
+   - Compact card design for better density
+   - Uses `useAsyncSpotifyData` composable for independent loading
+   - Handles loading, error, and empty states gracefully
+2. **Page Integration** (`resources/js/pages/Artist/Show.vue`)
+   - Replaced stubbed similar artists section with the new dynamic component
+   - Integrated component within the Artist Detail overview tab
+
+**Testing:**
+- **New Feature Test** (`tests/Feature/Api/SimilarArtistsTest.php`)
+  - Validates similar artists endpoint returns correctly filtered data
+  - Tests handling of artists with no genres
+  - Verifies authentication requirements
+
+**Files Created:**
+- `app/Http/Requests/GetSimilarArtistsRequest.php`
+- `resources/js/components/artist/ArtistSimilarArtists.vue`
+- `tests/Feature/Api/SimilarArtistsTest.php`
+
+**Files Modified:**
+- `app/Services/SpotifyService.php`
+- `app/Http/Controllers/ArtistController.php`
+- `routes/api.php`
+- `resources/js/pages/Artist/Show.vue`
+- `CHANGELOG.md`
+
 ### Race Condition Fix (2025-12-26)
 
 **Summary:** Resolved a persistent race condition in `CreateArtistsFromSpotifyJob` by adopting atomic `firstOrCreate`. This replaces the previous (2025-12-24) attempt which used manual existence checks within a transaction, as that pattern was still susceptible to race conditions under high concurrency.

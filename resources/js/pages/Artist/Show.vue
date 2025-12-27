@@ -22,6 +22,7 @@ import { ref, onMounted, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
+import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -295,26 +296,8 @@ const pageTitle = computed(() =>
                     <ArtistMediaList :artist-id="props.id" variant="recent-releases" />
                 </div>
 
-                <!-- Similar Artists (Stubbed) -->
-                <div>
-                    <h3 class="font-semibold text-lg mb-4">Similar Artists</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <Card v-for="similar in artistData.similar_artists" :key="similar.id" class="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                            <div class="aspect-square bg-muted relative">
-                                <!-- Placeholder Image -->
-                                <div class="absolute inset-0 flex items-center justify-center text-muted-foreground font-bold text-xl">
-                                    {{ similar.name.charAt(0) }}
-                                </div>
-                                <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                                    {{ similar.score }}
-                                </div>
-                            </div>
-                            <div class="p-3">
-                                <p class="font-medium text-sm truncate">{{ similar.name }}</p>
-                            </div>
-                        </Card>
-                    </div>
-                </div>
+                <!-- Similar Artists -->
+                <ArtistSimilarArtists :artist-id="props.id" />
 
                 <!-- External Links -->
                 <div>
