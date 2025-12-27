@@ -208,7 +208,7 @@ class SpotifyController extends Controller
     {
         $clientId = config('services.spotify.client_id');
         $redirectUri = $this->getRedirectUri();
-        $scopes = 'user-read-playback-state user-modify-playback-state user-read-currently-playing streaming';
+        $scopes = 'user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private';
 
         // Generate state for CSRF protection
         $state = bin2hex(random_bytes(16));

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, Music, AlertCircle, ExternalLink, Play, Pause } from 'lucide-vue-next';
+import { Loader2, Music, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
 import { trans } from 'laravel-vue-i18n';
@@ -39,6 +39,7 @@ const {
     progressPercentage,
     playTrack,
     togglePlayPause,
+    stop,
     isTrackPlaying,
 } = useSpotifyPlayback();
 
@@ -53,9 +54,11 @@ const formatDuration = (ms: number): string => {
 };
 
 const handlePlayClick = async (track: Track) => {
+    if (isPlaybackLoading.value) return;
+    
     if (isTrackPlaying(track.spotify_id)) {
-        // If this track is playing, toggle pause
-        await togglePlayPause();
+        // If this track is playing, stop playback
+        await stop();
     } else {
         // Play this track (will stop any currently playing track)
         await playTrack(track.spotify_id);
@@ -67,7 +70,7 @@ const isCurrentTrack = (trackId: string) => {
 };
 
 const showProgress = (trackId: string) => {
-    return isCurrentTrack(trackId) && (isPlaying.value || isPlaybackLoading.value);
+    return isCurrentTrack(trackId) && isPlaying.value;
 };
 </script>
 
@@ -139,18 +142,19 @@ const showProgress = (trackId: string) => {
                     </div>
 
                     <!-- Duration -->
-                    <div class="flex-shrink-0 text-sm text-muted-foreground">
-                        {{ formatDuration(track.duration_ms) }}
+                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right">
+                        <span v-if="showProgress(track.spotify_id)">{{ formattedPosition }} / {{ formattedDuration }}</span>
+                        <span v-else>{{ formatDuration(track.duration_ms) }}</span>
                     </div>
 
                     <!-- Actions -->
                     <div class="flex-shrink-0 flex items-center gap-2">
-                        <!-- Play/Pause Button -->
+                        <!-- Play/Stop Button -->
                         <button
                             @click="handlePlayClick(track)"
                             :disabled="isPlaybackLoading"
                             class="relative p-2 rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :title="isTrackPlaying(track.spotify_id) ? 'Pause' : 'Play'"
+                            :title="isTrackPlaying(track.spotify_id) ? 'Stop' : 'Play'"
                         >
                             <!-- Loading/Progress Indicator -->
                             <div
@@ -162,15 +166,15 @@ const showProgress = (trackId: string) => {
                                     :style="{ width: `${progressPercentage}%` }"
                                 />
                             </div>
-                            <!-- Play/Pause Icon -->
+                            <!-- Play/Stop Icon -->
                             <div class="relative flex items-center justify-center">
                                 <Loader2
                                     v-if="isCurrentTrack(track.spotify_id) && isPlaybackLoading"
                                     class="w-4 h-4 animate-spin"
                                 />
-                                <Pause
+                                <Square
                                     v-else-if="isTrackPlaying(track.spotify_id)"
-                                    class="w-4 h-4"
+                                    class="w-4 h-4 fill-current"
                                 />
                                 <Play
                                     v-else
@@ -178,13 +182,6 @@ const showProgress = (trackId: string) => {
                                 />
                             </div>
                         </button>
-                        <!-- Progress Display (when playing) -->
-                        <div
-                            v-if="showProgress(track.spotify_id)"
-                            class="text-xs text-muted-foreground min-w-[80px] text-right"
-                        >
-                            {{ formattedPosition }} / {{ formattedDuration }}
-                        </div>
                         <!-- External Link -->
                         <a
                             :href="track.external_url"

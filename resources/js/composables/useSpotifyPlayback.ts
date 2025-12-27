@@ -59,6 +59,27 @@ export function useSpotifyPlayback() {
     const error = ref<string | null>(null);
     const accessToken = ref<string | null>(null);
     const isInitializing = ref(false);
+    let progressInterval: number | null = null;
+
+    // Start progress timer
+    const startProgressTimer = () => {
+        stopProgressTimer();
+        progressInterval = window.setInterval(() => {
+            if (isPlaying.value && currentPosition.value < trackDuration.value) {
+                currentPosition.value += 1000;
+            } else if (currentPosition.value >= trackDuration.value) {
+                stopProgressTimer();
+            }
+        }, 1000);
+    };
+
+    // Stop progress timer
+    const stopProgressTimer = () => {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+    };
 
     // Clear token from backend session
     const clearToken = async (): Promise<void> => {
@@ -236,6 +257,13 @@ export function useSpotifyPlayback() {
                 isPlaying.value = !state.paused;
                 isLoading.value = state.loading;
 
+                // Manage progress timer based on playback state
+                if (isPlaying.value) {
+                    startProgressTimer();
+                } else {
+                    stopProgressTimer();
+                }
+
                 if (state.track_window.current_track) {
                     currentTrackId.value = state.track_window.current_track.id;
                     trackDuration.value = state.track_window.current_track.duration_ms;
@@ -388,6 +416,7 @@ export function useSpotifyPlayback() {
 
     // Cleanup on unmount
     onUnmounted(() => {
+        stopProgressTimer();
         if (player.value) {
             player.value.disconnect();
         }
