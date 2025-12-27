@@ -45,7 +45,7 @@ class ArtistSearchService
         [$localResults, $spotifyResults] = $this->searchBoth($query, $limit);
 
         // Merge, deduplicate, and limit results
-        return $this->mergeAndDeduplicate($localResults, $spotifyResults, $limit);
+        return $this->mergeAndDeduplicate($localResults, $spotifyResults, $limit, $query);
     }
 
     /**
@@ -94,12 +94,14 @@ class ArtistSearchService
      *
      * @param  Collection<Artist>  $localResults
      * @param  array<SpotifyArtistDTO>  $spotifyResults
+     * @param  string  $query  Search query for filtering Spotify results
      * @return Collection<ArtistSearchResultDTO>
      */
     private function mergeAndDeduplicate(
         Collection $localResults,
         array $spotifyResults,
         int $limit,
+        string $query,
     ): Collection {
         $merged = collect();
         $seenSpotifyIds = [];
@@ -119,6 +121,13 @@ class ArtistSearchService
         foreach ($spotifyResults as $spotifyArtist) {
             if (isset($seenSpotifyIds[$spotifyArtist->spotifyId])) {
                 continue; // Already added from local database
+            }
+
+            // Filter out Spotify results that don't match the query name (fuzzy match check)
+            // This was causing the UI to show related artists without the string contained in their name
+            // Spotify API can return related artists (e.g. Drake for "Kendrick")
+            if (stripos($spotifyArtist->name, $query) === false) {
+                continue;
             }
 
             // Check if this Spotify artist exists in our database

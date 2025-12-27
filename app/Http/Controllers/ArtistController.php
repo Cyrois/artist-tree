@@ -76,18 +76,23 @@ class ArtistController extends Controller
      * Select an artist (refreshes data from Spotify if available).
      *
      * POST /api/artists/select
-     * Body: { "artist_id": 123 }
+     * Body: { "artist_id": 123 } OR { "spotify_id": "..." }
      */
     public function select(SelectArtistRequest $request): JsonResponse
     {
         $artistId = $request->validated('artist_id');
+        $spotifyId = $request->validated('spotify_id');
 
         try {
-            $artist = \App\Models\Artist::with('metrics')->findOrFail($artistId);
+            if ($artistId) {
+                $artist = \App\Models\Artist::with('metrics')->findOrFail($artistId);
 
-            // If artist has a Spotify ID, refresh their data
-            if ($artist->spotify_id) {
-                $artist = $this->searchService->refreshArtistFromSpotify($artist);
+                // If artist has a Spotify ID, refresh their data
+                if ($artist->spotify_id && $artist->hasStaleMetrics()) {
+                    $artist = $this->searchService->refreshArtistFromSpotify($artist);
+                }
+            } else {
+                $artist = $this->searchService->getOrCreateFromSpotify($spotifyId);
             }
 
             return response()->json([
@@ -97,6 +102,7 @@ class ArtistController extends Controller
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to select artist', [
                 'artist_id' => $artistId,
+                'spotify_id' => $spotifyId,
             ]);
         }
     }

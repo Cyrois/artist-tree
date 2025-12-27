@@ -8,11 +8,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
-import { getTrendingArtists, getSimilarArtists } from '@/data/artists';
+import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { Search, SlidersHorizontal, ChevronDown, TrendingUp, Loader2, AlertCircle } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
@@ -42,8 +42,14 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const hasSearched = ref(false);
 
-// Get trending artists for initial display
-const trendingArtists = getTrendingArtists(10);
+// Initialize search from URL param
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+        searchQuery.value = q;
+    }
+});
 
 // Debounced search function (300ms as per CLAUDE.md)
 const performSearch = useDebounceFn(async (query: string) => {
@@ -349,24 +355,6 @@ const breadcrumbs = [
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <ArtistCard
                         v-for="artist in similarArtists"
-                        :key="artist.id"
-                        :artist="artist"
-                        compact
-                        :show-metrics="false"
-                        @click="handleArtistClick"
-                    />
-                </div>
-            </div>
-
-            <!-- Trending Artists -->
-            <div class="pt-6 border-t">
-                <div class="flex items-center gap-2 mb-4">
-                    <TrendingUp class="w-5 h-5 text-primary" />
-                    <h3 class="text-lg font-semibold">{{ $t('artists.search_trending_artists_title') }}</h3>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <ArtistCard
-                        v-for="artist in trendingArtists"
                         :key="artist.id"
                         :artist="artist"
                         compact

@@ -25,7 +25,8 @@ class SelectArtistRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'artist_id' => ['required', 'integer', 'exists:artists,id'],
+            'artist_id' => ['required_without:spotify_id', 'nullable', 'integer', 'exists:artists,id'],
+            'spotify_id' => ['required_without:artist_id', 'nullable', 'string'],
         ];
     }
 
