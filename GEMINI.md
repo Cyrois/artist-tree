@@ -44,24 +44,16 @@ When presenting implementation plans:
 - **Authentication:** Laravel Sanctum with cookie-based auth for Inertia frontend
 - **Deployment:** Single deployment to Laravel Cloud (monolithic app)
 
-### Route Structure
-```
-Routes:
-├── web.php (Inertia pages)
-│   ├── GET /dashboard → Inertia::render('Dashboard')
-│   ├── GET /lineups → Inertia::render('Lineups/Index')
-│   └── GET /lineups/{id} → Inertia::render('Lineups/Show')
-│
-└── api.php (RESTful JSON API)
-    ├── GET /api/artists → JSON (paginated list)
     ├── GET /api/artists/search?q=... → JSON (autocomplete)
     ├── GET /api/artists/{id} → JSON (artist details by database ID)
     ├── GET /api/artists?spotify_id=... → JSON (artist details by Spotify ID)
+    ├── POST /api/artists/select → JSON (select artist for lineup/etc.)
+    ├── GET /api/artists/{id}/top-tracks → JSON (artist's top tracks)
+    ├── GET /api/artists/{id}/albums → JSON (artist's albums)
     ├── POST /api/artists/{id}/refresh → JSON (refresh metrics)
     ├── POST /api/lineups → JSON (create lineup)
     ├── POST /api/lineups/{id}/artists → JSON (add artist, recalculate tiers)
     └── DELETE /api/lineups/{id}/artists/{artistId} → JSON
-```
 
 ### Frontend Pattern
 - Use Inertia for page loads and navigation
