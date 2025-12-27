@@ -217,6 +217,7 @@ export function useSpotifyPlayback() {
         }).catch(err => {
             console.error('Spotify initialization failed:', err);
             initializationPromise = null;
+            throw err;
         });
 
         await initializationPromise;
