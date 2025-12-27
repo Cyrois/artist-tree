@@ -226,13 +226,13 @@ const showProgress = (item: MediaItem) => {
                     </div>
 
                     <!-- Duration -->
-                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums">
+                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums transition-opacity" :class="{ 'opacity-0 group-hover:opacity-100': !isItemActive(item) }">
                         <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
                         <span v-else>{{ formatDuration(item.duration_ms) }}</span>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex-shrink-0 flex items-center gap-2">
+                    <div class="flex-shrink-0 flex items-center gap-2 transition-opacity" :class="{ 'opacity-0 group-hover:opacity-100': !isItemActive(item) }">
                         <!-- Play/Stop Button -->
                         <button
                             @click="handlePlayClick(item)"
