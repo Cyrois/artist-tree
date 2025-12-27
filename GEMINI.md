@@ -268,7 +268,7 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 **Service:** `App\Services\YouTubeService`
 
 **Rules:**
-- Daily quota: 10,000 units - monitor with `youtube_quota_usage` cache key
+- Daily quota: 10,000 units - monitor with `youtube_quota_usage:YYYY-MM-DD` cache key
 - Cache channel searches for 24 hours
 - **Graceful fallback** if artist has no YouTube channel (don't fail)
 - Search by artist name to find channel
