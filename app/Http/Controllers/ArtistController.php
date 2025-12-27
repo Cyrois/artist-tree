@@ -211,6 +211,7 @@ class ArtistController extends Controller
         $artist = Artist::findOrFail($id);
         $spotifyId = $this->spotifyService->resolveSpotifyId($artist);
         $limit = min((int) $request->validated('limit', 5), 20);
+        $type = $request->validated('type', 'album,single');
 
         if (! $spotifyId) {
             return response()->json([
@@ -221,7 +222,7 @@ class ArtistController extends Controller
         }
 
         try {
-            $albums = $this->spotifyService->getArtistAlbums($spotifyId, $limit);
+            $albums = $this->spotifyService->getArtistAlbums($spotifyId, $limit, $type);
 
             return response()->json([
                 'data' => array_map(fn ($album) => $album->toArray(), $albums),

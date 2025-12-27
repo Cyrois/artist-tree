@@ -1,6 +1,10 @@
 import { ref, onUnmounted, computed } from 'vue';
 
 interface SpotifyPlayerState {
+    context: {
+        uri: string | null;
+        metadata: any;
+    } | null;
     track_window: {
         current_track: {
             id: string;
@@ -21,8 +25,8 @@ interface SpotifyPlayer {
     connect: () => Promise<boolean>;
     disconnect: () => void;
     getCurrentState: () => Promise<SpotifyPlayerState | null>;
-    addListener: (event: string, callback: (state: SpotifyPlayerState) => void) => void;
-    removeListener: (event: string, callback: (state: SpotifyPlayerState) => void) => void;
+    addListener: (event: string, callback: (state: any) => void) => void;
+    removeListener: (event: string, callback: (state: any) => void) => void;
     togglePlay: () => Promise<void>;
     resume: () => Promise<void>;
     pause: () => Promise<void>;
@@ -47,20 +51,23 @@ declare global {
     }
 }
 
-export function useSpotifyPlayback() {
-    const player = ref<SpotifyPlayer | null>(null);
-    const deviceId = ref<string | null>(null);
-    const isReady = ref(false);
-    const isPlaying = ref(false);
-    const currentTrackId = ref<string | null>(null);
-    const currentPosition = ref(0);
-    const trackDuration = ref(0);
-    const isLoading = ref(false);
-    const error = ref<string | null>(null);
-    const accessToken = ref<string | null>(null);
-    const isInitializing = ref(false);
-    let progressInterval: number | null = null;
+// SHARED GLOBAL STATE
+const player = ref<SpotifyPlayer | null>(null);
+const deviceId = ref<string | null>(null);
+const isReady = ref(false);
+const isPlaying = ref(false);
+const currentTrackId = ref<string | null>(null);
+const currentContextUri = ref<string | null>(null);
+const currentPosition = ref(0);
+const trackDuration = ref(0);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+const accessToken = ref<string | null>(null);
+const isInitializing = ref(false);
+let progressInterval: number | null = null;
+let listenerCount = 0;
 
+export function useSpotifyPlayback() {
     // Start progress timer
     const startProgressTimer = () => {
         stopProgressTimer();
@@ -167,8 +174,8 @@ export function useSpotifyPlayback() {
 
     // Initialize Spotify Web Playback SDK
     const initializePlayer = async () => {
-        // Prevent multiple simultaneous initialization attempts
-        if (isInitializing.value) {
+        // If already initialized or currently initializing, don't do it again
+        if (player.value || isInitializing.value) {
             return;
         }
 
@@ -209,63 +216,36 @@ export function useSpotifyPlayback() {
             });
 
             // Error handling
-            spotifyPlayer.addListener('initialization_error', async ({ message }) => {
+            spotifyPlayer.addListener('initialization_error', async ({ message }: { message: string }) => {
                 console.error('Spotify SDK initialization error:', message);
                 error.value = `Initialization error: ${message}`;
-
-                // Clear invalid token and trigger re-authentication
                 await clearToken();
-
-                // Trigger re-authentication by fetching a new token
-                try {
-                    await fetchAccessToken();
-                    // If successful, try to reconnect
-                    if (accessToken.value) {
-                        await spotifyPlayer.connect();
-                    }
-                } catch (err) {
-                    // Re-authentication will redirect to OAuth
-                    console.error('Failed to re-authenticate after initialization error:', err);
-                }
             });
 
-            spotifyPlayer.addListener('authentication_error', async ({ message }) => {
+            spotifyPlayer.addListener('authentication_error', async ({ message }: { message: string }) => {
                 console.error('Spotify SDK authentication error:', message);
                 error.value = `Authentication error: ${message}`;
-
-                // Clear invalid token and trigger re-authentication
                 await clearToken();
-
-                // Trigger re-authentication by fetching a new token
-                try {
-                    await fetchAccessToken();
-                    // If successful, try to reconnect
-                    if (accessToken.value) {
-                        await spotifyPlayer.connect();
-                    }
-                } catch (err) {
-                    // Re-authentication will redirect to OAuth
-                    console.error('Failed to re-authenticate after auth error:', err);
-                }
             });
 
-            spotifyPlayer.addListener('account_error', ({ message }) => {
+            spotifyPlayer.addListener('account_error', ({ message }: { message: string }) => {
                 error.value = `Account error: ${message}. Please ensure you have Spotify Premium.`;
             });
 
-            spotifyPlayer.addListener('playback_error', ({ message }) => {
+            spotifyPlayer.addListener('playback_error', ({ message }: { message: string }) => {
                 error.value = `Playback error: ${message}`;
             });
 
             // Ready state
-            spotifyPlayer.addListener('ready', ({ device_id }) => {
+            spotifyPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
                 deviceId.value = device_id;
                 isReady.value = true;
                 error.value = null;
+                console.log('Spotify Player is ready with Device ID:', device_id);
             });
 
             // Not ready state
-            spotifyPlayer.addListener('not_ready', ({ device_id }) => {
+            spotifyPlayer.addListener('not_ready', ({ device_id }: { device_id: string }) => {
                 deviceId.value = device_id;
                 isReady.value = false;
             });
@@ -286,6 +266,9 @@ export function useSpotifyPlayback() {
                 } else {
                     stopProgressTimer();
                 }
+                
+                // Update context
+                currentContextUri.value = state.context?.uri || null;
 
                 if (state.track_window.current_track) {
                     currentTrackId.value = state.track_window.current_track.id;
@@ -305,28 +288,11 @@ export function useSpotifyPlayback() {
         } catch (err) {
             error.value = 'Failed to initialize Spotify player';
             console.error('Spotify player initialization error:', err);
-
-            // Clear invalid token if initialization fails
-            // This helps when token is invalid (e.g., after email change)
-            if (err instanceof Error && (
-                err.message.includes('authentication') ||
-                err.message.includes('token') ||
-                err.message.includes('Invalid')
-            )) {
-                await clearToken();
-                // Try to re-authenticate
-                try {
-                    await fetchAccessToken();
-                } catch (authErr) {
-                    // Will redirect to OAuth if needed
-                    console.error('Failed to re-authenticate after initialization failure:', authErr);
-                }
-            }
         }
     };
 
-    // Play a track
-    const playTrack = async (spotifyTrackId: string) => {
+    // Play a track or album
+    const playTrack = async (spotifyId: string, type: 'track' | 'album' = 'track') => {
         if (!player.value || !deviceId.value) {
             await initializePlayer();
             await waitForPlayerReady();
@@ -354,35 +320,38 @@ export function useSpotifyPlayback() {
             });
 
             // Start playback
+            const body: any = {};
+            if (type === 'track') {
+                body.uris = [`spotify:track:${spotifyId}`];
+            } else {
+                body.context_uri = `spotify:album:${spotifyId}`;
+            }
+
             await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    uris: [`spotify:track:${spotifyTrackId}`],
-                }),
+                body: JSON.stringify(body),
             });
-
-            currentTrackId.value = spotifyTrackId;
+            
+            // Set optimistic values for immediate UI feedback
+            if (type === 'track') {
+                currentTrackId.value = spotifyId;
+            } else {
+                currentContextUri.value = `spotify:album:${spotifyId}`;
+            }
             isLoading.value = true;
         } catch (err) {
-            error.value = 'Failed to play track. Please try again.';
-            console.error('Play track error:', err);
+            error.value = 'Failed to play. Please try again.';
+            console.error('Play error:', err);
         }
     };
 
     // Toggle play/pause
     const togglePlayPause = async () => {
-        // Initialize player if not already initialized
-        if (!player.value || !deviceId.value) {
-            await initializePlayer();
-            await waitForPlayerReady();
-        }
-
         if (!player.value) {
-            error.value = 'Player not ready. Please try again.';
             return;
         }
 
@@ -402,7 +371,6 @@ export function useSpotifyPlayback() {
 
         try {
             await player.value.pause();
-            currentTrackId.value = null;
         } catch (err) {
             console.error('Stop error:', err);
         }
@@ -453,16 +421,25 @@ export function useSpotifyPlayback() {
     const isTrackPlaying = (trackId: string) => {
         return currentTrackId.value === trackId && isPlaying.value;
     };
+    
+    // Check if a specific context (album/playlist) is currently playing
+    const isContextPlaying = (contextUri: string) => {
+        return currentContextUri.value === contextUri && isPlaying.value;
+    };
+
+    // TRACK LISTENERS
+    listenerCount++;
 
     // Cleanup on unmount
     onUnmounted(() => {
-        stopProgressTimer();
-        if (player.value) {
-            // Only disconnect if we are currently playing.
-            // This stops the music when the user leaves the page,
-            // but avoids interrupting other devices (like Desktop app) if we were idle.
-            if (isPlaying.value) {
+        listenerCount--;
+        // Only disconnect and stop timers if NO components are listening anymore
+        if (listenerCount === 0) {
+            stopProgressTimer();
+            if (player.value && isPlaying.value) {
                 player.value.disconnect();
+                player.value = null;
+                isReady.value = false;
             }
         }
     });
@@ -471,6 +448,7 @@ export function useSpotifyPlayback() {
         isReady,
         isPlaying,
         currentTrackId,
+        currentContextUri,
         currentPosition,
         trackDuration,
         isLoading,
@@ -482,7 +460,8 @@ export function useSpotifyPlayback() {
         togglePlayPause,
         stop,
         isTrackPlaying,
+        isContextPlaying,
         checkAuthentication,
+        initializePlayer,
     };
 }
-

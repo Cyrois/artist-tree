@@ -26,6 +26,7 @@ class GetArtistAlbumsRequest extends FormRequest
     {
         return [
             'limit' => ['nullable', 'integer', 'min:1'],
+            'type' => ['nullable', 'string'],
         ];
     }
 

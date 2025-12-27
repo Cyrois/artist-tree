@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,52 +10,86 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, Music, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
+import { Loader2, Music, Disc, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
 import { trans } from 'laravel-vue-i18n';
 
-interface Track {
+interface MediaItem {
     spotify_id: string;
     name: string;
-    album_name: string;
-    album_image_url: string;
+    // Track fields
+    album_name?: string;
+    album_image_url?: string;
     duration_ms: number;
-    preview_url: string;
+    preview_url?: string;
     external_url: string;
-    artists: Array<{ name: string; spotify_id: string }>;
+    artists?: Array<{ name: string; spotify_id: string }>;
+    // Album/Release fields
+    album_type?: 'album' | 'single' | 'compilation';
+    release_date?: string;
+    total_tracks?: number;
+    image_url?: string;
 }
 
 interface Props {
     artistId: number;
+    variant: 'top-tracks' | 'recent-releases';
 }
 
 const props = defineProps<Props>();
 
-const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
-    `/api/artists/${props.artistId}/top-tracks`
+// Computed configurations based on variant
+const config = computed(() => {
+    if (props.variant === 'top-tracks') {
+        return {
+            title: trans('artists.show_top_tracks_title'),
+            icon: Music,
+            apiUrl: `/api/artists/${props.artistId}/top-tracks`,
+            apiParams: {}, // Top tracks endpoint handles default limit
+            emptyMessage: trans('artists.show_top_tracks_empty'),
+            loadingMessage: trans('artists.show_top_tracks_loading'),
+            errorMessage: trans('artists.show_top_tracks_error'),
+        };
+    } else {
+        return {
+            title: trans('artists.show_recent_releases_title'),
+            icon: Disc,
+            apiUrl: `/api/artists/${props.artistId}/albums`,
+            apiParams: { limit: 5, type: 'single' },
+            emptyMessage: trans('artists.show_recent_releases_empty'),
+            loadingMessage: trans('artists.show_recent_releases_loading'),
+            errorMessage: trans('artists.show_recent_releases_error'),
+        };
+    }
+});
+
+const { data: items, loading, error, load } = useAsyncSpotifyData<MediaItem[]>(
+    config.value.apiUrl
 );
 
 const {
-    isPlaying,
-    currentTrackId,
     isLoading: isPlaybackLoading,
     error: playbackError,
-    formattedPosition,
-    formattedDuration,
-    progressPercentage,
     playTrack,
     stop,
     isTrackPlaying,
+    isContextPlaying,
     checkAuthentication,
+    formattedPosition,
+    formattedDuration,
+    isPlaying,
+    progressPercentage,
+    initializePlayer
 } = useSpotifyPlayback();
 
 const isAuthDialogOpen = ref(false);
 const spotifyAuthUrl = ref<string | null>(null);
-const pendingTrack = ref<Track | null>(null);
+const pendingItem = ref<MediaItem | null>(null);
 
 onMounted(() => {
-    load();
+    load(config.value.apiParams);
+    initializePlayer();
 });
 
 const formatDuration = (ms: number): string => {
@@ -64,25 +98,44 @@ const formatDuration = (ms: number): string => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-const handlePlayClick = async (track: Track) => {
+const formatReleaseDate = (date: string): string => {
+    if (!date) return 'Unknown';
+    const parts = date.split('-');
+    if (parts.length === 1) return parts[0]; // Year only
+    if (parts.length === 2) return `${parts[1]}/${parts[0]}`; // Month/Year
+    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+};
+
+const isItemActive = (item: MediaItem) => {
+    if (props.variant === 'top-tracks') {
+        return isTrackPlaying(item.spotify_id);
+    } else {
+        return isContextPlaying(`spotify:album:${item.spotify_id}`);
+    }
+};
+
+const handlePlayClick = async (item: MediaItem) => {
     if (isPlaybackLoading.value) return;
     
-    if (isTrackPlaying(track.spotify_id)) {
-        // If this track is playing, stop playback
+    const isActive = isItemActive(item);
+    
+    if (isActive) {
         await stop();
     } else {
-        // Check if authenticated before playing
         const { authenticated, authUrl } = await checkAuthentication();
         
         if (!authenticated && authUrl) {
-            pendingTrack.value = track;
+            pendingItem.value = item;
             spotifyAuthUrl.value = authUrl;
             isAuthDialogOpen.value = true;
             return;
         }
 
-        // Play this track (will stop any currently playing track)
-        await playTrack(track.spotify_id);
+        if (props.variant === 'top-tracks') {
+            await playTrack(item.spotify_id, 'track');
+        } else {
+            await playTrack(item.spotify_id, 'album');
+        }
     }
 };
 
@@ -92,12 +145,8 @@ const confirmAuth = () => {
     }
 };
 
-const isCurrentTrack = (trackId: string) => {
-    return currentTrackId.value === trackId;
-};
-
-const showProgress = (trackId: string) => {
-    return isCurrentTrack(trackId) && isPlaying.value;
+const showProgress = (item: MediaItem) => {
+    return isItemActive(item) && isPlaying.value;
 };
 </script>
 
@@ -105,8 +154,8 @@ const showProgress = (trackId: string) => {
     <Card>
         <CardHeader>
             <CardTitle class="flex items-center gap-2">
-                <Music class="w-5 h-5" />
-                {{ trans('artists.show_top_tracks_title') }}
+                <component :is="config.icon" class="w-5 h-5" />
+                {{ config.title }}
             </CardTitle>
         </CardHeader>
         <CardContent>
@@ -114,7 +163,7 @@ const showProgress = (trackId: string) => {
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3">
                     <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_loading') }}</p>
+                    <p class="text-sm text-muted-foreground">{{ config.loadingMessage }}</p>
                 </div>
             </div>
 
@@ -122,70 +171,78 @@ const showProgress = (trackId: string) => {
             <div v-else-if="error" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3 text-center">
                     <AlertCircle class="h-8 w-8 text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_error') }}</p>
+                    <p class="text-sm text-muted-foreground">{{ config.errorMessage }}</p>
                 </div>
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="!tracks || tracks.length === 0" class="flex items-center justify-center py-12">
-                <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_empty') }}</p>
+            <div v-else-if="!items || items.length === 0" class="flex items-center justify-center py-12">
+                <p class="text-sm text-muted-foreground">{{ config.emptyMessage }}</p>
             </div>
 
             <!-- Playback Error State -->
-            <div v-if="playbackError && tracks && tracks.length > 0" class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+            <div v-if="playbackError && items && items.length > 0" class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
                 <div class="flex items-center gap-2 text-sm text-destructive">
                     <AlertCircle class="w-4 h-4" />
                     <p>{{ playbackError }}</p>
                 </div>
             </div>
 
-            <!-- Tracks List -->
-            <div v-if="tracks && tracks.length > 0" class="space-y-0">
+            <!-- Items List -->
+            <div v-if="items && items.length > 0" class="space-y-0">
                 <div
-                    v-for="(track, index) in tracks"
-                    :key="track.spotify_id"
+                    v-for="(item, index) in items"
+                    :key="item.spotify_id"
                     class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors group -mx-6"
                 >
-                    <!-- Track Number -->
+                    <!-- Number -->
                     <div class="flex-shrink-0 w-6 text-center text-sm font-medium text-muted-foreground">
                         {{ index + 1 }}
                     </div>
 
-                    <!-- Album Art -->
+                    <!-- Image -->
                     <img
-                        v-if="track.album_image_url"
-                        :src="track.album_image_url"
-                        :alt="track.album_name"
+                        v-if="variant === 'top-tracks' ? item.album_image_url : item.image_url"
+                        :src="variant === 'top-tracks' ? item.album_image_url : item.image_url"
+                        :alt="item.name"
                         class="w-12 h-12 rounded object-cover"
                     />
                     <div v-else class="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                        <Music class="w-6 h-6 text-muted-foreground" />
+                        <component :is="config.icon" class="w-6 h-6 text-muted-foreground" />
                     </div>
 
-                    <!-- Track Info -->
+                    <!-- Info -->
                     <div class="flex-1 min-w-0">
-                        <p class="font-medium truncate">{{ track.name }}</p>
-                        <p class="text-sm text-muted-foreground truncate">{{ track.album_name }}</p>
+                        <p class="font-medium truncate">{{ item.name }}</p>
+                        
+                        <!-- Top Tracks Info -->
+                        <p v-if="variant === 'top-tracks'" class="text-sm text-muted-foreground truncate">
+                            {{ item.album_name }}
+                        </p>
+                        <!-- Recent Releases Info -->
+                        <p v-else-if="item.album_type && item.release_date" class="text-sm text-muted-foreground truncate">
+                            {{ item.album_type.charAt(0).toUpperCase() + item.album_type.slice(1) }} • {{ formatReleaseDate(item.release_date) }}
+                        </p>
                     </div>
 
                     <!-- Duration -->
                     <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums">
-                        <span v-if="showProgress(track.spotify_id)">{{ formattedPosition }} / {{ formattedDuration }}</span>
-                        <span v-else>{{ formatDuration(track.duration_ms) }}</span>
+                        <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
+                        <span v-else>{{ formatDuration(item.duration_ms) }}</span>
                     </div>
 
                     <!-- Actions -->
                     <div class="flex-shrink-0 flex items-center gap-2">
                         <!-- Play/Stop Button -->
                         <button
-                            @click="handlePlayClick(track)"
+                            @click="handlePlayClick(item)"
                             :disabled="isPlaybackLoading"
                             class="relative p-2 rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :title="isTrackPlaying(track.spotify_id) ? 'Stop' : 'Play'"
+                            :title="isItemActive(item) ? 'Stop' : 'Play'"
                         >
-                            <!-- Loading/Progress Indicator -->
+                             <!-- Loading/Progress Indicator -->
                             <div
-                                v-if="showProgress(track.spotify_id)"
+                                v-if="showProgress(item)"
                                 class="absolute inset-0 rounded-md overflow-hidden"
                             >
                                 <div
@@ -193,14 +250,14 @@ const showProgress = (trackId: string) => {
                                     :style="{ width: `${progressPercentage}%` }"
                                 />
                             </div>
-                            <!-- Play/Stop Icon -->
+
                             <div class="relative flex items-center justify-center">
                                 <Loader2
-                                    v-if="isCurrentTrack(track.spotify_id) && isPlaybackLoading"
+                                    v-if="isItemActive(item) && isPlaybackLoading"
                                     class="w-4 h-4 animate-spin"
                                 />
                                 <Square
-                                    v-else-if="isTrackPlaying(track.spotify_id)"
+                                    v-else-if="isItemActive(item)"
                                     class="w-4 h-4 fill-current"
                                 />
                                 <Play
@@ -211,7 +268,7 @@ const showProgress = (trackId: string) => {
                         </button>
                         <!-- External Link -->
                         <a
-                            :href="track.external_url"
+                            :href="item.external_url"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="p-2 rounded-md hover:bg-muted transition-colors"
