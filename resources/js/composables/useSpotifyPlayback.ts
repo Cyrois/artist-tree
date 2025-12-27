@@ -179,8 +179,10 @@ export function useSpotifyPlayback() {
 
             const spotifyPlayer = new window.Spotify.Player({
                 name: 'Artist Tree Web Player',
-                getOAuthToken: (callback) => {
-                    callback(token);
+                getOAuthToken: (cb) => {
+                    // Force a re-fetch from the backend to ensure the token is not stale.
+                    accessToken.value = null;
+                    fetchAccessToken().then(token => cb(token));
                 },
                 volume: 0.5,
             });
