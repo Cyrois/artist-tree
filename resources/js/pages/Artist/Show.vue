@@ -31,10 +31,14 @@ interface ApiArtist {
     name: string;
     genres: string[];
     image_url: string | null;
+    score: number;
     metrics: {
         spotify_monthly_listeners: number | null;
         spotify_popularity: number | null;
+        spotify_followers: number | null;
         youtube_subscribers: number | null;
+        instagram_followers: number | null;
+        tiktok_followers: number | null;
     } | null;
     created_at: string;
     updated_at: string;
@@ -78,38 +82,8 @@ onMounted(async () => {
     }
 });
 
-// Stub data merging
-const artistData = computed(() => {
-    if (!artist.value) return null;
-    
-    return {
-        ...artist.value,
-        // Stubbed fields
-        score: 94, // Mock score
-        location: 'United States',
-        description: `${artist.value.name} is a critically acclaimed artist known for their innovative approach to music and storytelling. They have garnered a massive following and numerous awards throughout their career.`,
-        genres: artist.value.genres && artist.value.genres.length > 0 
-            ? artist.value.genres 
-            : ['Hip-Hop', 'Rap', 'West Coast'], // Fallback if empty
-        metrics: {
-            spotify_monthly_listeners: artist.value.metrics?.spotify_monthly_listeners ?? 58200000,
-            spotify_popularity: artist.value.metrics?.spotify_popularity ?? 92,
-            youtube_subscribers: artist.value.metrics?.youtube_subscribers ?? 18400000,
-            instagram_followers: 17800000,
-            twitter_followers: 13200000,
-            youtube_views: 8200000000,
-            spotify_followers: 32100000,
-        },
-        similar_artists: [
-            { id: 101, name: 'Tyler, The Creator', score: 88, image_url: null },
-            { id: 102, name: 'Billie Eilish', score: 91, image_url: null },
-            { id: 103, name: 'Charli XCX', score: 88, image_url: null },
-        ]
-    };
-});
-
 const formatNumber = (num: number | null | undefined): string => {
-    if (num === null || num === undefined) return '-';
+    if (num === null || num === undefined || num === 0) return '-';
     if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -154,7 +128,7 @@ const pageTitle = computed(() =>
         </div>
 
         <!-- Artist Content -->
-        <div v-else-if="artistData" class="space-y-6">
+        <div v-else-if="artist" class="space-y-6">
             <!-- Back button -->
             <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary">
                 <ArrowLeft class="w-4 h-4 mr-2" />
@@ -168,9 +142,9 @@ const pageTitle = computed(() =>
                         <!-- Artist Image -->
                         <div class="shrink-0">
                             <img
-                                v-if="artistData.image_url"
-                                :src="artistData.image_url"
-                                :alt="artistData.name"
+                                v-if="artist.image_url"
+                                :src="artist.image_url"
+                                :alt="artist.name"
                                 class="h-40 w-40 rounded-lg object-cover shadow-lg"
                             />
                             <div
@@ -178,7 +152,7 @@ const pageTitle = computed(() =>
                                 class="flex h-40 w-40 items-center justify-center rounded-lg bg-muted"
                             >
                                 <span class="text-4xl font-bold text-muted-foreground">
-                                    {{ artistData.name.charAt(0).toUpperCase() }}
+                                    {{ artist.name.charAt(0).toUpperCase() }}
                                 </span>
                             </div>
                         </div>
@@ -188,10 +162,10 @@ const pageTitle = computed(() =>
                             <div>
                                 <div class="flex items-start justify-between">
                                     <div>
-                                        <h1 class="text-3xl font-bold">{{ artistData.name }}</h1>
-                                        <div class="flex flex-wrap gap-2 mt-2">
+                                        <h1 class="text-3xl font-bold">{{ artist.name }}</h1>
+                                        <div v-if="artist.genres && artist.genres.length > 0" class="flex flex-wrap gap-2 mt-2">
                                             <span 
-                                                v-for="genre in artistData.genres.slice(0, 4)" 
+                                                v-for="genre in artist.genres.slice(0, 4)" 
                                                 :key="genre"
                                                 class="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
                                             >
@@ -199,15 +173,19 @@ const pageTitle = computed(() =>
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center justify-center bg-primary/10 text-primary font-bold text-xl h-12 w-12 rounded-full border-2 border-primary/20">
-                                        {{ artistData.score }}
+                                    <div 
+                                        v-if="artist.score"
+                                        class="flex items-center justify-center bg-primary/10 text-primary font-bold text-xl h-12 w-12 rounded-full border-2 border-primary/20"
+                                        title="Artist-Tree Score"
+                                    >
+                                        {{ Math.round(artist.score) }}
                                     </div>
                                 </div>
                                 
                                 <div class="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-                                    <div class="flex items-center gap-1">
-                                        <MapPin class="w-4 h-4" />
-                                        <span>{{ artistData.location }}</span>
+                                    <div v-if="artist.spotify_id" class="flex items-center gap-1">
+                                        <Music class="w-4 h-4" />
+                                        <span>Verified Spotify Artist</span>
                                     </div>
                                 </div>
                             </div>
@@ -249,38 +227,38 @@ const pageTitle = computed(() =>
 
             <!-- Overview Tab -->
             <div v-if="activeTab === 'overview'" class="space-y-6">
-                <!-- Description -->
+                <!-- Description (Generic for now) -->
                 <p class="text-muted-foreground leading-relaxed">
-                    {{ artistData.description }}
+                    {{ artist.name }} is an artist featured on Spotify. Use the data below to analyze their performance and suitability for your festival lineup.
                 </p>
 
                 <!-- Quick Metrics Row -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card>
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_monthly_listeners') }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artistData.metrics.spotify_monthly_listeners) }}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
                             <div class="flex items-baseline gap-1 mt-1">
-                                <p class="text-2xl font-bold">{{ artistData.metrics.spotify_popularity }}</p>
+                                <p class="text-2xl font-bold">{{ artist.metrics?.spotify_popularity ?? '-' }}</p>
                                 <span class="text-sm text-muted-foreground">/ 100</span>
                             </div>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="p-4">
+                            <p class="text-xs text-muted-foreground font-medium uppercase">Spotify Followers</p>
+                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_youtube_subs') }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artistData.metrics.youtube_subscribers) }}</p>
+                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">Instagram</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artistData.metrics.instagram_followers) }}</p>
+                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -299,11 +277,12 @@ const pageTitle = computed(() =>
                     <h3 class="font-semibold text-lg mb-4">External Links</h3>
                     <div class="flex flex-wrap gap-3">
                         <Button 
+                            v-if="artist.spotify_id"
                             as-child
                             variant="outline" 
                             class="gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
                         >
-                            <a :href="`https://open.spotify.com/artist/${artistData.spotify_id}`" target="_blank" rel="noopener noreferrer">
+                            <a :href="`https://open.spotify.com/artist/${artist.spotify_id}`" target="_blank" rel="noopener noreferrer">
                                 <Music class="w-4 h-4" />
                                 Spotify
                             </a>
@@ -316,29 +295,21 @@ const pageTitle = computed(() =>
                             <Instagram class="w-4 h-4" />
                             Instagram
                         </Button>
-                        <Button variant="outline" disabled class="gap-2 hover:bg-slate-100">
-                            <Twitter class="w-4 h-4" />
-                            X / Twitter
-                        </Button>
                     </div>
                 </div>
             </div>
 
-            <!-- Data Tab (Stubbed) -->
+            <!-- Data Tab -->
             <div v-else-if="activeTab === 'data'" class="space-y-6">
                 <!-- Detailed Metrics Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card>
                         <CardContent class="p-4 space-y-2">
                             <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Music class="w-4 h-4" />
-                                <span>Monthly Listeners</span>
+                                <Users class="w-4 h-4" />
+                                <span>Spotify Followers</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artistData.metrics.spotify_monthly_listeners) }}</p>
-                            <p class="text-xs text-green-600 flex items-center gap-1 font-medium">
-                                <TrendingUp class="w-3 h-3" />
-                                29.3%
-                            </p>
+                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -347,18 +318,7 @@ const pageTitle = computed(() =>
                                 <TrendingUp class="w-4 h-4" />
                                 <span>Spotify Popularity</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ artistData.metrics.spotify_popularity }} <span class="text-sm font-normal text-muted-foreground">/ 100</span></p>
-                            <p class="text-xs text-muted-foreground">Out of 100</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Users class="w-4 h-4" />
-                                <span>Spotify Followers</span>
-                            </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artistData.metrics.spotify_followers) }}</p>
-                            <p class="text-xs text-muted-foreground">-</p>
+                            <p class="text-2xl font-bold">{{ artist.metrics?.spotify_popularity ?? '-' }} <span class="text-sm font-normal text-muted-foreground">/ 100</span></p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -367,8 +327,7 @@ const pageTitle = computed(() =>
                                 <Youtube class="w-4 h-4" />
                                 <span>YouTube Subs</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artistData.metrics.youtube_subscribers) }}</p>
-                            <p class="text-xs text-muted-foreground">{{ formatNumber(artistData.metrics.youtube_views) }} views</p>
+                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
                         </CardContent>
                     </Card>
                      <Card>
@@ -377,43 +336,19 @@ const pageTitle = computed(() =>
                                 <Instagram class="w-4 h-4" />
                                 <span>Instagram</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artistData.metrics.instagram_followers) }}</p>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Twitter class="w-4 h-4" />
-                                <span>X Twitter</span>
-                            </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artistData.metrics.twitter_followers) }}</p>
+                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
                         </CardContent>
                     </Card>
                 </div>
 
-                <!-- Charts Area (Placeholder) -->
+                <!-- Charts Area (Placeholder for now, but using real data if possible) -->
                 <div class="grid md:grid-cols-3 gap-6">
                     <Card class="md:col-span-2">
                         <CardHeader>
-                            <CardTitle class="text-base">Monthly Listeners Trend</CardTitle>
+                            <CardTitle class="text-base">Metric Comparison</CardTitle>
                         </CardHeader>
-                        <CardContent class="h-64 flex items-end justify-between px-8 pb-4">
-                            <!-- Fake Bar Chart -->
-                            <div class="w-12 bg-primary/20 hover:bg-primary/30 h-[40%] rounded-t transition-all relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100">Aug</div>
-                            </div>
-                            <div class="w-12 bg-primary/40 hover:bg-primary/50 h-[55%] rounded-t transition-all relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100">Sep</div>
-                            </div>
-                            <div class="w-12 bg-primary/60 hover:bg-primary/70 h-[65%] rounded-t transition-all relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100">Oct</div>
-                            </div>
-                            <div class="w-12 bg-primary/80 hover:bg-primary/90 h-[85%] rounded-t transition-all relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100">Nov</div>
-                            </div>
-                            <div class="w-12 bg-primary hover:bg-primary/90 h-[100%] rounded-t transition-all relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100">Dec</div>
-                            </div>
+                        <CardContent class="h-64 flex items-center justify-center">
+                            <p class="text-muted-foreground text-sm">Historical trend data will be available as we collect more snapshots.</p>
                         </CardContent>
                     </Card>
 
@@ -421,44 +356,35 @@ const pageTitle = computed(() =>
                          <CardHeader>
                             <CardTitle class="text-base">Score Breakdown</CardTitle>
                         </CardHeader>
-                        <CardContent class="space-y-6">
+                        <CardContent v-if="artist.metrics" class="space-y-6">
                              <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
-                                    <span>Spotify Listeners</span>
-                                    <span class="font-medium">9.5/10</span>
+                                    <span>Spotify Followers</span>
+                                    <span class="font-medium">{{ Math.round((log10((artist.metrics.spotify_followers || 0) + 1) / log10(100000000)) * 100) }} / 100</span>
                                 </div>
                                 <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[95%]"></div>
+                                    <div class="h-full bg-primary" :style="{ width: `${(log10((artist.metrics.spotify_followers || 0) + 1) / log10(100000000)) * 100}%` }"></div>
                                 </div>
                             </div>
                             <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
                                     <span>Spotify Popularity</span>
-                                    <span class="font-medium">9.2/10</span>
+                                    <span class="font-medium">{{ artist.metrics.spotify_popularity }} / 100</span>
                                 </div>
                                 <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[92%]"></div>
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="flex justify-between text-sm">
-                                    <span>YouTube Subs</span>
-                                    <span class="font-medium">8.0/10</span>
-                                </div>
-                                <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[80%]"></div>
+                                    <div class="h-full bg-primary" :style="{ width: `${artist.metrics.spotify_popularity}%` }"></div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
                 
-                <div class="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
+                <div v-if="artist.metrics?.refreshed_at" class="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
                     <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 class="w-4 h-4" />
-                        <span>Data last updated 2 hours ago</span>
+                        <RefreshCw class="w-4 h-4" />
+                        <span>Data last updated {{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</span>
                     </div>
-                    <Button variant="outline" size="sm" class="gap-2">
+                    <Button variant="outline" size="sm" class="gap-2" disabled>
                         <RefreshCw class="w-3 h-3" />
                         Refresh Data
                     </Button>

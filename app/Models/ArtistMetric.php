@@ -15,6 +15,8 @@ class ArtistMetric extends Model
         'spotify_popularity',
         'spotify_followers',
         'youtube_subscribers',
+        'instagram_followers',
+        'tiktok_followers',
         'refreshed_at',
     ];
 
@@ -22,6 +24,8 @@ class ArtistMetric extends Model
         'spotify_popularity' => 'integer',
         'spotify_followers' => 'integer',
         'youtube_subscribers' => 'integer',
+        'instagram_followers' => 'integer',
+        'tiktok_followers' => 'integer',
         'refreshed_at' => 'datetime',
     ];
 
