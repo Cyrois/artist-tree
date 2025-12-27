@@ -41,8 +41,10 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 **Frontend Implementation:**
 1. **New Component** (`resources/js/components/artist/ArtistSimilarArtists.vue`)
    - Implemented a responsive grid layout replacing the previous carousel
-   - Adaptive columns: 2 (mobile), 4 (medium), 5 (large)
-   - Dynamic visibility: Shows up to 6, 8, or 10 items based on screen size
+   - Single row behavior across all sizes:
+     - Mobile: 2 items
+     - Tablet (md): 4 items
+     - Large (lg): 8 items
    - Compact card design for better density
    - Uses `useAsyncSpotifyData` composable for independent loading
    - Handles loading, error, and empty states gracefully
