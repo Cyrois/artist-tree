@@ -88,7 +88,7 @@ class ArtistController extends Controller
                 $artist = \App\Models\Artist::with('metrics')->findOrFail($artistId);
 
                 // If artist has a Spotify ID, refresh their data
-                if ($artist->spotify_id) {
+                if ($artist->spotify_id && $artist->hasStaleMetrics()) {
                     $artist = $this->searchService->refreshArtistFromSpotify($artist);
                 }
             } else {
