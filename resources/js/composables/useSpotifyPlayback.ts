@@ -192,11 +192,11 @@ export function useSpotifyPlayback() {
                     resolve();
                     return;
                 }
-                try {
-                    await createPlayer();
+                await createPlayer();
+                if (player.value) {
                     resolve();
-                } catch (e) {
-                    reject(e);
+                } else {
+                    reject(new Error('createPlayer failed to set the player.'));
                 }
             };
 
