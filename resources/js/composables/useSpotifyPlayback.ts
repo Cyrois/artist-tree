@@ -99,7 +99,7 @@ export function useSpotifyPlayback() {
     };
 
     // Get access token from backend
-    const fetchAccessToken = async (): Promise<string> => {
+    const fetchAccessToken = async (allowRedirect = true): Promise<string> => {
         if (accessToken.value) {
             return accessToken.value;
         }
@@ -123,8 +123,15 @@ export function useSpotifyPlayback() {
                 // If not authenticated, clear token and redirect to Spotify OAuth
                 if (data.error === 'not_authenticated' && data.auth_url) {
                     await clearToken();
-                    window.location.href = data.auth_url;
-                    throw new Error('Redirecting to Spotify authentication');
+                    if (allowRedirect) {
+                        window.location.href = data.auth_url;
+                        throw new Error('Redirecting to Spotify authentication');
+                    }
+                    
+                    const error = new Error('Spotify authentication required');
+                    (error as any).authUrl = data.auth_url;
+                    (error as any).needsAuth = true;
+                    throw error;
                 }
 
                 throw new Error('Failed to get Spotify access token');
@@ -137,8 +144,24 @@ export function useSpotifyPlayback() {
             if (err instanceof Error && err.message.includes('Redirecting')) {
                 throw err; // Re-throw redirect errors
             }
+            if ((err as any).needsAuth) {
+                throw err;
+            }
             error.value = 'Unable to authenticate with Spotify. Please try again.';
             throw err;
+        }
+    };
+
+    // Check if user is authenticated without redirecting
+    const checkAuthentication = async (): Promise<{ authenticated: boolean; authUrl?: string }> => {
+        try {
+            await fetchAccessToken(false);
+            return { authenticated: true };
+        } catch (err) {
+            if ((err as any).needsAuth) {
+                return { authenticated: false, authUrl: (err as any).authUrl };
+            }
+            return { authenticated: false };
         }
     };
 
@@ -461,6 +484,7 @@ export function useSpotifyPlayback() {
         togglePlayPause,
         stop,
         isTrackPlaying,
+        checkAuthentication,
     };
 }
 

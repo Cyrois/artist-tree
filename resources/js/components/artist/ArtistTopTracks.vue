@@ -1,6 +1,15 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Loader2, Music, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
@@ -26,7 +35,6 @@ const props = defineProps<Props>();
 const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
     `/api/artists/${props.artistId}/top-tracks`
 );
-// Note: meta is available but not used for top tracks (always shows 5)
 
 const {
     isReady,
@@ -38,10 +46,14 @@ const {
     formattedDuration,
     progressPercentage,
     playTrack,
-    togglePlayPause,
     stop,
     isTrackPlaying,
+    checkAuthentication,
 } = useSpotifyPlayback();
+
+const isAuthDialogOpen = ref(false);
+const spotifyAuthUrl = ref<string | null>(null);
+const pendingTrack = ref<Track | null>(null);
 
 onMounted(() => {
     load();
@@ -60,8 +72,24 @@ const handlePlayClick = async (track: Track) => {
         // If this track is playing, stop playback
         await stop();
     } else {
+        // Check if authenticated before playing
+        const { authenticated, authUrl } = await checkAuthentication();
+        
+        if (!authenticated && authUrl) {
+            pendingTrack.value = track;
+            spotifyAuthUrl.value = authUrl;
+            isAuthDialogOpen.value = true;
+            return;
+        }
+
         // Play this track (will stop any currently playing track)
         await playTrack(track.spotify_id);
+    }
+};
+
+const confirmAuth = () => {
+    if (spotifyAuthUrl.value) {
+        window.location.href = spotifyAuthUrl.value;
     }
 };
 
@@ -197,4 +225,24 @@ const showProgress = (trackId: string) => {
             </div>
         </CardContent>
     </Card>
+
+    <!-- Spotify Auth Dialog -->
+    <Dialog v-model:open="isAuthDialogOpen">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{{ trans('artists.spotify_auth_required_title') }}</DialogTitle>
+                <DialogDescription>
+                    {{ trans('artists.spotify_auth_required_description') }}
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" @click="isAuthDialogOpen = false">
+                    {{ trans('common.action_cancel') }}
+                </Button>
+                <Button @click="confirmAuth">
+                    {{ trans('artists.spotify_auth_confirm_button') }}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
