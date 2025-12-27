@@ -198,11 +198,15 @@ const showProgress = (item: MediaItem) => {
                 <div
                     v-for="(item, index) in items"
                     :key="item.spotify_id"
-                    class="group -mx-6"
+                    class="group -mx-6 transition-colors"
+                    :class="{ 
+                        'bg-muted/30 border-t border-border/50': expandedMobileId === item.spotify_id,
+                        'border-t border-transparent': expandedMobileId !== item.spotify_id && index > 0
+                    }"
                 >
                     <!-- Main Row -->
                     <div 
-                        class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer sm:cursor-default"
+                        class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer lg:cursor-default"
                         @click="toggleMobileItem(item.spotify_id)"
                     >
                         <!-- Number -->
@@ -215,34 +219,34 @@ const showProgress = (item: MediaItem) => {
                             v-if="variant === 'top-tracks' ? item.album_image_url : item.image_url"
                             :src="variant === 'top-tracks' ? item.album_image_url : item.image_url"
                             :alt="item.name"
-                            class="hidden sm:block w-12 h-12 rounded object-cover"
+                            class="hidden lg:block w-12 h-12 rounded object-cover"
                         />
-                        <div v-else class="hidden sm:flex w-12 h-12 rounded bg-muted items-center justify-center">
+                        <div v-else class="hidden lg:flex w-12 h-12 rounded bg-muted items-center justify-center">
                             <component :is="config.icon" class="w-6 h-6 text-muted-foreground" />
                         </div>
 
                         <!-- Info -->
                         <div class="flex-1 min-w-0">
-                            <p class="font-medium truncate text-sm sm:text-base">{{ item.name }}</p>
+                            <p class="font-medium truncate text-sm lg:text-base">{{ item.name }}</p>
                             
                             <!-- Top Tracks Info -->
-                            <p v-if="variant === 'top-tracks'" class="text-xs sm:text-sm text-muted-foreground truncate">
+                            <p v-if="variant === 'top-tracks'" class="text-xs lg:text-sm text-muted-foreground truncate">
                                 {{ item.album_name }}
                             </p>
                             <!-- Recent Releases Info -->
-                            <p v-else-if="item.album_type && item.release_date" class="text-xs sm:text-sm text-muted-foreground truncate">
+                            <p v-else-if="item.album_type && item.release_date" class="text-xs lg:text-sm text-muted-foreground truncate">
                                 {{ item.album_type.charAt(0).toUpperCase() + item.album_type.slice(1) }} • {{ formatReleaseDate(item.release_date) }}
                             </p>
                         </div>
 
                         <!-- Duration (Desktop) -->
-                        <div class="hidden sm:block flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums transition-opacity" :class="{ 'opacity-0 group-hover:opacity-100': !isItemActive(item) }">
+                        <div class="hidden lg:block flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums transition-opacity" :class="{ 'opacity-0 lg:group-hover:opacity-100': !isItemActive(item) }">
                             <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
                             <span v-else>{{ formatDuration(item.duration_ms) }}</span>
                         </div>
 
                         <!-- Actions (Desktop) -->
-                        <div class="hidden sm:flex flex-shrink-0 items-center gap-2 transition-opacity" :class="{ 'opacity-0 group-hover:opacity-100': !isItemActive(item) }">
+                        <div class="hidden lg:flex flex-shrink-0 items-center gap-2 transition-opacity" :class="{ 'opacity-0 lg:group-hover:opacity-100 pointer-events-none lg:group-hover:pointer-events-auto': !isItemActive(item) }">
                             <!-- Play/Stop Button -->
                             <button
                                 @click.stop="handlePlayClick(item)"
@@ -290,10 +294,10 @@ const showProgress = (item: MediaItem) => {
                         </div>
                     </div>
 
-                    <!-- Mobile Actions Row -->
+                    <!-- Mobile/Tablet Actions Row -->
                     <div 
                         v-if="expandedMobileId === item.spotify_id" 
-                        class="sm:hidden px-6 pb-3 flex items-center justify-between bg-muted/20 border-b border-border/50"
+                        class="lg:hidden px-6 pb-4 flex items-center justify-between border-b border-border/50"
                     >
                          <div class="text-xs text-muted-foreground tabular-nums">
                             <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
