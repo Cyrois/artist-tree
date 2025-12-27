@@ -3,7 +3,6 @@ import { onMounted } from 'vue';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Users } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
-import { trans } from 'laravel-vue-i18n';
 
 interface SimilarArtist {
     spotify_id: string;
@@ -61,9 +60,15 @@ onMounted(() => {
         <!-- Grid Layout -->
         <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
             <Card 
-                v-for="similar in artists" 
+                v-for="(similar, index) in artists" 
                 :key="similar.spotify_id" 
-                class="similar-artist-card overflow-hidden hover:shadow-md transition-all cursor-pointer group border-muted p-0 gap-0"
+                class="overflow-hidden hover:shadow-md transition-all cursor-pointer group border-muted p-0 gap-0"
+                :class="{
+                    'hidden md:block': index >= 2 && index < 4,
+                    'hidden lg:block': index >= 4 && index < 6,
+                    'hidden xl:block': index >= 6 && index < 8,
+                    'hidden': index >= 8
+                }"
             >
                 <div class="aspect-square bg-muted relative overflow-hidden">
                     <img 
@@ -91,40 +96,3 @@ onMounted(() => {
         </div>
     </div>
 </template>
-
-<style scoped>
-/* Mobile: Show up to 2 (1 row) */
-.similar-artist-card:nth-child(n+3) {
-    display: none;
-}
-
-/* Tablet (md): Show up to 4 (1 row) */
-@media (min-width: 768px) {
-    .similar-artist-card:nth-child(n+3) {
-        display: flex;
-    }
-    .similar-artist-card:nth-child(n+5) {
-        display: none;
-    }
-}
-
-/* Large (lg): Show up to 6 (1 row) */
-@media (min-width: 1024px) {
-    .similar-artist-card:nth-child(n+5) {
-        display: flex;
-    }
-    .similar-artist-card:nth-child(n+7) {
-        display: none;
-    }
-}
-
-/* Extra Large (xl): Show up to 8 (1 row) */
-@media (min-width: 1280px) {
-    .similar-artist-card:nth-child(n+7) {
-        display: flex;
-    }
-    .similar-artist-card:nth-child(n+9) {
-        display: none;
-    }
-}
-</style>
