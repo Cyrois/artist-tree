@@ -26,7 +26,7 @@ class GetArtistAlbumsRequest extends FormRequest
     {
         return [
             'limit' => ['nullable', 'integer', 'min:1'],
-            'type' => ['nullable', 'string'],
+            'type' => ['nullable', 'string', 'regex:/^(album|single|compilation|appears_on)(,(album|single|compilation|appears_on))*$/'],
         ];
     }
 
