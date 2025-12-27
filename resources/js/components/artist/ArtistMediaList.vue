@@ -198,11 +198,11 @@ const showProgress = (item: MediaItem) => {
                 <div
                     v-for="(item, index) in items"
                     :key="item.spotify_id"
-                    class="group -mx-6"
+                    class="group sm:-mx-6"
                 >
                     <!-- Main Row -->
                     <div 
-                        class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer sm:cursor-default"
+                        class="flex items-center gap-3 px-0 sm:px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer sm:cursor-default"
                         @click="toggleMobileItem(item.spotify_id)"
                     >
                         <!-- Number -->
@@ -293,7 +293,7 @@ const showProgress = (item: MediaItem) => {
                     <!-- Mobile Actions Row -->
                     <div 
                         v-if="expandedMobileId === item.spotify_id" 
-                        class="sm:hidden px-6 pb-3 flex items-center justify-between bg-muted/20 border-b border-border/50"
+                        class="sm:hidden px-0 sm:px-6 pb-3 flex items-center justify-between bg-muted/20 border-b border-border/50"
                     >
                          <div class="text-xs text-muted-foreground tabular-nums">
                             <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
