@@ -218,11 +218,11 @@ const pageTitle = computed(() =>
                             </div>
 
                             <div class="flex gap-3 mt-6">
-                                <Button class="gap-2">
+                                <Button disabled class="gap-2">
                                     <Plus class="w-4 h-4" />
                                     {{ $t('artists.show_add_to_lineup') }}
                                 </Button>
-                                <Button variant="outline" class="gap-2">
+                                <Button disabled variant="outline" class="gap-2">
                                     <ArrowRightLeft class="w-4 h-4" />
                                     {{ $t('artists.show_compare') }}
                                 </Button>
