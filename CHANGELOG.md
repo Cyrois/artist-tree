@@ -45,6 +45,7 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
      - Mobile: 2 items
      - Tablet (md): 4 items
      - Large (lg): 8 items
+     - Extra Large (xl): 10 items
    - Compact card design for better density
    - Uses `useAsyncSpotifyData` composable for independent loading
    - Handles loading, error, and empty states gracefully
