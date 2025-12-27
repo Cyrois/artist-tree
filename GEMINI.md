@@ -373,16 +373,15 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 - Frontend uses `spotify_id` as fallback: `GET /api/artists?spotify_id={spotifyId}`
 - Both return the same response structure (full artist details with metrics)
 
-**Frontend Vue Component:**
 ```vue
 <script setup>
 import { ref, watch } from 'vue'
-import { debounce } from 'lodash-es'
+import { useDebounceFn } from '@vueuse/core'
 
 const searchQuery = ref('')
 const results = ref([])
 
-const searchArtists = debounce(async (query) => {
+const searchArtists = useDebounceFn(async (query) => {
   if (!query || query.length < 2) return
   const response = await axios.get('/api/artists/search', { params: { q: query } })
   results.value = response.data.data
@@ -390,7 +389,6 @@ const searchArtists = debounce(async (query) => {
 
 watch(searchQuery, (newValue) => searchArtists(newValue))
 </script>
-```
 
 ---
 
