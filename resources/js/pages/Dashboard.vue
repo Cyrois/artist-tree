@@ -146,7 +146,7 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
                             <div class="space-y-0">
                                 <div
                                     v-for="artist in displayedResults"
-                                    :key="artist.spotify_id"
+                                    :key="artist.id + '-' + artist.spotify_id"
                                     class="group px-4 py-3 hover:bg-muted cursor-pointer transition-colors flex items-center gap-4"
                                     @click="handleArtistClick(artist)"
                                 >
