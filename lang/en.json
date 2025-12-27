@@ -307,5 +307,28 @@
     "settings.delete_account_warning_description": "Please proceed with caution, this cannot be undone.",
     "settings.delete_account_button": "Delete account",
     "settings.delete_account_confirm_title": "Are you sure you want to delete your account?",
-    "settings.delete_account_confirm_description": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
+    "settings.delete_account_confirm_description": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+
+    "artists.error_load_failed": "Failed to load artist",
+    "artists.error_generic": "An error occurred while loading artist",
+    "artists.show_verified_spotify": "Verified Spotify Artist",
+    "artists.show_external_links": "External Links",
+    "artists.show_metric_comparison": "Metric Comparison",
+    "artists.show_metric_history_placeholder": "Historical trend data will be available as we collect more snapshots.",
+    "artists.show_data_last_updated": "Data last updated",
+    "artists.show_description_template": ":name is an artist featured on Spotify. Use the data below to analyze their performance and suitability for your festival lineup.",
+    "artists.similar_finding": "Finding similar artists...",
+    "artists.similar_none_found": "No similar artists found for this genre.",
+    "artists.similar_title": "Similar Artists",
+    "artists.error_spotify_fetch": "Unable to fetch data from Spotify. Please try again later.",
+    "artists.select_success": "Artist selected successfully",
+    "artists.error_no_spotify_id": "Artist does not have a Spotify ID",
+    "artists.refresh_success": "Artist refreshed successfully",
+    "artists.error_not_found_spotify": "Artist not found with Spotify ID: :id",
+    "artists.error_not_found_id": "Artist not found with ID: :id",
+    "artists.error_no_genres": "No genres found for this artist to find similar artists.",
+
+    "common.status_unknown": "Unknown",
+    "common.error_unexpected": "An unexpected error occurred. Please try again later.",
+    "errors.rate_limit_exceeded": "Rate limit exceeded. Please try again later."
 }

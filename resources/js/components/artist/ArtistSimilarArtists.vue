@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Users } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import { trans } from 'laravel-vue-i18n';
 
 interface SimilarArtist {
     spotify_id: string;
@@ -32,14 +33,14 @@ onMounted(() => {
     <div class="space-y-4">
         <h3 class="font-semibold text-lg flex items-center gap-2">
             <Users class="w-5 h-5" />
-            Similar Artists
+            {{ $t('artists.show_similar_artists_title') }}
         </h3>
 
         <!-- Loading State -->
         <div v-if="loading" class="flex items-center justify-center py-12">
             <div class="flex flex-col items-center gap-3">
                 <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                <p class="text-sm text-muted-foreground">Finding similar artists...</p>
+                <p class="text-sm text-muted-foreground">{{ $t('artists.similar_finding') }}</p>
             </div>
         </div>
 
@@ -54,7 +55,7 @@ onMounted(() => {
         <!-- Empty State -->
         <div v-else-if="!artists || artists.length === 0" class="bg-muted/30 rounded-lg py-12 flex flex-col items-center justify-center border border-dashed">
             <Users class="h-8 w-8 text-muted-foreground mb-2" />
-            <p class="text-sm text-muted-foreground">No similar artists found for this genre.</p>
+            <p class="text-sm text-muted-foreground">{{ $t('artists.similar_none_found') }}</p>
         </div>
 
         <!-- Grid Layout -->

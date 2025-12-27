@@ -76,7 +76,7 @@ onMounted(async () => {
         const data = await response.json();
         artist.value = data.data;
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An error occurred while loading artist';
+        error.value = err instanceof Error ? err.message : trans('artists.error_load_failed');
     } finally {
         isLoading.value = false;
     }
@@ -97,7 +97,7 @@ const breadcrumbs = computed(() => [
 ]);
 
 const pageTitle = computed(() =>
-    artist.value ? `${artist.value.name} - Artist-Tree` : 'Artist - Artist-Tree'
+    artist.value ? `${artist.value.name} - Artist-Tree` : `${trans('artists.show_page_title')} - Artist-Tree`
 );
 </script>
 
@@ -185,7 +185,7 @@ const pageTitle = computed(() =>
                                 <div class="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
                                     <div v-if="artist.spotify_id" class="flex items-center gap-1">
                                         <Music class="w-4 h-4" />
-                                        <span>Verified Spotify Artist</span>
+                                        <span>{{ $t('artists.show_verified_spotify') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -193,11 +193,11 @@ const pageTitle = computed(() =>
                             <div class="flex gap-3 mt-6">
                                 <Button disabled class="gap-2">
                                     <Plus class="w-4 h-4" />
-                                    {{ $t('artists.show_add_to_lineup') }}
+                                    {{ $t('artists.show_add_to_lineup_button') }}
                                 </Button>
                                 <Button disabled variant="outline" class="gap-2">
                                     <ArrowRightLeft class="w-4 h-4" />
-                                    {{ $t('artists.show_compare') }}
+                                    {{ $t('artists.show_compare_button') }}
                                 </Button>
                             </div>
                         </div>
@@ -229,7 +229,7 @@ const pageTitle = computed(() =>
             <div v-if="activeTab === 'overview'" class="space-y-6">
                 <!-- Description (Generic for now) -->
                 <p class="text-muted-foreground leading-relaxed">
-                    {{ artist.name }} is an artist featured on Spotify. Use the data below to analyze their performance and suitability for your festival lineup.
+                    {{ $t('artists.show_description_template', { name: artist.name }) }}
                 </p>
 
                 <!-- Quick Metrics Row -->
@@ -245,7 +245,7 @@ const pageTitle = computed(() =>
                     </Card>
                     <Card>
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">Spotify Followers</p>
+                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_spotify_followers') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
                         </CardContent>
                     </Card>
@@ -257,7 +257,7 @@ const pageTitle = computed(() =>
                     </Card>
                     <Card>
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">Instagram</p>
+                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_instagram') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
                         </CardContent>
                     </Card>
@@ -274,7 +274,7 @@ const pageTitle = computed(() =>
 
                 <!-- External Links -->
                 <div>
-                    <h3 class="font-semibold text-lg mb-4">External Links</h3>
+                    <h3 class="font-semibold text-lg mb-4">{{ $t('artists.show_external_links') }}</h3>
                     <div class="flex flex-wrap gap-3">
                         <Button 
                             v-if="artist.spotify_id"
@@ -307,7 +307,7 @@ const pageTitle = computed(() =>
                         <CardContent class="p-4 space-y-2">
                             <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                                 <Users class="w-4 h-4" />
-                                <span>Spotify Followers</span>
+                                <span>{{ $t('artists.show_spotify_followers') }}</span>
                             </div>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
                         </CardContent>
@@ -316,7 +316,7 @@ const pageTitle = computed(() =>
                         <CardContent class="p-4 space-y-2">
                             <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                                 <TrendingUp class="w-4 h-4" />
-                                <span>Spotify Popularity</span>
+                                <span>{{ $t('artists.show_spotify_popularity') }}</span>
                             </div>
                             <p class="text-2xl font-bold">{{ artist.metrics?.spotify_popularity ?? '-' }} <span class="text-sm font-normal text-muted-foreground">/ 100</span></p>
                         </CardContent>
@@ -325,7 +325,7 @@ const pageTitle = computed(() =>
                         <CardContent class="p-4 space-y-2">
                             <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                                 <Youtube class="w-4 h-4" />
-                                <span>YouTube Subs</span>
+                                <span>{{ $t('artists.show_youtube_subscribers') }}</span>
                             </div>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
                         </CardContent>
@@ -334,7 +334,7 @@ const pageTitle = computed(() =>
                         <CardContent class="p-4 space-y-2">
                             <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                                 <Instagram class="w-4 h-4" />
-                                <span>Instagram</span>
+                                <span>{{ $t('artists.show_instagram') }}</span>
                             </div>
                             <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
                         </CardContent>
@@ -345,30 +345,30 @@ const pageTitle = computed(() =>
                 <div class="grid md:grid-cols-3 gap-6">
                     <Card class="md:col-span-2">
                         <CardHeader>
-                            <CardTitle class="text-base">Metric Comparison</CardTitle>
+                            <CardTitle class="text-base">{{ $t('artists.show_metric_comparison') }}</CardTitle>
                         </CardHeader>
                         <CardContent class="h-64 flex items-center justify-center">
-                            <p class="text-muted-foreground text-sm">Historical trend data will be available as we collect more snapshots.</p>
+                            <p class="text-muted-foreground text-sm">{{ $t('artists.show_metric_history_placeholder') }}</p>
                         </CardContent>
                     </Card>
 
                     <Card>
                          <CardHeader>
-                            <CardTitle class="text-base">Score Breakdown</CardTitle>
+                            <CardTitle class="text-base">{{ $t('artists.show_score_breakdown_title') }}</CardTitle>
                         </CardHeader>
                         <CardContent v-if="artist.metrics" class="space-y-6">
                              <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
-                                    <span>Spotify Followers</span>
-                                    <span class="font-medium">{{ Math.round((log10((artist.metrics.spotify_followers || 0) + 1) / log10(100000000)) * 100) }} / 100</span>
+                                    <span>{{ $t('artists.show_spotify_followers') }}</span>
+                                    <span class="font-medium">{{ Math.round((Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100) }} / 100</span>
                                 </div>
                                 <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" :style="{ width: `${(log10((artist.metrics.spotify_followers || 0) + 1) / log10(100000000)) * 100}%` }"></div>
+                                    <div class="h-full bg-primary" :style="{ width: `${(Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100}%` }"></div>
                                 </div>
                             </div>
                             <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
-                                    <span>Spotify Popularity</span>
+                                    <span>{{ $t('artists.show_spotify_popularity') }}</span>
                                     <span class="font-medium">{{ artist.metrics.spotify_popularity }} / 100</span>
                                 </div>
                                 <div class="h-2 bg-muted rounded-full overflow-hidden">
@@ -382,11 +382,11 @@ const pageTitle = computed(() =>
                 <div v-if="artist.metrics?.refreshed_at" class="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
                     <div class="flex items-center gap-2 text-sm text-muted-foreground">
                         <RefreshCw class="w-4 h-4" />
-                        <span>Data last updated {{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</span>
+                        <span>{{ $t('artists.show_data_last_updated') }} {{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</span>
                     </div>
                     <Button variant="outline" size="sm" class="gap-2" disabled>
                         <RefreshCw class="w-3 h-3" />
-                        Refresh Data
+                        {{ $t('artists.show_refresh_data_button') }}
                     </Button>
                 </div>
             </div>

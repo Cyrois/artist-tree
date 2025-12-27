@@ -166,7 +166,7 @@ class SpotifyService
 
         if ($count >= $this->rateLimitPerMinute) {
             Log::warning('Spotify rate limit exceeded', ['count' => $count]);
-            throw new SpotifyApiException('Rate limit exceeded. Please try again later.', null, 429);
+            throw new SpotifyApiException(__('errors.rate_limit_exceeded'), null, 429);
         }
 
         Cache::put($key, $count + 1, 60); // TTL 60 seconds

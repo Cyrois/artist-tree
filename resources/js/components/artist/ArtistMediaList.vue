@@ -103,7 +103,7 @@ const formatDuration = (ms: number): string => {
 };
 
 const formatReleaseDate = (date: string): string => {
-    if (!date) return 'Unknown';
+    if (!date) return trans('common.status_unknown');
     const parts = date.split('-');
     if (parts.length === 1) return parts[0]; // Year only
     if (parts.length === 2) return `${parts[1]}/${parts[0]}`; // Month/Year

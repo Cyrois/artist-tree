@@ -48,8 +48,8 @@ class ArtistController extends Controller
 
         // Never expose raw exception messages in production
         $message = $isSpotifyError
-            ? 'Unable to fetch data from Spotify. Please try again later.'
-            : 'An unexpected error occurred. Please try again later.';
+            ? __('artists.error_spotify_fetch')
+            : __('common.error_unexpected');
 
         return response()->json([
             'message' => $message,
@@ -91,7 +91,7 @@ class ArtistController extends Controller
             }
 
             return response()->json([
-                'message' => 'Artist selected successfully',
+                'message' => __('artists.select_success'),
                 'data' => new ArtistResource($artist->load('metrics')),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
@@ -112,7 +112,7 @@ class ArtistController extends Controller
 
         if (! $artist->spotify_id) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
             ], 200);
         }
@@ -121,7 +121,7 @@ class ArtistController extends Controller
             $refreshedArtist = $this->searchService->refreshArtistFromSpotify($artist);
 
             return response()->json([
-                'message' => 'Artist refreshed successfully',
+                'message' => __('artists.refresh_success'),
                 'data' => new ArtistResource($refreshedArtist),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
@@ -147,7 +147,7 @@ class ArtistController extends Controller
 
             if (! $artist) {
                 return response()->json([
-                    'message' => 'Artist not found with Spotify ID: '.$spotifyId,
+                    'message' => __('artists.error_not_found_spotify', ['id' => $spotifyId]),
                 ], 404);
             }
 
@@ -161,7 +161,7 @@ class ArtistController extends Controller
 
         if (! $artist) {
             return response()->json([
-                'message' => 'Artist not found with ID: '.$id,
+                'message' => __('artists.error_not_found_id', ['id' => $id]),
             ], 404);
         }
 
@@ -183,7 +183,7 @@ class ArtistController extends Controller
 
         if (! $spotifyId) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
             ], 200);
         }
@@ -216,7 +216,7 @@ class ArtistController extends Controller
 
         if (! $spotifyId) {
             return response()->json([
-                'message' => 'Artist does not have a Spotify ID',
+                'message' => __('artists.error_no_spotify_id'),
                 'data' => [],
                 'meta' => ['limit' => $limit, 'max_limit' => 20, 'has_more' => false],
             ], 200);
@@ -261,7 +261,7 @@ class ArtistController extends Controller
         if (empty($genres)) {
             return response()->json([
                 'data' => [],
-                'message' => 'No genres found for this artist to find similar artists.',
+                'message' => __('artists.error_no_genres'),
             ], 200);
         }
 
