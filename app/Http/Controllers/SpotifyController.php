@@ -64,8 +64,7 @@ class SpotifyController extends Controller
                         'status' => $response->status(),
                         'user_id' => $user->id ?? null,
                     ]);
-                    $request->session()->forget('spotify_access_token');
-                    $request->session()->forget('spotify_refresh_token');
+                    $request->session()->forget(['spotify_access_token', 'spotify_refresh_token']);
                 }
             } catch (\Exception $e) {
                 // Network or other errors - clear token to be safe
