@@ -8,12 +8,12 @@ import LineupCard from '@/components/lineup/LineupCard.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { getLineups } from '@/data/lineups';
-import { getTrendingArtists } from '@/data/artists';
 import type { Artist, Lineup } from '@/data/types';
 import { Search, Music, TrendingUp, ChevronRight } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import axios from 'axios';
+import { search as searchRoute } from '@/routes';
 
 interface ArtistSearchResult {
     id: number | null;
@@ -26,7 +26,6 @@ interface ArtistSearchResult {
 }
 
 const lineups = getLineups();
-const trendingArtists = getTrendingArtists(5);
 
 const searchQuery = ref('');
 const searchResults = ref<ArtistSearchResult[]>([]);
@@ -86,7 +85,7 @@ async function handleArtistClick(artist: ArtistSearchResult) {
 
 function handleViewAllResults() {
     showSearchDropdown.value = false;
-    router.visit(route('search'), { data: { q: searchQuery.value } });
+    router.visit(searchRoute.url({ query: { q: searchQuery.value } }));
 }
 
 function handleSearchFocus() {
@@ -213,25 +212,6 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
                         :key="lineup.id"
                         :lineup="lineup"
                         @click="handleLineupClick"
-                    />
-                </div>
-            </div>
-
-            <!-- Trending Artists Section -->
-            <div>
-                <div class="flex items-center gap-2 mb-6">
-                    <TrendingUp class="w-5 h-5 text-primary" />
-                    <h2 class="text-2xl font-bold">{{ $t('dashboard.trending_section_title') }}</h2>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <ArtistCard
-                        v-for="artist in trendingArtists"
-                        :key="artist.id"
-                        :artist="artist"
-                        compact
-                        :show-metrics="false"
-                        @click="handleArtistClick"
                     />
                 </div>
             </div>

@@ -561,10 +561,6 @@ export function getSimilarArtists(artistId: number): Artist[] {
   return artist.similarArtists.map((id) => getArtistById(id)).filter((a): a is Artist => a !== undefined);
 }
 
-export function getTrendingArtists(limit: number = 10): Artist[] {
-  return sortArtists('listeners', 'desc').slice(0, limit);
-}
-
 export function getArtistsByIds(ids: number[]): Artist[] {
   return ids.map((id) => getArtistById(id)).filter((a): a is Artist => a !== undefined);
 }
