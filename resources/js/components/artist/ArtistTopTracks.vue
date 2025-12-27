@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, Music, AlertCircle, ExternalLink, Play } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2, Music, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
 import { trans } from 'laravel-vue-i18n';
 
 interface Track {
@@ -25,7 +35,24 @@ const props = defineProps<Props>();
 const { data: tracks, loading, error, load } = useAsyncSpotifyData<Track[]>(
     `/api/artists/${props.artistId}/top-tracks`
 );
-// Note: meta is available but not used for top tracks (always shows 5)
+
+const {
+    isPlaying,
+    currentTrackId,
+    isLoading: isPlaybackLoading,
+    error: playbackError,
+    formattedPosition,
+    formattedDuration,
+    progressPercentage,
+    playTrack,
+    stop,
+    isTrackPlaying,
+    checkAuthentication,
+} = useSpotifyPlayback();
+
+const isAuthDialogOpen = ref(false);
+const spotifyAuthUrl = ref<string | null>(null);
+const pendingTrack = ref<Track | null>(null);
 
 onMounted(() => {
     load();
@@ -35,6 +62,42 @@ const formatDuration = (ms: number): string => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const handlePlayClick = async (track: Track) => {
+    if (isPlaybackLoading.value) return;
+    
+    if (isTrackPlaying(track.spotify_id)) {
+        // If this track is playing, stop playback
+        await stop();
+    } else {
+        // Check if authenticated before playing
+        const { authenticated, authUrl } = await checkAuthentication();
+        
+        if (!authenticated && authUrl) {
+            pendingTrack.value = track;
+            spotifyAuthUrl.value = authUrl;
+            isAuthDialogOpen.value = true;
+            return;
+        }
+
+        // Play this track (will stop any currently playing track)
+        await playTrack(track.spotify_id);
+    }
+};
+
+const confirmAuth = () => {
+    if (spotifyAuthUrl.value) {
+        window.location.href = spotifyAuthUrl.value;
+    }
+};
+
+const isCurrentTrack = (trackId: string) => {
+    return currentTrackId.value === trackId;
+};
+
+const showProgress = (trackId: string) => {
+    return isCurrentTrack(trackId) && isPlaying.value;
 };
 </script>
 
@@ -68,8 +131,16 @@ const formatDuration = (ms: number): string => {
                 <p class="text-sm text-muted-foreground">{{ trans('artists.show_top_tracks_empty') }}</p>
             </div>
 
+            <!-- Playback Error State -->
+            <div v-if="playbackError && tracks && tracks.length > 0" class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                <div class="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle class="w-4 h-4" />
+                    <p>{{ playbackError }}</p>
+                </div>
+            </div>
+
             <!-- Tracks List -->
-            <div v-else class="space-y-0">
+            <div v-if="tracks && tracks.length > 0" class="space-y-0">
                 <div
                     v-for="(track, index) in tracks"
                     :key="track.spotify_id"
@@ -98,21 +169,47 @@ const formatDuration = (ms: number): string => {
                     </div>
 
                     <!-- Duration -->
-                    <div class="flex-shrink-0 text-sm text-muted-foreground">
-                        {{ formatDuration(track.duration_ms) }}
+                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums">
+                        <span v-if="showProgress(track.spotify_id)">{{ formattedPosition }} / {{ formattedDuration }}</span>
+                        <span v-else>{{ formatDuration(track.duration_ms) }}</span>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex-shrink-0 flex gap-2">
-                        <a
-                            v-if="track.preview_url"
-                            :href="track.preview_url"
-                            target="_blank"
-                            class="p-2 rounded-md hover:bg-muted transition-colors"
-                            title="Preview"
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <!-- Play/Stop Button -->
+                        <button
+                            @click="handlePlayClick(track)"
+                            :disabled="isPlaybackLoading"
+                            class="relative p-2 rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            :title="isTrackPlaying(track.spotify_id) ? 'Stop' : 'Play'"
                         >
-                            <Play class="w-4 h-4" />
-                        </a>
+                            <!-- Loading/Progress Indicator -->
+                            <div
+                                v-if="showProgress(track.spotify_id)"
+                                class="absolute inset-0 rounded-md overflow-hidden"
+                            >
+                                <div
+                                    class="h-full bg-primary/20 transition-all duration-300"
+                                    :style="{ width: `${progressPercentage}%` }"
+                                />
+                            </div>
+                            <!-- Play/Stop Icon -->
+                            <div class="relative flex items-center justify-center">
+                                <Loader2
+                                    v-if="isCurrentTrack(track.spotify_id) && isPlaybackLoading"
+                                    class="w-4 h-4 animate-spin"
+                                />
+                                <Square
+                                    v-else-if="isTrackPlaying(track.spotify_id)"
+                                    class="w-4 h-4 fill-current"
+                                />
+                                <Play
+                                    v-else
+                                    class="w-4 h-4"
+                                />
+                            </div>
+                        </button>
+                        <!-- External Link -->
                         <a
                             :href="track.external_url"
                             target="_blank"
@@ -127,4 +224,24 @@ const formatDuration = (ms: number): string => {
             </div>
         </CardContent>
     </Card>
+
+    <!-- Spotify Auth Dialog -->
+    <Dialog v-model:open="isAuthDialogOpen">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{{ trans('artists.spotify_auth_required_title') }}</DialogTitle>
+                <DialogDescription>
+                    {{ trans('artists.spotify_auth_required_description') }}
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button variant="outline" @click="isAuthDialogOpen = false">
+                    {{ trans('common.action_cancel') }}
+                </Button>
+                <Button @click="confirmAuth">
+                    {{ trans('artists.spotify_auth_confirm_button') }}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
