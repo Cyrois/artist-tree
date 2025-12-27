@@ -329,3 +329,35 @@ it('does not dispatch job when all Spotify results exist locally', function () {
     // Should NOT dispatch job since all artists exist
     Queue::assertNotPushed(\App\Jobs\CreateArtistsFromSpotifyJob::class);
 });
+
+it('filters out Spotify results that do not fuzzy match the query', function () {
+    // Mock Spotify to return results where one matches and one doesn't
+    $this->spotifyService->shouldReceive('searchArtists')
+        ->once()
+        ->with('Kendrick', 20)
+        ->andReturn([
+            new SpotifyArtistDTO(
+                spotifyId: 'kendrick1',
+                name: 'Kendrick Lamar',
+                genres: ['hip hop'],
+                imageUrl: 'https://example.com/kendrick.jpg',
+                popularity: 90,
+                followers: 1000000,
+            ),
+            new SpotifyArtistDTO(
+                spotifyId: 'drake1',
+                name: 'Drake', // Does not contain "Kendrick"
+                genres: ['hip hop'],
+                imageUrl: 'https://example.com/drake.jpg',
+                popularity: 95,
+                followers: 2000000,
+            ),
+        ]);
+
+    $results = $this->searchService->search('Kendrick');
+
+    // Should only have 1 result (Kendrick Lamar)
+    expect($results)->toHaveCount(1)
+        ->and($results->first()->name)->toBe('Kendrick Lamar')
+        ->and($results->first()->spotifyId)->toBe('kendrick1');
+});
