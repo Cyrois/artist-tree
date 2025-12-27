@@ -269,7 +269,7 @@ private function normalizeLogarithmic(float $value, string $metricName): float
   3. Job creates artist record + initial metrics from Spotify data
 - This ensures artists are available locally for future searches
 - Job class: `App\Jobs\CreateArtistsFromSpotifyJob`
-- Job should be idempotent (check if artist exists before creating)
+- Job must be idempotent: Use atomic `firstOrCreate` or `updateOrCreate` to prevent race conditions (never check existence then create in separate steps)
 - Use `spotify_id` as unique identifier to prevent duplicates
 
 #### YouTube API
