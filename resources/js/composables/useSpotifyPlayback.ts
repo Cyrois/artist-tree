@@ -63,7 +63,7 @@ const trackDuration = ref(0);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const accessToken = ref<string | null>(null);
-const isInitializing = ref(false);
+let initializationPromise: Promise<void> | null = null;
 let progressInterval: number | null = null;
 let listenerCount = 0;
 
@@ -174,21 +174,37 @@ export function useSpotifyPlayback() {
 
     // Initialize Spotify Web Playback SDK
     const initializePlayer = async () => {
-        // If already initialized or currently initializing, don't do it again
-        if (player.value || isInitializing.value) {
+        // If already initialized, return
+        if (player.value) {
             return;
         }
 
-        isInitializing.value = true;
+        // If initialization is in progress, wait for it
+        if (initializationPromise) {
+            await initializationPromise;
+            return;
+        }
 
-        try {
+        // Start initialization
+        initializationPromise = new Promise<void>((resolve, reject) => {
+            const tryCreatePlayer = async () => {
+                if (player.value) {
+                    resolve();
+                    return;
+                }
+                try {
+                    await createPlayer();
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            };
+
             if (window.Spotify?.Player) {
-                await createPlayer();
+                tryCreatePlayer();
             } else {
                 // Wait for SDK to load
-                window.onSpotifyWebPlaybackSDKReady = async () => {
-                    await createPlayer();
-                };
+                window.onSpotifyWebPlaybackSDKReady = tryCreatePlayer;
 
                 // Load SDK if not already loaded
                 if (!document.querySelector('script[src*="spotify-web-playback"]')) {
@@ -198,12 +214,17 @@ export function useSpotifyPlayback() {
                     document.body.appendChild(script);
                 }
             }
-        } finally {
-            isInitializing.value = false;
-        }
+        }).catch(err => {
+            console.error('Spotify initialization failed:', err);
+            initializationPromise = null;
+        });
+
+        await initializationPromise;
     };
 
     const createPlayer = async () => {
+        if (player.value) return;
+
         try {
             const spotifyPlayer = new window.Spotify.Player({
                 name: 'Artist Tree Web Player',
@@ -238,6 +259,9 @@ export function useSpotifyPlayback() {
 
             // Ready state
             spotifyPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
+                // Prevent duplicate ready events for the same device ID
+                if (deviceId.value === device_id) return;
+
                 deviceId.value = device_id;
                 isReady.value = true;
                 error.value = null;
@@ -440,6 +464,8 @@ export function useSpotifyPlayback() {
                 player.value.disconnect();
                 player.value = null;
                 isReady.value = false;
+                initializationPromise = null;
+                deviceId.value = null;
             }
         }
     });
