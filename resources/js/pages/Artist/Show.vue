@@ -87,7 +87,6 @@ const artistData = computed(() => {
         // Stubbed fields
         score: 94, // Mock score
         location: 'United States',
-        label: 'pgLang / Interscope',
         description: `${artist.value.name} is a critically acclaimed artist known for their innovative approach to music and storytelling. They have garnered a massive following and numerous awards throughout their career.`,
         genres: artist.value.genres && artist.value.genres.length > 0 
             ? artist.value.genres 
@@ -209,10 +208,6 @@ const pageTitle = computed(() =>
                                     <div class="flex items-center gap-1">
                                         <MapPin class="w-4 h-4" />
                                         <span>{{ artistData.location }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <Music class="w-4 h-4" />
-                                        <span>{{ artistData.label }}</span>
                                     </div>
                                 </div>
                             </div>
