@@ -119,14 +119,14 @@ export function useSpotifyPlayback() {
 
             if (!response.ok) {
                 const data = await response.json();
-                
+
                 // If not authenticated, clear token and redirect to Spotify OAuth
                 if (data.error === 'not_authenticated' && data.auth_url) {
                     await clearToken();
                     window.location.href = data.auth_url;
                     throw new Error('Redirecting to Spotify authentication');
                 }
-                
+
                 throw new Error('Failed to get Spotify access token');
             }
 
@@ -191,10 +191,10 @@ export function useSpotifyPlayback() {
             spotifyPlayer.addListener('initialization_error', async ({ message }) => {
                 console.error('Spotify SDK initialization error:', message);
                 error.value = `Initialization error: ${message}`;
-                
+
                 // Clear invalid token and trigger re-authentication
                 await clearToken();
-                
+
                 // Trigger re-authentication by fetching a new token
                 try {
                     await fetchAccessToken();
@@ -211,10 +211,10 @@ export function useSpotifyPlayback() {
             spotifyPlayer.addListener('authentication_error', async ({ message }) => {
                 console.error('Spotify SDK authentication error:', message);
                 error.value = `Authentication error: ${message}`;
-                
+
                 // Clear invalid token and trigger re-authentication
                 await clearToken();
-                
+
                 // Trigger re-authentication by fetching a new token
                 try {
                     await fetchAccessToken();
@@ -284,11 +284,11 @@ export function useSpotifyPlayback() {
         } catch (err) {
             error.value = 'Failed to initialize Spotify player';
             console.error('Spotify player initialization error:', err);
-            
+
             // Clear invalid token if initialization fails
             // This helps when token is invalid (e.g., after email change)
             if (err instanceof Error && (
-                err.message.includes('authentication') || 
+                err.message.includes('authentication') ||
                 err.message.includes('token') ||
                 err.message.includes('Invalid')
             )) {
@@ -357,8 +357,7 @@ export function useSpotifyPlayback() {
         // Initialize player if not already initialized
         if (!player.value || !deviceId.value) {
             await initializePlayer();
-            // Wait a bit for connection
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await waitForPlayerReady();
         }
 
         if (!player.value) {
@@ -386,6 +385,25 @@ export function useSpotifyPlayback() {
         } catch (err) {
             console.error('Stop error:', err);
         }
+    };
+
+    const waitForPlayerReady = (timeout = 5000) => {
+        return new Promise((resolve, reject) => {
+            if (isReady.value) {
+                return resolve(true);
+            }
+            const poll = setInterval(() => {
+                if (isReady.value) {
+                    clearInterval(poll);
+                    resolve(true);
+                }
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(poll);
+                reject(new Error('Player initialization timed out.'));
+            }, timeout);
+        });
     };
 
     // Format position for display
