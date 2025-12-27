@@ -22,6 +22,7 @@ interface ArtistSearchResult {
     genres: string[];
     image_url: string | null;
     exists_in_database: boolean;
+    source: 'local' | 'spotify';
     dummy_score: number;
 }
 
