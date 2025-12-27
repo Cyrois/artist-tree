@@ -418,7 +418,12 @@ export function useSpotifyPlayback() {
     onUnmounted(() => {
         stopProgressTimer();
         if (player.value) {
-            player.value.disconnect();
+            // Only disconnect if we are currently playing.
+            // This stops the music when the user leaves the page,
+            // but avoids interrupting other devices (like Desktop app) if we were idle.
+            if (isPlaying.value) {
+                player.value.disconnect();
+            }
         }
     });
 

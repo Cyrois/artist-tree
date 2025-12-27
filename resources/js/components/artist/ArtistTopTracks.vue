@@ -142,7 +142,7 @@ const showProgress = (trackId: string) => {
                     </div>
 
                     <!-- Duration -->
-                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right">
+                    <div class="flex-shrink-0 text-sm text-muted-foreground min-w-[80px] text-right tabular-nums">
                         <span v-if="showProgress(track.spotify_id)">{{ formattedPosition }} / {{ formattedDuration }}</span>
                         <span v-else>{{ formatDuration(track.duration_ms) }}</span>
                     </div>
