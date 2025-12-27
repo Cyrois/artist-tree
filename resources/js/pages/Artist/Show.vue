@@ -303,19 +303,25 @@ const pageTitle = computed(() =>
                 <div>
                     <h3 class="font-semibold text-lg mb-4">External Links</h3>
                     <div class="flex flex-wrap gap-3">
-                        <Button variant="outline" class="gap-2 text-green-600 hover:text-green-700 hover:bg-green-50">
-                            <Music class="w-4 h-4" />
-                            Spotify
+                        <Button 
+                            as-child
+                            variant="outline" 
+                            class="gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                            <a :href="`https://open.spotify.com/artist/${artistData.spotify_id}`" target="_blank" rel="noopener noreferrer">
+                                <Music class="w-4 h-4" />
+                                Spotify
+                            </a>
                         </Button>
-                        <Button variant="outline" class="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Button variant="outline" disabled class="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
                             <Youtube class="w-4 h-4" />
                             YouTube
                         </Button>
-                        <Button variant="outline" class="gap-2 text-pink-600 hover:text-pink-700 hover:bg-pink-50">
+                        <Button variant="outline" disabled class="gap-2 text-pink-600 hover:text-pink-700 hover:bg-pink-50">
                             <Instagram class="w-4 h-4" />
                             Instagram
                         </Button>
-                        <Button variant="outline" class="gap-2 hover:bg-slate-100">
+                        <Button variant="outline" disabled class="gap-2 hover:bg-slate-100">
                             <Twitter class="w-4 h-4" />
                             X / Twitter
                         </Button>
