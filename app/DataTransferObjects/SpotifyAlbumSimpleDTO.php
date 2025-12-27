@@ -32,12 +32,7 @@ class SpotifyAlbumSimpleDTO
     public static function fromSpotifyFullResponse(array $album): self
     {
         // Calculate total duration from tracks
-        $durationMs = 0;
-        if (isset($album['tracks']['items'])) {
-            foreach ($album['tracks']['items'] as $track) {
-                $durationMs += $track['duration_ms'] ?? 0;
-            }
-        }
+        $durationMs = array_sum(array_column($album['tracks']['items'] ?? [], 'duration_ms'));
 
         return new self(
             spotifyId: $album['id'],
