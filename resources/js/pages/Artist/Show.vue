@@ -129,7 +129,7 @@ const pageTitle = computed(() =>
         <!-- Artist Content -->
         <div v-else-if="artist" class="space-y-6">
             <!-- Back button -->
-            <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary">
+            <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary hover:underline">
                 <ArrowLeft class="w-4 h-4 mr-2" />
                 {{ $t('artists.show_back_button') }}
             </Button>
