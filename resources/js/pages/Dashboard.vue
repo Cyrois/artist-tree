@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import LineupCard from '@/components/lineup/LineupCard.vue';
-import ArtistCard from '@/components/artist/ArtistCard.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { getLineups } from '@/data/lineups';
-import type { Artist, Lineup } from '@/data/types';
-import { Search, Music, TrendingUp, ChevronRight } from 'lucide-vue-next';
+import type { Lineup } from '@/data/types';
+import { Search, Music, ChevronRight } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import axios from 'axios';
@@ -23,7 +22,7 @@ interface ArtistSearchResult {
     image_url: string | null;
     exists_in_database: boolean;
     source: 'local' | 'spotify';
-    dummy_score: number;
+    spotify_popularity: number;
 }
 
 const lineups = getLineups();
@@ -48,10 +47,7 @@ watch(searchQuery, (query) => {
             const response = await axios.get('/api/artists/search', {
                 params: { q: query }
             });
-            searchResults.value = response.data.data.map((artist: any) => ({
-                ...artist,
-                dummy_score: Math.floor(Math.random() * 40) + 60 // Random score 60-100
-            }));
+            searchResults.value = response.data.data;
             showSearchDropdown.value = searchResults.value.length > 0;
         } catch (error) {
             console.error('Search failed', error);
@@ -174,7 +170,7 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
 
                                     <!-- Score & Action -->
                                     <div class="flex items-center gap-3">
-                                        <ScoreBadge :score="artist.dummy_score" />
+                                        <ScoreBadge :score="artist.spotify_popularity" />
                                         <ChevronRight class="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                 </div>

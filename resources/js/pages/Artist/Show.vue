@@ -7,11 +7,9 @@ import {
     ArrowLeft, 
     Loader2, 
     AlertCircle, 
-    MapPin, 
     Music, 
     Youtube, 
     Instagram, 
-    Twitter, 
     TrendingUp, 
     Users, 
     Plus,
@@ -23,6 +21,7 @@ import { trans } from 'laravel-vue-i18n';
 import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -173,13 +172,13 @@ const pageTitle = computed(() =>
                                             </span>
                                         </div>
                                     </div>
-                                    <div 
-                                        v-if="artist.score"
-                                        class="flex items-center justify-center bg-primary/10 text-primary font-bold text-xl h-12 w-12 rounded-full border-2 border-primary/20"
+                                    <ScoreBadge 
+                                        v-if="artist.score" 
+                                        :score="Math.round(artist.score)" 
+                                        size="lg" 
+                                        class="text-xl"
                                         title="Artist-Tree Score"
-                                    >
-                                        {{ Math.round(artist.score) }}
-                                    </div>
+                                    />
                                 </div>
                                 
                                 <div class="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
@@ -237,9 +236,8 @@ const pageTitle = computed(() =>
                     <Card>
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
-                            <div class="flex items-baseline gap-1 mt-1">
-                                <p class="text-2xl font-bold">{{ artist.metrics?.spotify_popularity ?? '-' }}</p>
-                                <span class="text-sm text-muted-foreground">/ 100</span>
+                            <div class="mt-1">
+                                <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_popularity) }}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -318,7 +316,14 @@ const pageTitle = computed(() =>
                                 <TrendingUp class="w-4 h-4" />
                                 <span>{{ $t('artists.show_spotify_popularity') }}</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ artist.metrics?.spotify_popularity ?? '-' }} <span class="text-sm font-normal text-muted-foreground">/ 100</span></p>
+                            <div>
+                                <ScoreBadge 
+                                    v-if="artist.metrics?.spotify_popularity !== null" 
+                                    :score="artist.metrics!.spotify_popularity" 
+                                    size="md"
+                                />
+                                <p v-else class="text-2xl font-bold">-</p>
+                            </div>
                         </CardContent>
                     </Card>
                     <Card>

@@ -99,6 +99,8 @@
     "lineups.show_compare_clear": "Clear",
     "lineups.show_compare_submit": "Compare",
 
+    "artists.recent_searches_title": "Recent Searches",
+    "artists.recent_searches_empty": "No recent searches",
     "artists.show_page_title": "Artist",
     "artists.show_back_button": "Back to Search",
     "artists.show_add_to_lineup_button": "Add to Lineup",

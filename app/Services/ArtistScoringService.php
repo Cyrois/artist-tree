@@ -18,11 +18,11 @@ class ArtistScoringService
      * For now, this uses the 'balanced' preset from config as a default.
      * In the future, this will take an Organization model and use its specific weights.
      */
-    public function calculateScore(Artist $artist): float
+    public function calculateScore(Artist $artist): int
     {
         $metrics = $artist->metrics;
         if (! $metrics) {
-            return 0.0;
+            return 0;
         }
 
         $weights = Config::get('artist-tree.metric_presets.balanced');
@@ -34,7 +34,26 @@ class ArtistScoringService
             $score += $normalized * $weight;
         }
 
-        return round($score, 2);
+        return (int) round($score);
+    }
+
+    /**
+     * Calculate score from a raw array of metrics.
+     *
+     * @param  array<string, float|int|null>  $metrics
+     */
+    public function calculateScoreFromMetrics(array $metrics): int
+    {
+        $weights = Config::get('artist-tree.metric_presets.balanced');
+        $score = 0;
+
+        foreach ($weights as $metricName => $weight) {
+            $value = $this->getMetricValueFromArray($metrics, $metricName);
+            $normalized = $this->normalizeLogarithmic($value, $metricName);
+            $score += $normalized * $weight;
+        }
+
+        return (int) round($score);
     }
 
     /**
@@ -82,5 +101,24 @@ class ArtistScoringService
         $normalized = (log10($value + 1) / log10($max)) * 100;
 
         return min(max($normalized, 0), 100);
+    }
+
+    /**
+     * Get the raw value for a metric from a metrics array.
+     */
+    private function getMetricValueFromArray(array $metrics, string $metricName): float
+    {
+        // Map config metric names to array keys
+        $mapping = [
+            'spotify_monthly_listeners' => 'spotify_followers', // Fallback
+            'spotify_popularity' => 'spotify_popularity',
+            'youtube_subscribers' => 'youtube_subscribers',
+            'spotify_followers' => 'spotify_followers',
+            'instagram_followers' => 'instagram_followers',
+        ];
+
+        $key = $mapping[$metricName] ?? $metricName;
+
+        return (float) ($metrics[$key] ?? 0.0);
     }
 }

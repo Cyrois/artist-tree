@@ -8,14 +8,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
+import RecentSearches from '@/components/artist/RecentSearches.vue';
 import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, ChevronDown, TrendingUp, Loader2, AlertCircle } from 'lucide-vue-next';
+import { Search, SlidersHorizontal, ChevronDown, Loader2, AlertCircle } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
+import { useRecentSearches } from '@/composables/useRecentSearches';
+import axios from 'axios';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -26,9 +29,12 @@ interface ApiArtist {
     image_url: string | null;
     exists_in_database: boolean;
     source: 'local' | 'spotify';
+    spotify_popularity: number;
+    score: number;
 }
 
 // State
+const { addSearch } = useRecentSearches();
 const searchQuery = ref('');
 const selectedGenres = ref<string[]>([]);
 const scoreMin = ref(0);
@@ -100,9 +106,9 @@ const filteredArtists = computed(() => {
         id: apiArtist.id ?? 0,
         name: apiArtist.name,
         genre: apiArtist.genres,
-        score: 0, // Score not available in search results
+        score: apiArtist.score || 0,
         spotifyListeners: 0,
-        spotifyPopularity: 0,
+        spotifyPopularity: apiArtist.spotify_popularity || 0,
         spotifyFollowers: 0,
         youtubeSubscribers: 0,
         youtubeViews: 0,
@@ -180,12 +186,37 @@ function clearFilters() {
     scoreMax.value = 100;
 }
 
-function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
-    // Navigate using database ID if available, otherwise use Spotify ID
+async function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
+    // Add to recent searches
+    if (artist._spotifyId) {
+        addSearch({
+            id: artist.id,
+            spotify_id: artist._spotifyId,
+            name: artist.name,
+            genres: artist.genre,
+            image_url: artist.image || null,
+            spotify_popularity: artist.spotifyPopularity || 0,
+            spotify_followers: artist.spotifyFollowers || 0,
+            score: artist.score || 0
+        });
+    }
+
+    // Navigate using database ID if available, otherwise use Spotify ID to create/select
     if (artist.id && artist.id > 0) {
         router.visit(`/artist/${artist.id}`);
     } else if (artist._spotifyId) {
-        router.visit(`/artist?spotify_id=${artist._spotifyId}`);
+        try {
+            // Select (create) artist in backend using Spotify ID
+            const response = await axios.post('/api/artists/select', {
+                spotify_id: artist._spotifyId
+            });
+            const newId = response.data.data.id;
+            router.visit(`/artist/${newId}`);
+        } catch (error) {
+            console.error('Failed to select artist', error);
+            // Fallback (might fail if route doesn't exist, but worth a try or just alert)
+            // router.visit(`/artist?spotify_id=${artist._spotifyId}`);
+        }
     }
 }
 
@@ -251,6 +282,9 @@ const breadcrumbs = [
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            <!-- Recent Searches -->
+            <RecentSearches v-if="!hasSearched && !isLoading && searchQuery.length < 2" />
 
             <!-- Filter Panel -->
             <Card v-if="showFilters">

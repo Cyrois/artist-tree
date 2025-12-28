@@ -275,11 +275,22 @@ class ArtistController extends Controller
             // Search using the first genre for the most relevant results
             $results = $this->spotifyService->searchArtistsByGenre($genres[0], $limit + 1);
 
+            // Need scoring service to calculate scores for results
+            $scoringService = app(\App\Services\ArtistScoringService::class);
+
             // Filter out the current artist and map to array
             $similarArtists = collect($results)
                 ->filter(fn ($similar) => $similar->spotifyId !== $artist->spotify_id)
                 ->take($limit)
-                ->map(fn ($similar) => $similar->toArray())
+                ->map(function ($similar) use ($scoringService) {
+                    $data = $similar->toArray();
+                    $data['score'] = $scoringService->calculateScoreFromMetrics([
+                        'spotify_popularity' => $similar->popularity,
+                        'spotify_followers' => $similar->followers,
+                    ]);
+
+                    return $data;
+                })
                 ->values();
 
             return response()->json([

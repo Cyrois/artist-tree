@@ -19,6 +19,17 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Similar Artists Score Display (2025-12-28)
+**Summary:** Updated Similar Artists and Search components to display the Artist-Tree score instead of Spotify popularity.
+- **Frontend**
+  - Updated `ArtistSimilarArtists.vue` to use `score` field
+  - Updated `Search.vue` and `RecentSearches.vue` to use calculated score
+- **Backend**
+  - Added `calculateScoreFromMetrics` to `ArtistScoringService`
+  - Updated `ArtistController::similar` to calculate and return scores
+  - Updated `ArtistSearchResultDTO` and `Resource` to include scores
+  - **Fix:** Enforced integer return type for scores to prevent decimal display (e.g. 65.6 -> 66)
+
 ### Similar Artists Responsive Grid (2025-12-26)
 
 **Summary:** Implemented a "Similar Artists" responsive grid on the Artist Detail page that dynamically fetches artists with similar genres from Spotify.
