@@ -39,6 +39,12 @@ const emit = defineEmits<{
 const isOpen = ref(true);
 const config = computed(() => tierConfig[props.tier]);
 
+const averageScore = computed(() => {
+    if (!props.artists.length) return 0;
+    const sum = props.artists.reduce((acc, artist) => acc + (artist.score || 0), 0);
+    return Math.round(sum / props.artists.length);
+});
+
 function isSelected(artistId: number) {
     return props.selectedArtistIds.includes(artistId);
 }
@@ -57,6 +63,11 @@ function isSelected(artistId: number) {
                         {{ config.label }}
                     </span>
                     <Badge variant="secondary">{{ artists.length }}</Badge>
+                    <ScoreBadge 
+                        v-if="artists.length > 0" 
+                        :score="averageScore" 
+                        size="sm" 
+                    />
                 </div>
             </div>
         </CollapsibleTrigger>
