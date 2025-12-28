@@ -139,7 +139,7 @@ const pageTitle = computed(() =>
             </Button>
 
             <!-- Artist Header -->
-            <Card>
+            <Card class="py-0">
                 <CardContent class="p-6">
                     <div class="flex flex-col md:flex-row gap-6">
                         <!-- Artist Image -->
@@ -237,7 +237,7 @@ const pageTitle = computed(() =>
 
                 <!-- Quick Metrics Row -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
                             <div class="mt-1">
@@ -245,19 +245,19 @@ const pageTitle = computed(() =>
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_spotify_followers') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_youtube_subs') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_instagram') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
