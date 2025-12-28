@@ -237,12 +237,7 @@ const pageTitle = computed(() =>
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
                             <div class="mt-1">
-                                <ScoreBadge 
-                                    v-if="artist.metrics?.spotify_popularity !== null" 
-                                    :score="artist.metrics!.spotify_popularity" 
-                                    size="md"
-                                />
-                                <p v-else class="text-2xl font-bold">-</p>
+                                <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_popularity) }}</p>
                             </div>
                         </CardContent>
                     </Card>
