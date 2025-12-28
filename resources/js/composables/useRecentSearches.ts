@@ -8,11 +8,15 @@ export interface RecentSearchArtist {
     image_url: string | null;
     spotify_popularity: number;
     spotify_followers: number;
+    score: number;
     timestamp?: number; // Optional as it's added on save
 }
 
 // Global state for recent searches to share across components if needed
 const recentSearches = useStorage<RecentSearchArtist[]>('artist-tree-recent-searches', []);
+
+const MAX_RECENT_SEARCHES = 12;
+
 
 export function useRecentSearches() {
     /**

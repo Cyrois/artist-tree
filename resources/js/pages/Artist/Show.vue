@@ -176,7 +176,7 @@ const pageTitle = computed(() =>
                                         v-if="artist.score" 
                                         :score="Math.round(artist.score)" 
                                         size="lg" 
-                                        class="h-12 w-12 text-xl"
+                                        class="text-xl"
                                         title="Artist-Tree Score"
                                     />
                                 </div>

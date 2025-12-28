@@ -26,6 +26,7 @@ class ArtistSearchResultResource extends JsonResource
             'image_url' => $this->imageUrl,
             'spotify_popularity' => $this->popularity,
             'exists_in_database' => $this->existsInDatabase,
+            'score' => $this->score,
             'source' => $this->source,
         ];
     }

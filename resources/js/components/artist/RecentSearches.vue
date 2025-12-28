@@ -60,7 +60,7 @@ const handleArtistClick = async (artist: RecentSearchArtist) => {
                         {{ artist.name.charAt(0) }}
                     </div>
                     <div class="absolute top-2 right-2">
-                        <ScoreBadge :score="artist.spotify_popularity" />
+                        <ScoreBadge :score="artist.score" />
                     </div>
                 </div>
                 <div class="p-3">

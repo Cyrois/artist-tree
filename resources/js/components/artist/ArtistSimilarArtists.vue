@@ -10,7 +10,7 @@ interface SimilarArtist {
     name: string;
     genres: string[];
     image_url: string | null;
-    spotify_popularity: number;
+    score: number;
     spotify_followers: number;
 }
 
@@ -82,7 +82,7 @@ onMounted(() => {
                         {{ similar.name.charAt(0) }}
                     </div>
                     <div class="absolute top-2 right-2">
-                        <ScoreBadge :score="similar.spotify_popularity" />
+                        <ScoreBadge :score="similar.score" />
                     </div>
                 </div>
                 <div class="p-3">

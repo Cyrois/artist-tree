@@ -20,6 +20,7 @@ readonly class ArtistSearchResultDTO
         public ?int $popularity,
         public ?int $followers,
         public bool $existsInDatabase,
+        public ?int $score = null,
         public ?int $databaseId = null,
         public string $source = 'spotify', // 'local' or 'spotify'
     ) {}
@@ -29,6 +30,8 @@ readonly class ArtistSearchResultDTO
      */
     public static function fromLocalArtist(Artist $artist): self
     {
+        $score = app(\App\Services\ArtistScoringService::class)->calculateScore($artist);
+
         return new self(
             spotifyId: $artist->spotify_id,
             name: $artist->name,
@@ -37,6 +40,7 @@ readonly class ArtistSearchResultDTO
             popularity: $artist->metrics?->spotify_popularity,
             followers: $artist->metrics?->spotify_followers,
             existsInDatabase: true,
+            score: $score,
             databaseId: $artist->id,
             source: 'local',
         );
@@ -47,6 +51,17 @@ readonly class ArtistSearchResultDTO
      */
     public static function fromSpotifyArtist(SpotifyArtistDTO $spotify, ?Artist $localArtist = null): self
     {
+        $score = null;
+
+        if ($localArtist) {
+            $score = app(\App\Services\ArtistScoringService::class)->calculateScore($localArtist);
+        } else {
+            $score = app(\App\Services\ArtistScoringService::class)->calculateScoreFromMetrics([
+                'spotify_popularity' => $spotify->popularity,
+                'spotify_followers' => $spotify->followers,
+            ]);
+        }
+
         return new self(
             spotifyId: $spotify->spotifyId,
             name: $spotify->name,
@@ -55,6 +70,7 @@ readonly class ArtistSearchResultDTO
             popularity: $spotify->popularity,
             followers: $spotify->followers,
             existsInDatabase: $localArtist !== null,
+            score: $score,
             databaseId: $localArtist?->id,
             source: 'spotify',
         );
@@ -73,6 +89,7 @@ readonly class ArtistSearchResultDTO
             'popularity' => $this->popularity,
             'followers' => $this->followers,
             'exists_in_database' => $this->existsInDatabase,
+            'score' => $this->score,
             'database_id' => $this->databaseId,
             'source' => $this->source,
         ];

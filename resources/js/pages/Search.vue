@@ -30,6 +30,7 @@ interface ApiArtist {
     exists_in_database: boolean;
     source: 'local' | 'spotify';
     spotify_popularity: number;
+    score: number;
 }
 
 // State
@@ -105,7 +106,7 @@ const filteredArtists = computed(() => {
         id: apiArtist.id ?? 0,
         name: apiArtist.name,
         genre: apiArtist.genres,
-        score: apiArtist.spotify_popularity || 0, // Use popularity as proxy for score in search results
+        score: apiArtist.score || 0,
         spotifyListeners: 0,
         spotifyPopularity: apiArtist.spotify_popularity || 0,
         spotifyFollowers: 0,
@@ -195,7 +196,8 @@ async function handleArtistClick(artist: Artist & { _spotifyId?: string; _exists
             genres: artist.genre,
             image_url: artist.image || null,
             spotify_popularity: artist.spotifyPopularity || 0,
-            spotify_followers: artist.spotifyFollowers || 0
+            spotify_followers: artist.spotifyFollowers || 0,
+            score: artist.score || 0
         });
     }
 
