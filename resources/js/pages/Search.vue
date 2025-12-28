@@ -28,6 +28,7 @@ interface ApiArtist {
     image_url: string | null;
     exists_in_database: boolean;
     source: 'local' | 'spotify';
+    spotify_popularity: number;
 }
 
 // State
@@ -103,9 +104,9 @@ const filteredArtists = computed(() => {
         id: apiArtist.id ?? 0,
         name: apiArtist.name,
         genre: apiArtist.genres,
-        score: 0, // Score not available in search results
+        score: apiArtist.spotify_popularity || 0, // Use popularity as proxy for score in search results
         spotifyListeners: 0,
-        spotifyPopularity: 0,
+        spotifyPopularity: apiArtist.spotify_popularity || 0,
         spotifyFollowers: 0,
         youtubeSubscribers: 0,
         youtubeViews: 0,

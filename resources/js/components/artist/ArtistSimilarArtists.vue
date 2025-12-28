@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Users } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 
 interface SimilarArtist {
     spotify_id: string;
@@ -80,8 +81,8 @@ onMounted(() => {
                     <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground font-bold text-2xl bg-muted">
                         {{ similar.name.charAt(0) }}
                     </div>
-                    <div class="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded font-medium backdrop-blur-sm">
-                        {{ similar.spotify_popularity }}
+                    <div class="absolute top-2 right-2">
+                        <ScoreBadge :score="similar.spotify_popularity" />
                     </div>
                 </div>
                 <div class="p-3">

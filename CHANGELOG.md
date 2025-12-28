@@ -17,22 +17,7 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ---
 
-### Linting Fixes (2025-12-28)
-
-**Summary:** Resolved all linting issues identified by ESLint, primarily addressing unused imports and variables in Vue components to improve code quality and maintainability.
-
-#### Changes Made
-- Removed unused imports (`Trash2`, `Button`, `trans`) and variables (`clearSearches`) from `resources/js/components/artist/RecentSearches.vue`.
-- Removed unused imports (`MapPin`, `Twitter`) from `resources/js/pages/Artist/Show.vue`.
-- Removed unused imports (`ArtistCard`, `Artist`, `TrendingUp`) from `resources/js/pages/Dashboard.vue`.
-- Removed unused import (`TrendingUp`) from `resources/js/pages/Search.vue`.
-
-**Files Modified:**
-- `resources/js/components/artist/RecentSearches.vue`
-- `resources/js/pages/Artist/Show.vue`
-- `resources/js/pages/Dashboard.vue`
-- `resources/js/pages/Search.vue`
-- `CHANGELOG.md`
+## [Unreleased]
 
 ### Similar Artists Responsive Grid (2025-12-26)
 

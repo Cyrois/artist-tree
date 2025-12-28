@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { History } from 'lucide-vue-next';
 import { useRecentSearches, type RecentSearchArtist } from '@/composables/useRecentSearches';
 import { router } from '@inertiajs/vue3';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 
 const { recentSearches } = useRecentSearches();
 
@@ -49,8 +50,8 @@ const handleArtistClick = (artist: RecentSearchArtist) => {
                     <div v-else class="absolute inset-0 flex items-center justify-center text-muted-foreground font-bold text-2xl bg-muted">
                         {{ artist.name.charAt(0) }}
                     </div>
-                    <div class="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded font-medium backdrop-blur-sm">
-                        {{ artist.spotify_popularity }}
+                    <div class="absolute top-2 right-2">
+                        <ScoreBadge :score="artist.spotify_popularity" />
                     </div>
                 </div>
                 <div class="p-3">
