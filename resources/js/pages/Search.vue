@@ -19,6 +19,7 @@ import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
 import { useRecentSearches } from '@/composables/useRecentSearches';
 import axios from 'axios';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -226,7 +227,6 @@ const sortOptions = [
     { value: 'listeners', label: trans('artists.search_sort_listeners') },
 ];
 
-import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 const { search: searchBreadcrumbs } = useBreadcrumbs();
 const breadcrumbs = searchBreadcrumbs();
 </script>
