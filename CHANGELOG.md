@@ -19,6 +19,15 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Lineup Schema Refactor (Many-to-Many) (2025-12-28)
+**Summary:** Refactored the relationship between Users and Lineups from One-to-Many to Many-to-Many to support shared lineup access.
+- **Database:**
+  - Created `lineup_user` pivot table with `role` column.
+  - Removed `user_id` column from `lineups` table (modifying today's migration).
+- **Models:**
+  - Updated `User` model with `lineups()` relationship (`belongsToMany`).
+  - Updated `Lineup` model with `users()` relationship (`belongsToMany`) and removed `user_id` from `$fillable`.
+
 ### Similar Artists Score Display (2025-12-28)
 **Summary:** Updated Similar Artists and Search components to display the Artist-Tree score instead of Spotify popularity.
 - **Frontend**

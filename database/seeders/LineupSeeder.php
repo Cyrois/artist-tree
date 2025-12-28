@@ -26,6 +26,12 @@ class LineupSeeder extends Seeder
 
         // Clear existing associations to prevent duplicates if run multiple times
         $lineup->artists()->detach();
+        
+        // Attach to first user (Test User) if not already attached
+        $user = \App\Models\User::first();
+        if ($user && !$lineup->users()->where('user_id', $user->id)->exists()) {
+            $lineup->users()->attach($user->id, ['role' => 'owner']);
+        }
 
         // Attach artists with tiers
         foreach ($artists as $index => $artist) {

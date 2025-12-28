@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lineups', function (Blueprint $table) {
+        Schema::create('lineup_user', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
+            $table->foreignId('lineup_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('role')->default('member'); // owner, editor, viewer
             $table->timestamps();
+
+            $table->unique(['lineup_id', 'user_id']);
         });
     }
 
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lineups');
+        Schema::dropIfExists('lineup_user');
     }
 };
