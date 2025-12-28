@@ -9,25 +9,50 @@ import { Separator } from '@/components/ui/separator';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import { getLineupById, getLineupStats, getAllLineupArtists } from '@/data/lineups';
-import { getArtistsByIds } from '@/data/artists';
 import { tierOrder } from '@/data/constants';
-import type { Artist, TierType } from '@/data/types';
-import { Search, Layers, Scale, Download, Calendar, Users } from 'lucide-vue-next';
+import type { TierType } from '@/data/types';
+import { Search, Layers, Scale, Download, Users } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
+interface ApiArtist {
+    id: number;
+    name: string;
+    genres: string[];
+    image_url: string | null;
+    score: number;
+    lineup_tier: TierType;
+    lineup_suggested_tier: TierType;
+    lineup_tier_override: boolean;
+    // Map properties for compatibility with TierSection if needed
+    genre?: string[]; 
+    tierSuggestion?: TierType;
+}
+
 interface Props {
     id: number;
+    lineup: {
+        id: number;
+        name: string;
+        updatedAt: string;
+        artists: Record<TierType, ApiArtist[]>;
+        artistStatuses: any;
+        stats: {
+            artistCount: number;
+            avgScore: number;
+        };
+    };
 }
 
 const props = defineProps<Props>();
 const { lineup: lineupBreadcrumbs } = useBreadcrumbs();
 
-const lineup = computed(() => getLineupById(props.id));
-const stats = computed(() => lineup.value ? getLineupStats(lineup.value) : null);
-const allArtists = computed(() => lineup.value ? getAllLineupArtists(lineup.value) : []);
+// Flatten artists for search/avatar lookup
+const allArtists = computed(() => {
+    if (!props.lineup) return [];
+    return Object.values(props.lineup.artists).flat();
+});
 
 // Mode states
 const stackMode = ref(false);
@@ -39,11 +64,18 @@ const searchQuery = ref('');
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
-    if (!lineup.value) return [];
-    return getArtistsByIds(lineup.value.artists[tier]);
+    if (!props.lineup) return [];
+    
+    // Map API structure to component expectations
+    return props.lineup.artists[tier].map(artist => ({
+        ...artist,
+        image: artist.image_url, // Map image_url for ArtistAvatar
+        genre: artist.genres || [], // Map genres for TierSection
+        tierSuggestion: artist.lineup_suggested_tier // Map suggestion
+    }));
 }
 
-function handleArtistSelect(artist: Artist) {
+function handleArtistSelect(artist: ApiArtist) {
     if (compareMode.value) {
         const index = selectedArtistIds.value.indexOf(artist.id);
         if (index === -1 && selectedArtistIds.value.length < 4) {
@@ -54,7 +86,7 @@ function handleArtistSelect(artist: Artist) {
     }
 }
 
-function handleArtistView(artist: Artist) {
+function handleArtistView(artist: ApiArtist) {
     if (!compareMode.value && !stackMode.value) {
         router.visit(`/artist/${artist.id}`);
     }
@@ -71,23 +103,26 @@ function exitCompareMode() {
 
 const breadcrumbs = computed(() => 
     lineupBreadcrumbs(
-        lineup.value?.name ?? trans('lineups.show_page_title'), 
+        props.lineup?.name ?? trans('lineups.show_page_title'), 
         props.id
     )
 );
 </script>
 
 <template>
-    <Head :title="`${lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`" />
+    <Head :title="`${props.lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`" />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div v-if="lineup" class="space-y-6">
+        <div v-if="props.lineup" class="space-y-6">
             <!-- Lineup Header Card -->
             <Card class="py-0">
                 <CardContent class="p-6">
                     <div class="flex flex-col md:flex-row justify-between gap-6">
                         <!-- Info -->
                         <div class="flex-1">
-                            <h1 class="text-3xl font-bold">{{ lineup.name }}</h1>
+                            <h1 class="text-3xl font-bold">{{ props.lineup.name }}</h1>
+                            <p class="text-sm text-muted-foreground mt-1">
+                                {{ $t('lineups.show_updated_prefix') }} {{ props.lineup.updatedAt }}
+                            </p>
                             
                             <div class="flex flex-wrap items-center gap-8 mt-6">
                                 <!-- Artist Count -->
@@ -97,34 +132,22 @@ const breadcrumbs = computed(() =>
                                     </div>
                                     <div>
                                         <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{{ $t('lineups.show_stats_artists') }}</p>
-                                        <p class="text-xl font-bold leading-none">{{ stats?.artistCount ?? 0 }}</p>
+                                        <p class="text-xl font-bold leading-none">{{ props.lineup.stats.artistCount }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Avg Score -->
                                 <div class="flex items-center gap-3">
                                     <ScoreBadge 
-                                        v-if="stats?.avgScore" 
-                                        :score="Math.round(stats.avgScore)" 
+                                        v-if="props.lineup.stats.avgScore" 
+                                        :score="Math.round(props.lineup.stats.avgScore)" 
                                         size="lg"
                                     />
                                     <div v-else class="h-10 w-10 flex items-center justify-center rounded-full bg-muted">
                                         <span class="font-bold">-</span>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{{ $t('lineups.show_stats_avg_score') }}</p>
-                                        <p class="text-xl font-bold leading-none">{{ stats?.avgScore ?? '-' }}</p>
-                                    </div>
-                                </div>
-
-                                <!-- Updated Date -->
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2.5 rounded-full bg-muted">
-                                        <Calendar class="w-5 h-5 text-muted-foreground" />
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{{ $t('lineups.show_updated_prefix') }}</p>
-                                        <p class="text-xl font-bold leading-none">{{ lineup.updatedAt }}</p>
+                                        <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider">{{ $t('lineups.show_stats_avg_score') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -222,7 +245,7 @@ const breadcrumbs = computed(() =>
                         :key="tier"
                         :tier="tier"
                         :artists="getArtistsByTier(tier)"
-                        :statuses="lineup.artistStatuses"
+                        :statuses="props.lineup.artistStatuses"
                         :compare-mode="compareMode"
                         :selected-artist-ids="selectedArtistIds"
                         @select-artist="handleArtistSelect"
@@ -242,3 +265,4 @@ const breadcrumbs = computed(() =>
         </div>
     </MainLayout>
 </template>
+

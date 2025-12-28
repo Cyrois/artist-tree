@@ -18,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('search', fn () => Inertia::render('Search'))->name('search');
     Route::get('artist/{id}', fn ($id) => Inertia::render('Artist/Show', ['id' => (int) $id]))->name('artist.show');
     Route::get('lineups', [LineupController::class, 'index'])->name('lineups.index');
-    Route::get('lineups/{id}', fn ($id) => Inertia::render('Lineups/Show', ['id' => (int) $id]))->name('lineups.show');
+    Route::get('lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
     // Settings routes are in routes/settings.php
 });
 

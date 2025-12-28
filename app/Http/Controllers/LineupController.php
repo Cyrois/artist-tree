@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artist;
+use App\Models\Lineup;
+use App\Http\Resources\ArtistResource;
+use App\Services\ArtistScoringService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,6 +46,59 @@ class LineupController extends Controller
 
         return Inertia::render('Lineups/Index', [
             'lineups' => $lineups
+        ]);
+    }
+
+    public function show($id)
+    {
+        $lineup = Lineup::with(['artists.metrics'])->findOrFail($id);
+        
+        // Group artists by tier
+        $artistsByTier = [
+            'headliner' => [],
+            'sub_headliner' => [],
+            'mid_tier' => [],
+            'undercard' => [],
+        ];
+
+        foreach ($lineup->artists as $artist) {
+            $tier = $artist->pivot->tier;
+            if (array_key_exists($tier, $artistsByTier)) {
+                // Use ArtistResource to format
+                $artistData = (new ArtistResource($artist))->resolve();
+                // Add pivot data
+                $artistData['lineup_tier'] = $tier;
+                $artistData['lineup_suggested_tier'] = $artist->pivot->suggested_tier;
+                $artistData['lineup_tier_override'] = (bool) $artist->pivot->tier_override;
+                
+                $artistsByTier[$tier][] = $artistData;
+            }
+        }
+        
+        // Calculate avg score
+        $totalScore = 0;
+        $artistCount = $lineup->artists->count();
+        $scoringService = app(ArtistScoringService::class);
+        
+        foreach ($lineup->artists as $artist) {
+             $totalScore += $scoringService->calculateScore($artist);
+        }
+        
+        $avgScore = $artistCount > 0 ? round($totalScore / $artistCount) : 0;
+
+        return Inertia::render('Lineups/Show', [
+            'id' => $lineup->id,
+            'lineup' => [
+                'id' => $lineup->id,
+                'name' => $lineup->name,
+                'updatedAt' => $lineup->updated_at->diffForHumans(),
+                'artists' => $artistsByTier,
+                'artistStatuses' => [], // Empty as requested
+                'stats' => [
+                    'artistCount' => $artistCount,
+                    'avgScore' => $avgScore,
+                ]
+            ],
         ]);
     }
 
