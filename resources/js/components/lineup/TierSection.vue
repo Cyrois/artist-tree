@@ -63,12 +63,13 @@ function isSelected(artistId: number) {
                         {{ config.label }}
                     </span>
                     <Badge variant="secondary">{{ artists.length }}</Badge>
-                    <ScoreBadge 
-                        v-if="artists.length > 0" 
-                        :score="averageScore" 
-                        size="sm" 
-                    />
                 </div>
+                <ScoreBadge 
+                    v-if="artists.length > 0" 
+                    :score="averageScore" 
+                    size="sm" 
+                    class="mr-2"
+                />
             </div>
         </CollapsibleTrigger>
 
