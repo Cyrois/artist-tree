@@ -2,56 +2,63 @@
 import { Head, router } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
-import LineupCard from '@/components/lineup/LineupCard.vue';
-import { getLineups } from '@/data/lineups';
-import type { Lineup } from '@/data/types';
+import LineupListCard from '@/components/lineup/LineupListCard.vue';
 import { Plus } from 'lucide-vue-next';
-import { trans } from 'laravel-vue-i18n';
-import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
-const lineups = getLineups();
-const { lineups: lineupsBreadcrumbs } = useBreadcrumbs();
-
-function handleLineupClick(lineup: Lineup) {
-    router.visit(`/lineups/${lineup.id}`);
+interface Artist {
+    id: number;
+    name: string;
+    image_url: string | null;
+    tier: string;
 }
 
-const breadcrumbs = lineupsBreadcrumbs();
+interface Lineup {
+    id: number;
+    name: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+    total_artists: number;
+    artists: Artist[];
+}
+
+defineProps<{
+    lineups: Lineup[];
+}>();
+
+const breadcrumbs = [
+    { title: 'My Lineups', href: '/lineups' }
+];
+
+function createLineup() {
+    // Stub for create action
+    console.log('Create lineup clicked');
+}
 </script>
 
 <template>
-    <Head :title="$t('lineups.index_page_title')" />
+    <Head title="My Lineups" />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6">
+        <div class="space-y-8">
             <!-- Header -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold">{{ $t('lineups.index_title') }}</h1>
-                    <p class="text-muted-foreground">{{ $t('lineups.index_subtitle') }}</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h1 class="text-3xl font-bold tracking-tight">My Lineups</h1>
+                    <p class="text-lg text-muted-foreground">Manage your festival lineups and artist placements</p>
                 </div>
-                <Button>
-                    <Plus class="w-4 h-4 mr-2" />
-                    {{ $t('lineups.index_create_button') }}
+                <Button size="lg" class="gap-2" disabled @click="createLineup">
+                    <Plus class="w-5 h-5" />
+                    Create Lineup
                 </Button>
             </div>
 
-            <!-- Lineups Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <LineupCard
-                    v-for="lineup in lineups"
-                    :key="lineup.id"
-                    :lineup="lineup"
-                    @click="handleLineupClick"
-                />
-            </div>
-
-            <!-- Empty State -->
-            <div v-if="lineups.length === 0" class="text-center py-12">
-                <p class="text-muted-foreground mb-4">{{ $t('lineups.index_empty_state_message') }}</p>
-                <Button>
-                    <Plus class="w-4 h-4 mr-2" />
-                    {{ $t('lineups.index_create_button') }}
-                </Button>
+            <!-- Lineup Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <LineupListCard 
+                    v-for="lineup in lineups" 
+                    :key="lineup.id" 
+                    :lineup="lineup" 
+                 />
             </div>
         </div>
     </MainLayout>
