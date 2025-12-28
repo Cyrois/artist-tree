@@ -4,14 +4,23 @@ import { History } from 'lucide-vue-next';
 import { useRecentSearches, type RecentSearchArtist } from '@/composables/useRecentSearches';
 import { router } from '@inertiajs/vue3';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import axios from 'axios';
 
 const { recentSearches } = useRecentSearches();
 
-const handleArtistClick = (artist: RecentSearchArtist) => {
+const handleArtistClick = async (artist: RecentSearchArtist) => {
     if (artist.id && artist.id > 0) {
         router.visit(`/artist/${artist.id}`);
     } else if (artist.spotify_id) {
-        router.visit(`/artist?spotify_id=${artist.spotify_id}`);
+        try {
+            const response = await axios.post('/api/artists/select', {
+                spotify_id: artist.spotify_id
+            });
+            const newId = response.data.data.id;
+            router.visit(`/artist/${newId}`);
+        } catch (error) {
+            console.error('Failed to select artist', error);
+        }
     }
 };
 

@@ -18,6 +18,7 @@ import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
 import { useRecentSearches } from '@/composables/useRecentSearches';
+import axios from 'axios';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -184,7 +185,7 @@ function clearFilters() {
     scoreMax.value = 100;
 }
 
-function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
+async function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
     // Add to recent searches
     if (artist._spotifyId) {
         addSearch({
@@ -198,11 +199,22 @@ function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInData
         });
     }
 
-    // Navigate using database ID if available, otherwise use Spotify ID
+    // Navigate using database ID if available, otherwise use Spotify ID to create/select
     if (artist.id && artist.id > 0) {
         router.visit(`/artist/${artist.id}`);
     } else if (artist._spotifyId) {
-        router.visit(`/artist?spotify_id=${artist._spotifyId}`);
+        try {
+            // Select (create) artist in backend using Spotify ID
+            const response = await axios.post('/api/artists/select', {
+                spotify_id: artist._spotifyId
+            });
+            const newId = response.data.data.id;
+            router.visit(`/artist/${newId}`);
+        } catch (error) {
+            console.error('Failed to select artist', error);
+            // Fallback (might fail if route doesn't exist, but worth a try or just alert)
+            // router.visit(`/artist?spotify_id=${artist._spotifyId}`);
+        }
     }
 }
 
