@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
+import RecentSearches from '@/components/artist/RecentSearches.vue';
 import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
@@ -16,6 +17,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import { search as artistSearchRoute } from '@/routes/api/artists';
+import { useRecentSearches } from '@/composables/useRecentSearches';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -29,6 +31,7 @@ interface ApiArtist {
 }
 
 // State
+const { addSearch } = useRecentSearches();
 const searchQuery = ref('');
 const selectedGenres = ref<string[]>([]);
 const scoreMin = ref(0);
@@ -181,6 +184,19 @@ function clearFilters() {
 }
 
 function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
+    // Add to recent searches
+    if (artist._spotifyId) {
+        addSearch({
+            id: artist.id,
+            spotify_id: artist._spotifyId,
+            name: artist.name,
+            genres: artist.genre,
+            image_url: artist.image || null,
+            spotify_popularity: artist.spotifyPopularity || 0,
+            spotify_followers: artist.spotifyFollowers || 0
+        });
+    }
+
     // Navigate using database ID if available, otherwise use Spotify ID
     if (artist.id && artist.id > 0) {
         router.visit(`/artist/${artist.id}`);
@@ -251,6 +267,9 @@ const breadcrumbs = [
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            <!-- Recent Searches -->
+            <RecentSearches v-if="!hasSearched && !isLoading && searchQuery.length < 2" />
 
             <!-- Filter Panel -->
             <Card v-if="showFilters">
