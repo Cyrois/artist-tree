@@ -24,7 +24,6 @@ interface ApiArtist {
     score: number;
     lineup_tier: TierType;
     lineup_suggested_tier: TierType;
-    lineup_tier_override: boolean;
     // Map properties for compatibility with TierSection if needed
     genre?: string[]; 
     tierSuggestion?: TierType;

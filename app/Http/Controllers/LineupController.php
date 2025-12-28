@@ -69,7 +69,6 @@ class LineupController extends Controller
                 // Add pivot data
                 $artistData['lineup_tier'] = $tier;
                 $artistData['lineup_suggested_tier'] = $artist->pivot->suggested_tier;
-                $artistData['lineup_tier_override'] = (bool) $artist->pivot->tier_override;
                 
                 $artistsByTier[$tier][] = $artistData;
             }

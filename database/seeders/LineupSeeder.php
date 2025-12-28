@@ -44,7 +44,6 @@ class LineupSeeder extends Seeder
             $lineup->artists()->attach($artist->id, [
                 'tier' => $tier,
                 'suggested_tier' => $tier,
-                'tier_override' => false,
             ]);
         }
     }
