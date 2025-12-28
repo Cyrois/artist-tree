@@ -37,8 +37,8 @@ export function useRecentSearches() {
         });
 
         // Limit to 12 items (covers most grid layouts)
-        if (recentSearches.value.length > 12) {
-            recentSearches.value = recentSearches.value.slice(0, 12);
+        if (recentSearches.value.length > MAX_RECENT_SEARCHES) {
+            recentSearches.value = recentSearches.value.slice(0, MAX_RECENT_SEARCHES);
         }
     };
 
