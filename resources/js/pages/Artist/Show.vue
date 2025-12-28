@@ -22,6 +22,7 @@ import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -48,6 +49,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { artist: artistBreadcrumbs } = useBreadcrumbs();
 
 // State
 const artist = ref<ApiArtist | null>(null);
@@ -89,11 +92,12 @@ const formatNumber = (num: number | null | undefined): string => {
     return num.toString();
 };
 
-const breadcrumbs = computed(() => [
-    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
-    { title: trans('common.breadcrumb_search_artists'), href: '/search' },
-    { title: artist.value?.name ?? trans('artists.show_page_title'), href: `/artist/${props.id}` },
-]);
+const breadcrumbs = computed(() => 
+    artistBreadcrumbs(
+        artist.value?.name ?? trans('artists.show_page_title'), 
+        props.id
+    )
+);
 
 const pageTitle = computed(() =>
     artist.value ? `${artist.value.name} - Artist-Tree` : `${trans('artists.show_page_title')} - Artist-Tree`
@@ -129,13 +133,13 @@ const pageTitle = computed(() =>
         <!-- Artist Content -->
         <div v-else-if="artist" class="space-y-6">
             <!-- Back button -->
-            <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary">
+            <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary hover:underline">
                 <ArrowLeft class="w-4 h-4 mr-2" />
                 {{ $t('artists.show_back_button') }}
             </Button>
 
             <!-- Artist Header -->
-            <Card>
+            <Card class="py-0">
                 <CardContent class="p-6">
                     <div class="flex flex-col md:flex-row gap-6">
                         <!-- Artist Image -->
@@ -233,7 +237,7 @@ const pageTitle = computed(() =>
 
                 <!-- Quick Metrics Row -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
                             <div class="mt-1">
@@ -241,19 +245,19 @@ const pageTitle = computed(() =>
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_spotify_followers') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_youtube_subs') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card class="py-0">
                         <CardContent class="p-4">
                             <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_instagram') }}</p>
                             <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>

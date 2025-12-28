@@ -17,12 +17,14 @@ import type { Artist, TierType } from '@/data/types';
 import { ArrowLeft, Search, Layers, Scale, Download } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 interface Props {
     id: number;
 }
 
 const props = defineProps<Props>();
+const { lineup: lineupBreadcrumbs } = useBreadcrumbs();
 
 const lineup = computed(() => getLineupById(props.id));
 const stats = computed(() => lineup.value ? getLineupStats(lineup.value) : null);
@@ -84,11 +86,12 @@ function exitCompareMode() {
     selectedArtistIds.value = [];
 }
 
-const breadcrumbs = computed(() => [
-    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
-    { title: trans('common.breadcrumb_my_lineups'), href: '/lineups' },
-    { title: lineup.value?.name ?? trans('lineups.show_page_title'), href: `/lineups/${props.id}` },
-]);
+const breadcrumbs = computed(() => 
+    lineupBreadcrumbs(
+        lineup.value?.name ?? trans('lineups.show_page_title'), 
+        props.id
+    )
+);
 </script>
 
 <template>
