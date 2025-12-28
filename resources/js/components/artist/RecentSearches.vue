@@ -16,11 +16,6 @@ const handleArtistClick = (artist: RecentSearchArtist) => {
     }
 };
 
-const handleClear = () => {
-    if (confirm(trans('artists.confirm_clear_history') || 'Are you sure you want to clear your search history?')) {
-        clearSearches();
-    }
-};
 </script>
 
 <template>
@@ -28,12 +23,8 @@ const handleClear = () => {
         <div class="flex items-center justify-between">
             <h3 class="font-semibold text-lg flex items-center gap-2">
                 <History class="w-5 h-5" />
-                {{ $t('artists.recent_searches_title') || 'Recent Searches' }}
+                {{ $t('artists.recent_searches_title') }}
             </h3>
-            <Button variant="ghost" size="sm" class="text-muted-foreground hover:text-destructive h-8 px-2" @click="handleClear">
-                <Trash2 class="w-4 h-4 mr-1.5" />
-                <span class="text-xs">{{ $t('common.clear') || 'Clear' }}</span>
-            </Button>
         </div>
 
         <!-- Grid Layout (Matching ArtistSimilarArtists.vue) -->
