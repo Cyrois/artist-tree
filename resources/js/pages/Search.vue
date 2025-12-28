@@ -226,10 +226,9 @@ const sortOptions = [
     { value: 'listeners', label: trans('artists.search_sort_listeners') },
 ];
 
-const breadcrumbs = [
-    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
-    { title: trans('common.breadcrumb_search_artists'), href: '/search' },
-];
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+const { search: searchBreadcrumbs } = useBreadcrumbs();
+const breadcrumbs = searchBreadcrumbs();
 </script>
 
 <template>

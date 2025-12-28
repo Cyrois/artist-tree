@@ -7,17 +7,16 @@ import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
 import { Plus } from 'lucide-vue-next';
 import { trans } from 'laravel-vue-i18n';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 const lineups = getLineups();
+const { lineups: lineupsBreadcrumbs } = useBreadcrumbs();
 
 function handleLineupClick(lineup: Lineup) {
     router.visit(`/lineups/${lineup.id}`);
 }
 
-const breadcrumbs = [
-    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
-    { title: trans('common.breadcrumb_my_lineups'), href: '/lineups' },
-];
+const breadcrumbs = lineupsBreadcrumbs();
 </script>
 
 <template>

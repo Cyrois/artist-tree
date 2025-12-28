@@ -22,6 +22,7 @@ import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -48,6 +49,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { artist: artistBreadcrumbs } = useBreadcrumbs();
 
 // State
 const artist = ref<ApiArtist | null>(null);
@@ -89,11 +92,12 @@ const formatNumber = (num: number | null | undefined): string => {
     return num.toString();
 };
 
-const breadcrumbs = computed(() => [
-    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
-    { title: trans('common.breadcrumb_search_artists'), href: '/search' },
-    { title: artist.value?.name ?? trans('artists.show_page_title'), href: `/artist/${props.id}` },
-]);
+const breadcrumbs = computed(() => 
+    artistBreadcrumbs(
+        artist.value?.name ?? trans('artists.show_page_title'), 
+        props.id
+    )
+);
 
 const pageTitle = computed(() =>
     artist.value ? `${artist.value.name} - Artist-Tree` : `${trans('artists.show_page_title')} - Artist-Tree`
