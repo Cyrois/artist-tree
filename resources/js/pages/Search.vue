@@ -12,7 +12,7 @@ import RecentSearches from '@/components/artist/RecentSearches.vue';
 import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, ChevronDown, TrendingUp, Loader2, AlertCircle } from 'lucide-vue-next';
+import { Search, SlidersHorizontal, ChevronDown, Loader2, AlertCircle } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';

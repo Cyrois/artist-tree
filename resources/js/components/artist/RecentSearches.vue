@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Card } from '@/components/ui/card';
-import { History, Trash2 } from 'lucide-vue-next';
+import { History } from 'lucide-vue-next';
 import { useRecentSearches, type RecentSearchArtist } from '@/composables/useRecentSearches';
-import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
 
-const { recentSearches, clearSearches } = useRecentSearches();
+const { recentSearches } = useRecentSearches();
 
 const handleArtistClick = (artist: RecentSearchArtist) => {
     if (artist.id && artist.id > 0) {
