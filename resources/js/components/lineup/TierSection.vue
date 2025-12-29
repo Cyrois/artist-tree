@@ -105,12 +105,6 @@ function isSelected(artistId: number) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="font-medium truncate">{{ artist.name }}</span>
-                            <!-- Suggested tier indicator -->
-                            <Sparkles
-                                v-if="artist.tierSuggestion && artist.tierSuggestion !== tier"
-                                class="w-4 h-4 text-amber-500"
-                                v-tooltip="'Suggested: ' + tierConfig[artist.tierSuggestion].label"
-                            />
                         </div>
                         <div class="flex items-center gap-2 mt-1">
                             <div v-if="artist.genre && artist.genre.length > 0" class="flex flex-wrap gap-1">

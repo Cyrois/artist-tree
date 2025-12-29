@@ -241,7 +241,6 @@ const breadcrumbs = computed(() =>
                         :key="tier"
                         :tier="tier"
                         :artists="getArtistsByTier(tier)"
-                        :statuses="props.lineup.artistStatuses"
                         :compare-mode="compareMode"
                         :selected-artist-ids="selectedArtistIds"
                         @select-artist="handleArtistSelect"
