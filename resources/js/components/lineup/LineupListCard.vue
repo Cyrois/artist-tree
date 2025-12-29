@@ -2,9 +2,7 @@
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ChevronRight, Lightbulb, Mail, DollarSign, Plane, Leaf, Check, X } from 'lucide-vue-next';
+import { ChevronRight } from 'lucide-vue-next';
 
 interface Artist {
     id: number;
@@ -81,7 +79,10 @@ function getRandomColor(name: string) {
 </script>
 
 <template>
-    <Card class="overflow-hidden hover:shadow-lg transition-all duration-200 py-0 group">
+    <Card 
+        class="overflow-hidden hover:shadow-lg transition-all duration-200 py-0 group cursor-pointer"
+        @click="router.visit(`/lineups/${lineup.id}`)"
+    >
         <div class="p-6">
             <!-- Header -->
             <div class="flex justify-between items-start mb-2">
@@ -145,8 +146,7 @@ function getRandomColor(name: string) {
 
         <!-- Footer Action -->
         <div 
-            class="p-4 border-t flex items-center justify-between group-hover:bg-muted/50 cursor-pointer transition-all duration-200"
-            @click="router.visit(`/lineups/${lineup.id}`)"
+            class="p-4 border-t flex items-center justify-between group-hover:bg-muted/50 transition-all duration-200"
         >
             <span class="text-primary font-medium transition-all duration-200 group-hover:text-foreground group-hover:underline underline-offset-4 decoration-2">
                 View & Edit

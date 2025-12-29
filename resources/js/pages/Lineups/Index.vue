@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import LineupListCard from '@/components/lineup/LineupListCard.vue';
