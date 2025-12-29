@@ -30,7 +30,7 @@ class ArtistResource extends JsonResource
             'score' => $scoringService->calculateScore($this->resource),
 
             // Include metrics if loaded
-            'metrics' => $this->when($this->relationLoaded('metrics'), function () {
+            'metrics' => $this->when($this->relationLoaded('metrics') && $this->metrics, function () {
                 return [
                     'spotify_popularity' => $this->metrics->spotify_popularity,
                     'spotify_followers' => $this->metrics->spotify_followers,
