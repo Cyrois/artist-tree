@@ -23,10 +23,8 @@ interface ApiArtist {
     image_url: string | null;
     score: number;
     lineup_tier: TierType;
-    lineup_suggested_tier: TierType;
     // Map properties for compatibility with TierSection if needed
     genre?: string[]; 
-    tierSuggestion?: TierType;
 }
 
 interface Props {
@@ -70,7 +68,6 @@ function getArtistsByTier(tier: TierType) {
         ...artist,
         image: artist.image_url, // Map image_url for ArtistAvatar
         genre: artist.genres || [], // Map genres for TierSection
-        tierSuggestion: artist.lineup_suggested_tier // Map suggestion
     }));
 }
 

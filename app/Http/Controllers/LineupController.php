@@ -68,7 +68,6 @@ class LineupController extends Controller
                 $artistData = (new ArtistResource($artist))->resolve();
                 // Add pivot data
                 $artistData['lineup_tier'] = $tier;
-                $artistData['lineup_suggested_tier'] = $artist->pivot->suggested_tier;
                 
                 $artistsByTier[$tier][] = $artistData;
             }
