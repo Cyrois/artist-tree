@@ -28,10 +28,10 @@ const props = defineProps<{
 const tiers = ['headliner', 'sub_headliner', 'mid_tier', 'undercard'];
 
 const tierColors: Record<string, string> = {
-    headliner: 'bg-black',
-    sub_headliner: 'bg-gray-700',
-    mid_tier: 'bg-gray-400',
-    undercard: 'bg-gray-300',
+    headliner: 'bg-black dark:bg-white',
+    sub_headliner: 'bg-gray-700 dark:bg-gray-400',
+    mid_tier: 'bg-gray-400 dark:bg-gray-600',
+    undercard: 'bg-gray-300 dark:bg-gray-800',
 };
 
 const artistsByTier = computed(() => {
@@ -74,28 +74,25 @@ function getRandomColor(name: string) {
 
 <template>
     <Card 
-        class="overflow-hidden hover:shadow-lg transition-all duration-200 py-0 group cursor-pointer"
+        class="flex flex-col h-full overflow-hidden hover:shadow-lg transition-all duration-200 py-0 group cursor-pointer gap-0"
         @click="router.visit(`/lineups/${lineup.id}`)"
     >
-        <div class="p-6">
+        <div class="pt-6 px-6 pb-4 flex-1">
             <!-- Header -->
             <div class="flex justify-between items-start mb-2">
-                <div>
-                    <h3 class="text-xl font-bold text-foreground">{{ lineup.name }}</h3>
-                    <p class="text-muted-foreground text-sm mt-1">{{ lineup.description }}</p>
-                    <div class="text-xs text-muted-foreground mt-4">
-                        {{ $t('lineups.card_created') }} {{ lineup.created_at }} <span class="mx-2">&bull;</span> {{ $t('lineups.card_updated') }} {{ lineup.updated_at }}
-                    </div>
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-foreground leading-tight">{{ lineup.name }}</h3>
+                    <p class="text-muted-foreground text-sm mt-1 min-h-[1.25rem]">{{ lineup.description }}</p>
                 </div>
-                <div class="text-right">
+                <div class="text-right ml-4">
                     <div class="text-3xl font-bold">{{ lineup.total_artists }}</div>
-                    <div class="text-xs text-muted-foreground uppercase tracking-wide">{{ $t('lineups.card_artists') }}</div>
+                    <div class="text-xs text-muted-foreground uppercase tracking-wide leading-none">{{ $t('lineups.card_artists') }}</div>
                 </div>
             </div>
 
             <!-- Tiers List -->
-            <div class="space-y-4 mt-8">
-                <div v-for="tier in tiers" :key="tier" class="flex items-center justify-between">
+            <div class="space-y-4 mt-8 flex flex-col justify-between">
+                <div v-for="tier in tiers" :key="tier" class="flex items-center justify-between h-8">
                     <div class="flex items-center gap-4 flex-1">
                         <div class="w-2 h-2 rounded-full" :class="tierColors[tier]"></div> <!-- Bullet -->
                         <span class="text-xs font-bold text-muted-foreground w-24 uppercase tracking-wider">
@@ -126,7 +123,6 @@ function getRandomColor(name: string) {
                                     +{{ artistsByTier[tier].length - 4 }}
                                 </div>
                             </template>
-                            <span v-else class="text-xs text-muted-foreground italic pl-2">{{ $t('lineups.card_none') }}</span>
                         </div>
                     </div>
                     
@@ -134,6 +130,10 @@ function getRandomColor(name: string) {
                     <div class="text-sm font-medium text-muted-foreground">
                         {{ artistsByTier[tier].length }}
                     </div>
+                </div>
+                
+                <div class="text-xs text-muted-foreground mt-4 text-right">
+                    {{ $t('lineups.card_updated') }} {{ lineup.updated_at }}
                 </div>
             </div>
         </div>

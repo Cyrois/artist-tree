@@ -3,7 +3,9 @@ import { Head } from '@inertiajs/vue3';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Button } from '@/components/ui/button';
 import LineupListCard from '@/components/lineup/LineupListCard.vue';
+import CreateLineupModal from '@/components/lineup/CreateLineupModal.vue';
 import { Plus } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Artist {
     id: number;
@@ -30,9 +32,10 @@ const breadcrumbs = [
     { title: 'My Lineups', href: '/lineups' }
 ];
 
+const showCreateModal = ref(false);
+
 function createLineup() {
-    // Stub for create action
-    console.log('Create lineup clicked');
+    showCreateModal.value = true;
 }
 </script>
 
@@ -46,7 +49,11 @@ function createLineup() {
                     <h1 class="text-3xl font-bold tracking-tight">My Lineups</h1>
                     <p class="text-lg text-muted-foreground">Manage your festival lineups and artist placements</p>
                 </div>
-                <Button size="lg" class="gap-2" disabled @click="createLineup">
+                <Button 
+                    size="lg" 
+                    class="gap-2 bg-[#EE6055] hover:bg-[#EE6055]/90 text-white" 
+                    @click="createLineup"
+                >
                     <Plus class="w-5 h-5" />
                     Create Lineup
                 </Button>
@@ -61,5 +68,7 @@ function createLineup() {
                  />
             </div>
         </div>
+
+        <CreateLineupModal v-model:open="showCreateModal" />
     </MainLayout>
 </template>
