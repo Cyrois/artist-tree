@@ -74,13 +74,10 @@ class LineupController extends Controller
         }
         
         // Calculate avg score
-        $totalScore = 0;
+        // Calculate avg score
         $artistCount = $lineup->artists->count();
         $scoringService = app(ArtistScoringService::class);
-        
-        foreach ($lineup->artists as $artist) {
-             $totalScore += $scoringService->calculateScore($artist);
-        }
+        $totalScore = $lineup->artists->sum(fn ($artist) => $scoringService->calculateScore($artist));
         
         $avgScore = $artistCount > 0 ? round($totalScore / $artistCount) : 0;
 
