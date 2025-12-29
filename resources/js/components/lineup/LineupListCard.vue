@@ -26,12 +26,6 @@ const props = defineProps<{
 }>();
 
 const tiers = ['headliner', 'sub_headliner', 'mid_tier', 'undercard'];
-const tierLabels: Record<string, string> = {
-    headliner: 'HEADLINER',
-    sub_headliner: 'SUB-HEADLINER',
-    mid_tier: 'MID-TIER',
-    undercard: 'UNDERCARD',
-};
 
 const tierColors: Record<string, string> = {
     headliner: 'bg-black',
@@ -90,12 +84,12 @@ function getRandomColor(name: string) {
                     <h3 class="text-xl font-bold text-foreground">{{ lineup.name }}</h3>
                     <p class="text-muted-foreground text-sm mt-1">{{ lineup.description }}</p>
                     <div class="text-xs text-muted-foreground mt-4">
-                        Created {{ lineup.created_at }} <span class="mx-2">&bull;</span> Updated {{ lineup.updated_at }}
+                        {{ $t('lineups.card_created') }} {{ lineup.created_at }} <span class="mx-2">&bull;</span> {{ $t('lineups.card_updated') }} {{ lineup.updated_at }}
                     </div>
                 </div>
                 <div class="text-right">
                     <div class="text-3xl font-bold">{{ lineup.total_artists }}</div>
-                    <div class="text-xs text-muted-foreground uppercase tracking-wide">artists</div>
+                    <div class="text-xs text-muted-foreground uppercase tracking-wide">{{ $t('lineups.card_artists') }}</div>
                 </div>
             </div>
 
@@ -105,7 +99,7 @@ function getRandomColor(name: string) {
                     <div class="flex items-center gap-4 flex-1">
                         <div class="w-2 h-2 rounded-full" :class="tierColors[tier]"></div> <!-- Bullet -->
                         <span class="text-xs font-bold text-muted-foreground w-24 uppercase tracking-wider">
-                            {{ tierLabels[tier].replace('_', ' ') }}
+                            {{ $t('lineups.tier_' + tier) }}
                         </span>
                         
                         <!-- Avatars -->
@@ -132,7 +126,7 @@ function getRandomColor(name: string) {
                                     +{{ artistsByTier[tier].length - 4 }}
                                 </div>
                             </template>
-                            <span v-else class="text-xs text-muted-foreground italic pl-2">None</span>
+                            <span v-else class="text-xs text-muted-foreground italic pl-2">{{ $t('lineups.card_none') }}</span>
                         </div>
                     </div>
                     
@@ -149,7 +143,7 @@ function getRandomColor(name: string) {
             class="p-4 border-t flex items-center justify-between group-hover:bg-muted/50 transition-all duration-200"
         >
             <span class="text-primary font-medium transition-all duration-200 group-hover:text-foreground group-hover:underline underline-offset-4 decoration-2">
-                View & Edit
+                {{ $t('lineups.card_view_and_edit') }}
             </span>
             <ChevronRight class="w-4 h-4 text-primary transition-all duration-200 group-hover:text-foreground group-hover:translate-x-1" />
         </div>
