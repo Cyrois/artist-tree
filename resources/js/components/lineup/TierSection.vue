@@ -14,7 +14,7 @@ import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { tierConfig } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, Sparkles, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 
