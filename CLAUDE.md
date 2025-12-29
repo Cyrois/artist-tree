@@ -216,7 +216,6 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 ```sql
 - tier (enum) -- current tier (may be manually set)
 - suggested_tier (enum) -- what algorithm calculated
-- tier_override (boolean, default false) -- user manually changed?
 ```
 
 **Suggested Tier Calculation Logic:**
@@ -228,15 +227,14 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 
 **Manual Override Flow:**
 1. Add artist → Algorithm calculates `suggested_tier`
-2. Set `tier = suggested_tier`, `tier_override = false`
-3. User drags artist to different tier → Set `tier_override = true`
+2. Set `tier = suggested_tier`
+3. User drags artist to different tier → Update `tier` to new value
 4. Visual indicator shows manually placed artists
-5. "Reset to Suggested" button → Copy `suggested_tier` to `tier`, set `tier_override = false`
+5. "Reset to Suggested" button → Copy `suggested_tier` to `tier`
 
 **Recalculation Behavior:**
 - When artist added/removed: Recalculate ALL `suggested_tier` values
-- Artists with `tier_override = false` → Update `tier` to new `suggested_tier`
-- Artists with `tier_override = true` → Keep current `tier`, update only `suggested_tier`
+- Artists with manual placements might need UI indication if their tier differs from suggested
 - This preserves manual placements while updating auto-assigned artists
 
 ### External API Integration
@@ -345,7 +343,6 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 - `artist_metrics.score` (for sorting)
 - `lineups.organization_id` (foreign key)
 - `lineup_artists` (composite unique: lineup_id + artist_id)
-- `lineup_artists.tier_override` (for filtering manual vs auto placements)
 
 **JSON Columns:**
 - `artists.genre` (array of strings)

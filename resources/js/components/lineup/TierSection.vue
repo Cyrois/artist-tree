@@ -11,17 +11,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import { tierConfig, statusConfig, formatCurrency } from '@/data/constants';
-import type { Artist, TierType, ArtistStatus } from '@/data/types';
+import { tierConfig } from '@/data/constants';
+import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, Sparkles, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight, MoreHorizontal, Layers, Scale, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     tier: TierType;
     artists: Artist[];
-    statuses: Record<number, ArtistStatus>;
     compareMode?: boolean;
     selectedArtistIds?: number[];
 }
@@ -39,6 +38,12 @@ const emit = defineEmits<{
 
 const isOpen = ref(true);
 const config = computed(() => tierConfig[props.tier]);
+
+const averageScore = computed(() => {
+    if (!props.artists.length) return 0;
+    const sum = props.artists.reduce((acc, artist) => acc + (artist.score || 0), 0);
+    return Math.round(sum / props.artists.length);
+});
 
 function isSelected(artistId: number) {
     return props.selectedArtistIds.includes(artistId);
@@ -59,6 +64,12 @@ function isSelected(artistId: number) {
                     </span>
                     <Badge variant="secondary">{{ artists.length }}</Badge>
                 </div>
+                <ScoreBadge 
+                    v-if="artists.length > 0" 
+                    :score="averageScore" 
+                    size="sm" 
+                    class="mr-2"
+                />
             </div>
         </CollapsibleTrigger>
 
@@ -94,29 +105,19 @@ function isSelected(artistId: number) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="font-medium truncate">{{ artist.name }}</span>
-                            <!-- Status indicator -->
-                            <span
-                                v-if="statuses[artist.id]"
-                                class="text-xs px-2 py-0.5 rounded-full"
-                                :style="{
-                                    backgroundColor: statusConfig[statuses[artist.id].status]?.bgColor,
-                                    color: statusConfig[statuses[artist.id].status]?.color
-                                }"
-                            >
-                                {{ statusConfig[statuses[artist.id].status]?.label }}
-                            </span>
-                            <!-- Suggested tier indicator -->
-                            <Sparkles
-                                v-if="artist.tierSuggestion !== tier"
-                                class="w-4 h-4 text-amber-500"
-                                v-tooltip="'Suggested: ' + tierConfig[artist.tierSuggestion].label"
-                            />
                         </div>
-                        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{{ artist.genre.slice(0, 2).join(', ') }}</span>
-                            <span v-if="statuses[artist.id]?.fee">
-                                · {{ formatCurrency(statuses[artist.id].fee!) }}
-                            </span>
+                        <div class="flex items-center gap-2 mt-1">
+                            <div v-if="artist.genre && artist.genre.length > 0" class="flex flex-wrap gap-1">
+                                <Badge 
+                                    v-for="genre in artist.genre.slice(0, 3)" 
+                                    :key="genre"
+                                    variant="secondary"
+                                    class="text-[10px] px-1.5 py-0 h-5 font-normal"
+                                >
+                                    {{ genre }}
+                                </Badge>
+                                <span v-if="artist.genre.length > 3" class="text-xs text-muted-foreground">+{{ artist.genre.length - 3 }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -156,3 +157,4 @@ function isSelected(artistId: number) {
         </CollapsibleContent>
     </Collapsible>
 </template>
+

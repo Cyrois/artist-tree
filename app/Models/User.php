@@ -49,4 +49,11 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    public function lineups()
+    {
+        return $this->belongsToMany(Lineup::class, 'lineup_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
 }
