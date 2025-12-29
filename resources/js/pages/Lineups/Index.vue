@@ -25,7 +25,7 @@ interface Lineup {
 }
 
 defineProps<{
-    lineups: Lineup[];
+    lineups: { data: Lineup[] };
 }>();
 
 const breadcrumbs = [
@@ -62,7 +62,7 @@ function createLineup() {
             <!-- Lineup Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                  <LineupListCard 
-                    v-for="lineup in lineups" 
+                    v-for="lineup in lineups.data" 
                     :key="lineup.id" 
                     :lineup="lineup" 
                  />

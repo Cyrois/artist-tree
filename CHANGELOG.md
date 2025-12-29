@@ -19,6 +19,42 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Lineup List Resource Conversion (2025-12-29)
+**Summary:** Converted the Lineup list response to use a standard API Resource class, optimized database queries, and aligned frontend implementation.
+- **Backend:**
+  - Created `LineupResource` to standardize the API response structure.
+  - Updated `LineupController::index` to use `LineupResource::collection` and added `withCount('artists')` to fix N+1 query performance issues.
+- **Frontend:**
+  - Updated `Lineups/Index.vue` to handle the `data` wrapper in the API response.
+- **Testing:**
+  - Updated `LineupControllerTest` to generate real database records instead of relying on non-existent mocks, and verified the correct response structure.
+
+### Add Artist to Lineup (2025-12-29)
+**Summary:** Implemented the ability to search for and add artists to a specific lineup.
+- **Backend:**
+  - Added `AddArtistToLineupRequest` for validation.
+  - Implemented `LineupController::addArtist` to attach artists to lineups (defaulting to 'undercard').
+  - Added `POST /lineups/{lineup}/artists` route.
+- **Frontend:**
+  - Created `AddArtistModal.vue` component with artist search and "Add" functionality.
+  - Integrated modal into `Lineups/Show.vue` with an "Add Artist" button.
+- **Testing:**
+  - Added feature tests for adding artists, handling duplicates, and validation.
+
+### Create Lineup Flow (2025-12-29)
+**Summary:** Implemented the "Create New Lineup" flow, including backend API, validation, and frontend modal UI.
+- **Backend:**
+  - Added `StoreLineupRequest` for validation.
+  - Implemented `LineupController::store` to create lineups and associate the user as 'owner'.
+  - Updated `LineupController::index` to fetch real lineups from the database with a mock fallback.
+  - Added `POST /lineups` route.
+- **Frontend:**
+  - Created `CreateLineupModal.vue` component matching the design requirements.
+  - Integrated modal into `Lineups/Index.vue` page.
+  - Enabled the "Create Lineup" button.
+- **Testing:**
+  - Added feature tests for lineup creation and validation in `LineupControllerTest.php`.
+
 ### Lineup Schema Refactor (Many-to-Many) (2025-12-28)
 **Summary:** Refactored the relationship between Users and Lineups from One-to-Many to Many-to-Many to support shared lineup access.
 - **Database:**
