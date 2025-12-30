@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('lineups/{lineup}', [LineupController::class, 'destroy'])->name('lineups.destroy');
     Route::get('lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
     Route::post('lineups/{lineup}/artists', [LineupController::class, 'addArtist'])->name('lineups.artists.store');
+    Route::delete('lineups/{lineup}/artists/{artist}', [LineupController::class, 'removeArtist'])->name('lineups.artists.destroy');
     // Settings routes are in routes/settings.php
 });
 

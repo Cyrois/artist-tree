@@ -76,6 +76,12 @@ class LineupController extends Controller
         return redirect()->back();
     }
 
+        if ($lineup->artists()->detach($artist->id)) {
+            return redirect()->back()->with('success', 'Artist removed successfully.');
+        }
+
+        return redirect()->back();
+
     public function show($id)
     {
         $lineup = Lineup::with(['artists.metrics'])->findOrFail($id);

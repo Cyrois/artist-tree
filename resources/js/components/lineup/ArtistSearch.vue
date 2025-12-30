@@ -9,9 +9,9 @@ import { useDebounceFn } from '@vueuse/core';
 import {
     Check,
     ChevronRight,
+    ExternalLink,
     Layers,
     Loader2,
-    Plus,
     Scale,
     Search,
     X,
@@ -91,6 +91,14 @@ function closeSearch() {
 
 function handleViewAllResults() {
     router.visit(`/search?q=${encodeURIComponent(searchQuery.value)}`);
+}
+
+function navigateToArtist(artist: SearchResultArtist) {
+    if (artist.id) {
+        router.visit(`/artist/${artist.id}`);
+    } else {
+        router.visit(`/search?q=${encodeURIComponent(artist.name)}`);
+    }
 }
 </script>
 
@@ -209,7 +217,11 @@ function handleViewAllResults() {
                     <div
                         v-for="artist in displayedResults"
                         :key="artist.spotify_id"
-                        class="flex items-center justify-between p-3 transition-colors hover:bg-muted/50"
+                        class="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-muted/50"
+                        @click="
+                            !isArtistInLineup(artist) &&
+                                emit('add-artist', artist)
+                        "
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-3">
                             <img
@@ -246,29 +258,30 @@ function handleViewAllResults() {
                                 "
                             />
 
-                            <Button
-                                v-if="!isArtistInLineup(artist)"
-                                size="sm"
-                                variant="ghost"
-                                class="h-8 w-8 p-0"
-                                :disabled="!!addingArtistId"
-                                @click="emit('add-artist', artist)"
-                            >
-                                <Loader2
-                                    v-if="
-                                        addingArtistId ===
-                                        (artist.id || artist.spotify_id)
-                                    "
-                                    class="h-4 w-4 animate-spin"
-                                />
-                                <Plus v-else class="h-4 w-4" />
-                            </Button>
                             <div
-                                v-else
+                                v-if="
+                                    addingArtistId ===
+                                    (artist.id || artist.spotify_id)
+                                "
+                                class="flex h-8 w-8 items-center justify-center"
+                            >
+                                <Loader2 class="h-4 w-4 animate-spin" />
+                            </div>
+                            <div
+                                v-else-if="isArtistInLineup(artist)"
                                 class="flex h-8 w-8 items-center justify-center"
                             >
                                 <Check class="h-4 w-4 text-green-500" />
                             </div>
+
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                class="h-8 w-8 p-0"
+                                @click.stop="navigateToArtist(artist)"
+                            >
+                                <ExternalLink class="h-4 w-4" />
+                            </Button>
                         </div>
                     </div>
                 </div>

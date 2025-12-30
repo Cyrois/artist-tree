@@ -22,6 +22,7 @@ import { trans } from 'laravel-vue-i18n';
 import {
     ChevronDown,
     ChevronRight,
+    ExternalLink,
     Layers,
     MoreHorizontal,
     Scale,
@@ -103,17 +104,16 @@ function isSelected(artistId: number) {
                     :key="artist.id"
                     :class="
                         cn(
-                            'flex cursor-pointer items-center gap-4 p-4 transition-colors hover:bg-muted/30',
+                            'flex items-center gap-4 p-4 transition-colors',
+                            compareMode
+                                ? 'cursor-pointer hover:bg-muted/30'
+                                : '',
                             compareMode &&
                                 isSelected(artist.id) &&
                                 'border-l-4 border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral-bg))]',
                         )
                     "
-                    @click="
-                        compareMode
-                            ? emit('select-artist', artist)
-                            : emit('view-artist', artist)
-                    "
+                    @click="compareMode && emit('select-artist', artist)"
                 >
                     <!-- Checkbox for compare mode -->
                     <div v-if="compareMode" class="flex-shrink-0">
@@ -192,6 +192,12 @@ function isSelected(artistId: number) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" @click.stop>
+                            <DropdownMenuItem
+                                @click="emit('view-artist', artist)"
+                            >
+                                <ExternalLink class="mr-2 h-4 w-4" />
+                                {{ trans('lineups.tier_view_artist') }}
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 @click="emit('select-artist', artist)"
                             >

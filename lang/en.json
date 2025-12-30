@@ -119,6 +119,11 @@
     "lineups.delete_confirmation_label": "Type \"delete\" to confirm",
     "lineups.delete_button": "Delete Lineup",
 
+    "lineups.remove_artist_title": "Remove Artist",
+    "lineups.remove_artist_message_prefix": "Are you sure you want to remove",
+    "lineups.remove_artist_message_suffix": "from this lineup?",
+    "lineups.remove_artist_confirm": "Remove",
+
     "artists.recent_searches_title": "Recent Searches",
     "artists.recent_searches_empty": "No recent searches",
     "artists.show_page_title": "Artist",
@@ -326,6 +331,7 @@
     "lineups.tier_undercard": "UNDERCARD",
     "lineups.tier_add_to_stack": "Add to Stack",
     "lineups.tier_compare_artist": "Compare Artist",
+    "lineups.tier_view_artist": "View Artist",
     "lineups.tier_remove_from_lineup": "Remove from Lineup",
     "lineups.tier_empty_state": "No artists in this tier yet.",
 
