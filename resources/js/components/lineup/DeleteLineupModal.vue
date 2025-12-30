@@ -38,18 +38,12 @@ watch(
 function handleDelete() {
     if (confirmation.value.toLowerCase() !== 'delete') return;
 
-    // TODO: Connect to backend
-    // form.delete(`/lineups/${props.lineup.id}`, {
-    //     onSuccess: () => {
-    //         emit('update:open', false);
-    //     },
-    // });
-
-    // For now, just close modal as requested
-    console.log('Delete confirmed for lineup:', props.lineup.id);
-    emit('update:open', false);
-}
-</script>
+    form.delete(`/lineups/${props.lineup.id}`, {
+        onSuccess: () => {
+            emit('update:open', false);
+        },
+    });
+}</script>
 
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">

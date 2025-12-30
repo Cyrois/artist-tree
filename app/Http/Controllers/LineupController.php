@@ -48,6 +48,15 @@ class LineupController extends Controller
         return redirect()->back();
     }
 
+    public function destroy(Lineup $lineup)
+    {
+        Gate::authorize('delete', $lineup);
+
+        $lineup->delete();
+
+        return redirect()->route('lineups.index')->with('success', 'Lineup deleted successfully.');
+    }
+
     public function addArtist(Lineup $lineup, AddArtistToLineupRequest $request)
     {
         // Check authorization
