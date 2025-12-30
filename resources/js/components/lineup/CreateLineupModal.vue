@@ -104,7 +104,7 @@ function close() {
                     <Button
                         type="submit"
                         class="flex-1 h-14 text-base font-bold bg-[#EE6055] hover:bg-[#D54B41] text-white border-none shadow-lg shadow-[#EE6055]/20 transition-all active:scale-[0.98]"
-                        :disabled="form.processing || form.name.length < 5"
+            'name' => 'required|string|min:5|max:255',
                     >
                         {{ $t('lineups.create_submit_button') }}
                     </Button>
