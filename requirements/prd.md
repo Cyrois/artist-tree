@@ -417,9 +417,7 @@ artistStacks: {
 - **Components:** Backend + Frontend + Database (monolithic)
 - **No CORS needed:** Same origin (Inertia + API on same server)
 
----
-
-## Database Schema Updates
+### Database Schema Updates
 
 ### lineup_artists (updated)
 ```
@@ -427,8 +425,6 @@ artistStacks: {
 - lineup_id (foreign key)
 - artist_id (foreign key)
 - tier (enum: headliner, sub_headliner, supporting, emerging, local)
-- suggested_tier (enum)
-- tier_override (boolean)
 - booking_status (enum: idea, outreach, negotiating, contract_sent, contract_signed, confirmed, declined)
 - booking_fee (decimal, nullable)
 - stack_id (uuid, nullable) - Groups stacked artists
