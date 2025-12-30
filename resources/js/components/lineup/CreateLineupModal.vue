@@ -10,9 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const props = defineProps<{
-    open: boolean;
-}>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;

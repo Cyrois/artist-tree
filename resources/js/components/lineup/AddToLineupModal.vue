@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Check, Loader2, X } from 'lucide-vue-next';
 import { TierType } from '@/data/types';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
