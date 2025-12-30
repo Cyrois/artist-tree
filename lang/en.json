@@ -113,6 +113,12 @@
     "lineups.show_compare_clear": "Clear",
     "lineups.show_compare_submit": "Compare",
 
+    "lineups.delete_title": "Delete Lineup",
+    "lineups.delete_warning_title": "This action cannot be undone",
+    "lineups.delete_warning_message": "You are about to permanently delete \":name\" and all of its artist placements.",
+    "lineups.delete_confirmation_label": "Type \"delete\" to confirm",
+    "lineups.delete_button": "Delete Lineup",
+
     "artists.recent_searches_title": "Recent Searches",
     "artists.recent_searches_empty": "No recent searches",
     "artists.show_page_title": "Artist",

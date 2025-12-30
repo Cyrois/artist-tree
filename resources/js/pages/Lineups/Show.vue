@@ -2,6 +2,7 @@
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
+import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
 import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
@@ -96,6 +97,9 @@ const isAddingToLineup = ref(false);
 
 // Edit Lineup Modal State
 const isEditModalOpen = ref(false);
+
+// Delete Lineup Modal State
+const isDeleteModalOpen = ref(false);
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
@@ -333,8 +337,8 @@ const breadcrumbs = computed(() =>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        disabled
                                         class="text-destructive"
+                                        @click="isDeleteModalOpen = true"
                                     >
                                         <Trash2 class="mr-2 h-4 w-4" />
                                         {{ $t('common.action_delete') }}
@@ -450,6 +454,12 @@ const breadcrumbs = computed(() =>
         <EditLineupModal
             v-if="props.lineup"
             v-model:open="isEditModalOpen"
+            :lineup="props.lineup"
+        />
+
+        <DeleteLineupModal
+            v-if="props.lineup"
+            v-model:open="isDeleteModalOpen"
             :lineup="props.lineup"
         />
     </MainLayout>
