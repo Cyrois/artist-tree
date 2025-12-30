@@ -299,7 +299,7 @@ const breadcrumbs = computed(() =>
                         <div class="flex items-start gap-3">
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
-                                    <Button variant="outline" size="icon">
+                                    <Button variant="ghost" size="icon" class="h-8 w-8">
                                         <MoreHorizontal class="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
