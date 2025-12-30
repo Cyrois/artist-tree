@@ -408,8 +408,8 @@ const breadcrumbs = computed(() =>
                                 type="text"
                                 :placeholder="
                                     isSearchExpanded
-                                        ? 'Search artists...'
-                                        : 'Search and add artists...'
+                                        ? $t('dashboard.search_placeholder')
+                                        : $t('lineups.show_search_placeholder')
                                 "
                                 class="h-10 border-none pl-9 shadow-none transition-all focus-visible:ring-0"
                                 :class="
@@ -506,7 +506,7 @@ const breadcrumbs = computed(() =>
                             v-else-if="searchResults.length === 0"
                             class="py-8 text-center text-muted-foreground"
                         >
-                            No artists found matching "{{ searchQuery }}"
+                            {{ $t('lineups.show_search_no_results', { query: searchQuery }) }}
                         </div>
 
                         <div v-else>
@@ -596,7 +596,7 @@ const breadcrumbs = computed(() =>
                                     class="flex w-full cursor-pointer items-center justify-center gap-1 py-1 text-xs font-medium text-primary hover:underline"
                                     @click="handleViewAllResults"
                                 >
-                                    View all results for "{{ searchQuery }}"
+                                    {{ $t('lineups.show_search_view_all', { query: searchQuery }) }}
                                     <ChevronRight class="h-3 w-3" />
                                 </button>
                             </div>

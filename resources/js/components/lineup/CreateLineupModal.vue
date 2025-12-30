@@ -10,6 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+interface Props {
+    open: boolean;
+}
+
 defineProps<Props>();
 
 const emit = defineEmits<{
@@ -39,16 +43,16 @@ function close() {
     <Dialog :open="open" @update:open="emit('update:open', $event)">
         <DialogContent class="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl">
             <DialogHeader class="p-8 pb-0">
-                <DialogTitle class="text-2xl font-bold text-foreground">Create New Lineup</DialogTitle>
+                <DialogTitle class="text-2xl font-bold text-foreground">{{ $t('lineups.create_title') }}</DialogTitle>
             </DialogHeader>
 
             <form @submit.prevent="submit" class="p-8 pt-6 space-y-6">
                 <div class="space-y-2">
-                    <Label for="name" required class="text-sm font-semibold text-foreground">Lineup Name</Label>
+                    <Label for="name" required class="text-sm font-semibold text-foreground">{{ $t('lineups.create_name_label') }}</Label>
                     <Input
                         id="name"
                         v-model="form.name"
-                        placeholder="e.g., Summer Festival 2025"
+                        :placeholder="$t('lineups.create_name_placeholder')"
                         required
                         class="h-12 text-base border-2 focus-visible:ring-0 focus-visible:border-foreground transition-colors"
                     />
@@ -56,34 +60,34 @@ function close() {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="description" class="text-sm font-semibold text-foreground">Description (optional)</Label>
+                    <Label for="description" class="text-sm font-semibold text-foreground">{{ $t('lineups.create_description_label_optional') }}</Label>
                     <textarea
                         id="description"
                         v-model="form.description"
-                        placeholder="Brief description of this lineup..."
+                        :placeholder="$t('lineups.create_description_placeholder')"
                         class="flex min-h-[120px] w-full rounded-md border-2 border-input bg-transparent px-3 py-3 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                     ></textarea>
                     <div v-if="form.errors.description" class="text-xs text-destructive mt-1 font-medium">{{ form.errors.description }}</div>
                 </div>
 
                 <div class="bg-[#F8F9FA] dark:bg-muted/30 rounded-xl p-6 space-y-4">
-                    <p class="text-sm font-semibold text-foreground">Your lineup will have these tiers:</p>
+                    <p class="text-sm font-semibold text-foreground">{{ $t('lineups.create_tiers_intro') }}</p>
                     <div class="grid grid-cols-2 gap-y-3">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-black dark:bg-foreground"></div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">HEADLINER</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_headliner') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-gray-700 dark:bg-gray-400"></div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">SUB-HEADLINER</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_sub_headliner') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">MID-TIER</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_mid_tier') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-800"></div>
-                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">UNDERCARD</span>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_undercard') }}</span>
                         </div>
                     </div>
                 </div>
@@ -95,14 +99,14 @@ function close() {
                         class="flex-1 h-14 text-base font-bold bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#495057] dark:bg-muted dark:hover:bg-muted/80 dark:text-foreground border-none transition-all" 
                         @click="close"
                     >
-                        Cancel
+                        {{ $t('common.action_cancel') }}
                     </Button>
                     <Button
                         type="submit"
                         class="flex-1 h-14 text-base font-bold bg-[#EE6055] hover:bg-[#D54B41] text-white border-none shadow-lg shadow-[#EE6055]/20 transition-all active:scale-[0.98]"
                         :disabled="form.processing || form.name.length < 5"
                     >
-                        Create Lineup
+                        {{ $t('lineups.create_submit_button') }}
                     </Button>
                 </div>
             </form>

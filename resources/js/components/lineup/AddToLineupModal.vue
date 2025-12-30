@@ -30,13 +30,6 @@ const emit = defineEmits(['update:open', 'add']);
 
 const selectedTier = ref<TierType | null>(null);
 
-const tierLabels: Record<TierType, string> = {
-    headliner: 'Headliner',
-    sub_headliner: 'Sub-Headliner',
-    mid_tier: 'Mid-Tier',
-    undercard: 'Undercard',
-};
-
 // Reset selected tier when modal opens or suggested tier changes
 watch(() => props.open, (isOpen) => {
     if (isOpen) {
@@ -70,7 +63,7 @@ const displayScore = computed(() => {
         <DialogContent class="sm:max-w-md p-0 gap-0 overflow-hidden" :show-close-button="false">
             <div class="p-6 pb-2">
                 <div class="flex items-center justify-between mb-4">
-                     <DialogTitle class="text-xl font-bold">Select Tier</DialogTitle>
+                     <DialogTitle class="text-xl font-bold">{{ $t('lineups.add_modal_title') }}</DialogTitle>
                      <DialogClose class="rounded-md p-2 hover:bg-muted transition-colors opacity-70 hover:opacity-100">
                         <X class="w-4 h-4" />
                      </DialogClose>
@@ -87,7 +80,7 @@ const displayScore = computed(() => {
                         <ScoreBadge :score="displayScore" size="sm" />
                     </div>
                     <div class="text-right shrink-0">
-                        <p class="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Adding to</p>
+                        <p class="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{{ $t('lineups.add_modal_adding_to') }}</p>
                         <p class="text-sm font-medium truncate max-w-[120px]">{{ lineupName }}</p>
                     </div>
                 </div>
@@ -114,14 +107,14 @@ const displayScore = computed(() => {
                                 >
                                     <div v-if="selectedTier === tier" class="w-2.5 h-2.5 rounded-full bg-[#EE6055]" />
                                 </div>
-                                <span class="font-medium">{{ tierLabels[tier] }}</span>
+                                <span class="font-medium">{{ $t('lineups.tier_' + tier) }}</span>
                                 
                                 <Badge 
                                     v-if="suggestedTier === tier" 
                                     variant="secondary" 
                                     class="bg-orange-100 text-orange-700 hover:bg-orange-100 border-0 flex items-center gap-1 text-[10px] h-5 px-1.5"
                                 >
-                                    <span class="text-[8px]">✨</span> Suggested
+                                    <span class="text-[8px]">✨</span> {{ $t('lineups.add_modal_suggested') }}
                                 </Badge>
                             </div>
 
@@ -149,7 +142,7 @@ const displayScore = computed(() => {
                     @click="handleAdd"
                 >
                     <Loader2 v-if="isAdding" class="w-5 h-5 animate-spin mr-2" />
-                    {{ isAdding ? 'Adding...' : 'Add to Lineup' }}
+                    {{ isAdding ? $t('lineups.add_modal_adding') : $t('lineups.add_modal_submit') }}
                 </Button>
             </div>
         </DialogContent>
