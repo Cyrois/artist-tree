@@ -34,11 +34,16 @@ class LineupController extends Controller
     public function suggestTier(Request $request, Lineup $lineup, TierCalculationService $tierService, ArtistScoringService $scoringService)
     {
         $request->validate([
-            'artist_id' => 'required|exists:artists,id',
+            'artist_id' => 'required_without:score|nullable|exists:artists,id',
+            'score' => 'required_without:artist_id|numeric|min:0|max:100',
         ]);
 
-        $artist = Artist::findOrFail($request->artist_id);
-        $score = $scoringService->calculateScore($artist);
+        if ($request->has('score')) {
+            $score = (int) $request->score;
+        } else {
+            $artist = Artist::findOrFail($request->artist_id);
+            $score = $scoringService->calculateScore($artist);
+        }
         
         $suggestedTier = $tierService->suggestTier($lineup, $score);
 
@@ -91,7 +96,7 @@ class LineupController extends Controller
             ]);
         }
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Artist added to lineup successfully.');
     }
 
     public function removeArtist(Lineup $lineup, Artist $artist)

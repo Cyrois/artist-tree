@@ -104,9 +104,18 @@ const formatNumber = (num: number | null | undefined): string => {
 };
 
 function handleAddToLineupSubmit(data: any) {
-    // TODO: Implement API call to add artist to lineup
-    console.log('Adding artist to lineup:', data);
-    showAddToLineupModal.value = false;
+    router.post(
+        `/lineups/${data.lineupId}/artists`,
+        {
+            artist_id: data.artistId,
+            tier: data.tier,
+        },
+        {
+            onSuccess: () => {
+                showAddToLineupModal.value = false;
+            },
+        },
+    );
 }
 
 const breadcrumbs = computed(() =>

@@ -119,7 +119,7 @@ function handleSubmit() {
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">
         <DialogContent
-            class="gap-0 overflow-hidden p-0 sm:max-w-md"
+            class="gap-0 overflow-hidden p-0 sm:max-w-lg"
             :show-close-button="false"
         >
             <div class="p-6">
@@ -153,7 +153,7 @@ function handleSubmit() {
                 <!-- Artist Card -->
                 <div
                     v-if="artist"
-                    class="mb-6 flex items-center gap-4 rounded-xl border bg-muted/40 p-3"
+                    class="mb-6 flex items-center gap-3 rounded-xl border bg-muted/40 p-3"
                 >
                     <div
                         class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#EE6055] text-lg font-bold text-white"
@@ -170,7 +170,8 @@ function handleSubmit() {
                     </div>
                     <div class="min-w-0 flex-1">
                         <h3
-                            class="mb-1 truncate text-lg leading-tight font-bold"
+                            class="mb-1 text-lg leading-tight font-bold break-words"
+                            :title="artist.name"
                         >
                             {{ artist.name }}
                         </h3>
@@ -179,7 +180,10 @@ function handleSubmit() {
                             {{ Math.round(displayScore) }}
                         </p>
                     </div>
-                    <div v-if="step === 2 && selectedLineup" class="text-right">
+                    <div
+                        v-if="step === 2 && selectedLineup"
+                        class="shrink-0 text-right"
+                    >
                         <p
                             class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
                         >
