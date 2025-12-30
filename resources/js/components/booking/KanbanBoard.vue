@@ -1,10 +1,27 @@
 <script setup lang="ts">
-import { Card, CardContent } from '@/components/ui/card';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
-import { statusConfig, statusOrder, formatCurrency } from '@/data/constants';
-import { tierConfig } from '@/data/constants';
-import type { Artist, ArtistStatus, BookingStatus, TierType } from '@/data/types';
-import { Lightbulb, Mail, DollarSign, Send, FileSignature, CheckCircle, X } from 'lucide-vue-next';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    formatCurrency,
+    statusConfig,
+    statusOrder,
+    tierConfig,
+} from '@/data/constants';
+import type {
+    Artist,
+    ArtistStatus,
+    BookingStatus,
+    TierType,
+} from '@/data/types';
+import {
+    CheckCircle,
+    DollarSign,
+    FileSignature,
+    Lightbulb,
+    Mail,
+    Send,
+    X,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -59,48 +76,69 @@ function getArtistTier(artistId: number): TierType {
         <div
             v-for="status in statusOrder"
             :key="status"
-            class="flex-shrink-0 w-64"
+            class="w-64 flex-shrink-0"
         >
             <!-- Column Header -->
             <div
-                class="flex items-center gap-2 px-3 py-2 rounded-t-lg"
+                class="flex items-center gap-2 rounded-t-lg px-3 py-2"
                 :style="{ backgroundColor: statusConfig[status].bgColor }"
             >
                 <component
-                    :is="iconMap[statusConfig[status].icon as keyof typeof iconMap]"
-                    class="w-4 h-4"
+                    :is="
+                        iconMap[
+                            statusConfig[status].icon as keyof typeof iconMap
+                        ]
+                    "
+                    class="h-4 w-4"
                     :style="{ color: statusConfig[status].color }"
                 />
-                <span class="font-medium text-sm" :style="{ color: statusConfig[status].color }">
+                <span
+                    class="text-sm font-medium"
+                    :style="{ color: statusConfig[status].color }"
+                >
                     {{ statusConfig[status].label }}
                 </span>
-                <span class="ml-auto text-xs bg-white/50 px-2 py-0.5 rounded-full">
+                <span
+                    class="ml-auto rounded-full bg-white/50 px-2 py-0.5 text-xs"
+                >
                     {{ artistsByStatus[status].length }}
                 </span>
             </div>
 
             <!-- Column Content -->
-            <div class="min-h-[300px] bg-muted/30 rounded-b-lg p-2 space-y-2">
+            <div class="min-h-[300px] space-y-2 rounded-b-lg bg-muted/30 p-2">
                 <Card
                     v-for="artist in artistsByStatus[status]"
                     :key="artist.id"
-                    class="cursor-pointer hover:shadow-md transition-shadow"
+                    class="cursor-pointer transition-shadow hover:shadow-md"
                     @click="emit('artist-click', artist)"
                 >
                     <CardContent class="p-3">
                         <div class="flex items-center gap-3">
                             <ArtistAvatar :artist="artist" size="sm" />
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-sm truncate">{{ artist.name }}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium">
+                                    {{ artist.name }}
+                                </p>
                                 <p
                                     class="text-xs"
-                                    :style="{ color: tierConfig[getArtistTier(artist.id)].color }"
+                                    :style="{
+                                        color: tierConfig[
+                                            getArtistTier(artist.id)
+                                        ].color,
+                                    }"
                                 >
-                                    {{ tierConfig[getArtistTier(artist.id)].label }}
+                                    {{
+                                        tierConfig[getArtistTier(artist.id)]
+                                            .label
+                                    }}
                                 </p>
                             </div>
                         </div>
-                        <div v-if="statuses[artist.id]?.fee" class="mt-2 pt-2 border-t text-sm font-medium">
+                        <div
+                            v-if="statuses[artist.id]?.fee"
+                            class="mt-2 border-t pt-2 text-sm font-medium"
+                        >
                             {{ formatCurrency(statuses[artist.id].fee!) }}
                         </div>
                     </CardContent>
@@ -109,7 +147,7 @@ function getArtistTier(artistId: number): TierType {
                 <!-- Empty state -->
                 <div
                     v-if="artistsByStatus[status].length === 0"
-                    class="h-20 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground text-sm"
+                    class="flex h-20 items-center justify-center rounded-lg border-2 border-dashed text-sm text-muted-foreground"
                 >
                     Drop artists here
                 </div>

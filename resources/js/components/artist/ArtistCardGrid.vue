@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ArtistCard from './ArtistCard.vue';
 import type { Artist } from '@/data/types';
 import { cn } from '@/lib/utils';
+import ArtistCard from './ArtistCard.vue';
 
 interface Props {
     artists: Artist[];
@@ -27,7 +27,10 @@ const gridClasses = {
 </script>
 
 <template>
-    <div :class="cn('grid gap-4', gridClasses[columns])" data-slot="artist-card-grid">
+    <div
+        :class="cn('grid gap-4', gridClasses[columns])"
+        data-slot="artist-card-grid"
+    >
         <ArtistCard
             v-for="artist in artists"
             :key="artist.id"

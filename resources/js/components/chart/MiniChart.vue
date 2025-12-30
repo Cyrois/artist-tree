@@ -50,8 +50,13 @@ const barWidth = computed(() => {
                 }"
             />
         </div>
-        <div v-if="showLabels && labels.length > 0" class="flex justify-between text-xs text-muted-foreground">
-            <span v-for="(label, index) in labels" :key="index">{{ label }}</span>
+        <div
+            v-if="showLabels && labels.length > 0"
+            class="flex justify-between text-xs text-muted-foreground"
+        >
+            <span v-for="(label, index) in labels" :key="index">{{
+                label
+            }}</span>
         </div>
     </div>
 </template>

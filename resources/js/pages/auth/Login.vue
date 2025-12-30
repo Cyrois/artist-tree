@@ -41,7 +41,9 @@ defineProps<{
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">{{ $t('auth.login_email_label') }}</Label>
+                    <Label for="email">{{
+                        $t('auth.login_email_label')
+                    }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -57,7 +59,9 @@ defineProps<{
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">{{ $t('auth.login_password_label') }}</Label>
+                        <Label for="password">{{
+                            $t('auth.login_password_label')
+                        }}</Label>
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
@@ -103,7 +107,9 @@ defineProps<{
                 v-if="canRegister"
             >
                 {{ $t('auth.login_no_account_text') }}
-                <TextLink :href="register()" :tabindex="5">{{ $t('auth.login_signup_link') }}</TextLink>
+                <TextLink :href="register()" :tabindex="5">{{
+                    $t('auth.login_signup_link')
+                }}</TextLink>
             </div>
         </Form>
     </AuthBase>

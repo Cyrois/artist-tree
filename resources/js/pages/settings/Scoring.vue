@@ -1,19 +1,35 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import WeightSlider from '@/components/settings/WeightSlider.vue';
 import TeamMemberRow from '@/components/settings/TeamMemberRow.vue';
+import WeightSlider from '@/components/settings/WeightSlider.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { useAppearance } from '@/composables/useAppearance';
 import { metricPresets } from '@/data/constants';
 import type { TeamMember } from '@/data/types';
-import { Music, Youtube, TrendingUp, Plus, AlertCircle, Check, Sun, Moon, Monitor } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { Head } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    Check,
+    Monitor,
+    Moon,
+    Music,
+    Plus,
+    Sun,
+    TrendingUp,
+    Youtube,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 // Tab state
 const activeTab = ref<'weights' | 'team' | 'appearance'>('weights');
@@ -29,7 +45,11 @@ const weights = ref({
 });
 
 const totalWeight = computed(() => {
-    return weights.value.spotifyListeners + weights.value.spotifyPopularity + weights.value.youtubeSubscribers;
+    return (
+        weights.value.spotifyListeners +
+        weights.value.spotifyPopularity +
+        weights.value.youtubeSubscribers
+    );
 });
 
 const isValidTotal = computed(() => Math.abs(totalWeight.value - 1) < 0.001);
@@ -81,11 +101,15 @@ const breadcrumbs = [
 <template>
     <Head :title="$t('settings.scoring_page_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div class="space-y-6 max-w-4xl">
+        <div class="max-w-4xl space-y-6">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl font-bold">{{ $t('settings.scoring_title') }}</h1>
-                <p class="text-muted-foreground">{{ $t('settings.scoring_subtitle') }}</p>
+                <h1 class="text-2xl font-bold">
+                    {{ $t('settings.scoring_title') }}
+                </h1>
+                <p class="text-muted-foreground">
+                    {{ $t('settings.scoring_subtitle') }}
+                </p>
             </div>
 
             <!-- Tabs -->
@@ -93,8 +117,10 @@ const breadcrumbs = [
                 <div class="flex gap-6">
                     <button
                         :class="[
-                            'pb-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === 'weights' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                            '-mb-px border-b-2 pb-3 text-sm font-medium transition-colors',
+                            activeTab === 'weights'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                         ]"
                         @click="activeTab = 'weights'"
                     >
@@ -102,8 +128,10 @@ const breadcrumbs = [
                     </button>
                     <button
                         :class="[
-                            'pb-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === 'team' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                            '-mb-px border-b-2 pb-3 text-sm font-medium transition-colors',
+                            activeTab === 'team'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                         ]"
                         @click="activeTab = 'team'"
                     >
@@ -111,8 +139,10 @@ const breadcrumbs = [
                     </button>
                     <button
                         :class="[
-                            'pb-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === 'appearance' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                            '-mb-px border-b-2 pb-3 text-sm font-medium transition-colors',
+                            activeTab === 'appearance'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                         ]"
                         @click="activeTab = 'appearance'"
                     >
@@ -125,7 +155,9 @@ const breadcrumbs = [
             <div v-if="activeTab === 'weights'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>{{ $t('settings.scoring_weights_title') }}</CardTitle>
+                        <CardTitle>{{
+                            $t('settings.scoring_weights_title')
+                        }}</CardTitle>
                         <CardDescription>
                             {{ $t('settings.scoring_weights_subtitle') }}
                         </CardDescription>
@@ -133,7 +165,9 @@ const breadcrumbs = [
                     <CardContent class="space-y-6">
                         <!-- Presets -->
                         <div>
-                            <p class="text-sm font-medium mb-3">{{ $t('settings.scoring_presets_title') }}</p>
+                            <p class="mb-3 text-sm font-medium">
+                                {{ $t('settings.scoring_presets_title') }}
+                            </p>
                             <div class="flex flex-wrap gap-2">
                                 <Button
                                     v-for="(preset, key) in metricPresets"
@@ -153,17 +187,23 @@ const breadcrumbs = [
                         <div class="space-y-6">
                             <WeightSlider
                                 v-model="weights.spotifyListeners"
-                                :label="$t('settings.scoring_spotify_listeners')"
+                                :label="
+                                    $t('settings.scoring_spotify_listeners')
+                                "
                                 :icon="Music"
                             />
                             <WeightSlider
                                 v-model="weights.spotifyPopularity"
-                                :label="$t('settings.scoring_spotify_popularity')"
+                                :label="
+                                    $t('settings.scoring_spotify_popularity')
+                                "
                                 :icon="TrendingUp"
                             />
                             <WeightSlider
                                 v-model="weights.youtubeSubscribers"
-                                :label="$t('settings.scoring_youtube_subscribers')"
+                                :label="
+                                    $t('settings.scoring_youtube_subscribers')
+                                "
                                 :icon="Youtube"
                             />
                         </div>
@@ -172,17 +212,24 @@ const breadcrumbs = [
 
                         <!-- Total -->
                         <div class="flex items-center justify-between">
-                            <span class="font-medium">{{ $t('settings.scoring_total_weight') }}</span>
+                            <span class="font-medium">{{
+                                $t('settings.scoring_total_weight')
+                            }}</span>
                             <div class="flex items-center gap-2">
                                 <span
                                     :class="[
                                         'text-lg font-bold',
-                                        isValidTotal ? 'text-[hsl(var(--score-high))]' : 'text-[hsl(var(--score-critical))]'
+                                        isValidTotal
+                                            ? 'text-[hsl(var(--score-high))]'
+                                            : 'text-[hsl(var(--score-critical))]',
                                     ]"
                                 >
                                     {{ Math.round(totalWeight * 100) }}%
                                 </span>
-                                <Check v-if="isValidTotal" class="w-5 h-5 text-[hsl(var(--score-high))]" />
+                                <Check
+                                    v-if="isValidTotal"
+                                    class="h-5 w-5 text-[hsl(var(--score-high))]"
+                                />
                             </div>
                         </div>
 
@@ -190,7 +237,11 @@ const breadcrumbs = [
                         <Alert v-if="!isValidTotal" variant="destructive">
                             <AlertCircle class="h-4 w-4" />
                             <AlertDescription>
-                                {{ $t('settings.scoring_weights_error', { total: Math.round(totalWeight * 100) }) }}
+                                {{
+                                    $t('settings.scoring_weights_error', {
+                                        total: Math.round(totalWeight * 100),
+                                    })
+                                }}
                             </AlertDescription>
                         </Alert>
 
@@ -221,7 +272,9 @@ const breadcrumbs = [
                                 :key="member.id"
                                 :member="member"
                                 :can-edit="true"
-                                @update-role="(role) => updateMemberRole(member.id, role)"
+                                @update-role="
+                                    (role) => updateMemberRole(member.id, role)
+                                "
                                 @remove="removeMember(member.id)"
                             />
                         </div>
@@ -230,17 +283,24 @@ const breadcrumbs = [
 
                         <!-- Invite Member -->
                         <div>
-                            <p class="text-sm font-medium mb-3">{{ $t('settings.team_invite_title') }}</p>
+                            <p class="mb-3 text-sm font-medium">
+                                {{ $t('settings.team_invite_title') }}
+                            </p>
                             <div class="flex gap-2">
                                 <Input
                                     v-model="inviteEmail"
                                     type="email"
-                                    :placeholder="$t('settings.team_invite_placeholder')"
+                                    :placeholder="
+                                        $t('settings.team_invite_placeholder')
+                                    "
                                     class="flex-1"
                                     @keyup.enter="inviteMember"
                                 />
-                                <Button @click="inviteMember" :disabled="!inviteEmail">
-                                    <Plus class="w-4 h-4 mr-2" />
+                                <Button
+                                    @click="inviteMember"
+                                    :disabled="!inviteEmail"
+                                >
+                                    <Plus class="mr-2 h-4 w-4" />
                                     {{ $t('settings.team_invite_button') }}
                                 </Button>
                             </div>
@@ -262,50 +322,68 @@ const breadcrumbs = [
                         <div class="grid grid-cols-3 gap-4">
                             <button
                                 :class="[
-                                    'flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-colors',
+                                    'flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-colors',
                                     appearance === 'light'
                                         ? 'border-primary bg-primary/5'
-                                        : 'border-border hover:border-primary/50'
+                                        : 'border-border hover:border-primary/50',
                                 ]"
                                 @click="updateAppearance('light')"
                             >
-                                <div class="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
-                                    <Sun class="w-6 h-6 text-amber-600" />
+                                <div
+                                    class="rounded-full bg-amber-100 p-3 dark:bg-amber-900/30"
+                                >
+                                    <Sun class="h-6 w-6 text-amber-600" />
                                 </div>
-                                <span class="font-medium">{{ $t('settings.theme_light') }}</span>
-                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_light_description') }}</span>
+                                <span class="font-medium">{{
+                                    $t('settings.theme_light')
+                                }}</span>
+                                <span class="text-xs text-muted-foreground">{{
+                                    $t('settings.theme_light_description')
+                                }}</span>
                             </button>
 
                             <button
                                 :class="[
-                                    'flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-colors',
+                                    'flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-colors',
                                     appearance === 'dark'
                                         ? 'border-primary bg-primary/5'
-                                        : 'border-border hover:border-primary/50'
+                                        : 'border-border hover:border-primary/50',
                                 ]"
                                 @click="updateAppearance('dark')"
                             >
-                                <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-                                    <Moon class="w-6 h-6 text-indigo-600" />
+                                <div
+                                    class="rounded-full bg-indigo-100 p-3 dark:bg-indigo-900/30"
+                                >
+                                    <Moon class="h-6 w-6 text-indigo-600" />
                                 </div>
-                                <span class="font-medium">{{ $t('settings.theme_dark') }}</span>
-                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_dark_description') }}</span>
+                                <span class="font-medium">{{
+                                    $t('settings.theme_dark')
+                                }}</span>
+                                <span class="text-xs text-muted-foreground">{{
+                                    $t('settings.theme_dark_description')
+                                }}</span>
                             </button>
 
                             <button
                                 :class="[
-                                    'flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-colors',
+                                    'flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-colors',
                                     appearance === 'system'
                                         ? 'border-primary bg-primary/5'
-                                        : 'border-border hover:border-primary/50'
+                                        : 'border-border hover:border-primary/50',
                                 ]"
                                 @click="updateAppearance('system')"
                             >
-                                <div class="p-3 rounded-full bg-gray-100 dark:bg-gray-800">
-                                    <Monitor class="w-6 h-6 text-gray-600" />
+                                <div
+                                    class="rounded-full bg-gray-100 p-3 dark:bg-gray-800"
+                                >
+                                    <Monitor class="h-6 w-6 text-gray-600" />
                                 </div>
-                                <span class="font-medium">{{ $t('settings.theme_system') }}</span>
-                                <span class="text-xs text-muted-foreground">{{ $t('settings.theme_system_description') }}</span>
+                                <span class="font-medium">{{
+                                    $t('settings.theme_system')
+                                }}</span>
+                                <span class="text-xs text-muted-foreground">{{
+                                    $t('settings.theme_system_description')
+                                }}</span>
                             </button>
                         </div>
                     </CardContent>

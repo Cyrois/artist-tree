@@ -50,7 +50,9 @@ const user = page.props.auth.user;
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
                     <div class="grid gap-2">
-                        <Label for="name">{{ $t('settings.profile_name_label') }}</Label>
+                        <Label for="name">{{
+                            $t('settings.profile_name_label')
+                        }}</Label>
                         <Input
                             id="name"
                             class="mt-1 block w-full"
@@ -58,13 +60,17 @@ const user = page.props.auth.user;
                             :default-value="user.name"
                             required
                             autocomplete="name"
-                            :placeholder="$t('settings.profile_name_placeholder')"
+                            :placeholder="
+                                $t('settings.profile_name_placeholder')
+                            "
                         />
                         <InputError class="mt-2" :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">{{ $t('settings.profile_email_label') }}</Label>
+                        <Label for="email">{{
+                            $t('settings.profile_email_label')
+                        }}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -73,7 +79,9 @@ const user = page.props.auth.user;
                             :default-value="user.email"
                             required
                             autocomplete="username"
-                            :placeholder="$t('settings.profile_email_placeholder')"
+                            :placeholder="
+                                $t('settings.profile_email_placeholder')
+                            "
                         />
                         <InputError class="mt-2" :message="errors.email" />
                     </div>

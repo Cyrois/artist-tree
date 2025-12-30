@@ -20,7 +20,9 @@ const page = usePage();
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>{{ trans('common.sidebar_platform') }}</SidebarGroupLabel>
+        <SidebarGroupLabel>{{
+            trans('common.sidebar_platform')
+        }}</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton

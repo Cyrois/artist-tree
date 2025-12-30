@@ -22,10 +22,9 @@ createInertiaApp({
             .use(i18nVue, {
                 lang: 'en',
                 resolve: async (lang: string) => {
-                    const langs = import.meta.glob<{ default: Record<string, string> }>(
-                        '../../lang/*.json',
-                        { eager: false }
-                    );
+                    const langs = import.meta.glob<{
+                        default: Record<string, string>;
+                    }>('../../lang/*.json', { eager: false });
                     return await langs[`../../lang/${lang}.json`]();
                 },
             })

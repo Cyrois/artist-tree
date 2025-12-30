@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getInitials, avatarColors } from '@/data/constants';
+import { avatarColors, getInitials } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { computed } from 'vue';
@@ -16,7 +16,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const initials = computed(() => getInitials(props.artist.name));
 
-const bgColor = computed(() => avatarColors[props.artist.id % avatarColors.length]);
+const bgColor = computed(
+    () => avatarColors[props.artist.id % avatarColors.length],
+);
 
 const sizeClasses = computed(() => {
     switch (props.size) {
@@ -35,7 +37,12 @@ const sizeClasses = computed(() => {
 
 <template>
     <Avatar :class="cn('rounded-xl', sizeClasses)" data-slot="artist-avatar">
-        <AvatarImage v-if="artist.image" :src="artist.image" :alt="artist.name" class="object-cover" />
+        <AvatarImage
+            v-if="artist.image"
+            :src="artist.image"
+            :alt="artist.name"
+            class="object-cover"
+        />
         <AvatarFallback
             class="rounded-xl font-bold text-white"
             :style="{ backgroundColor: bgColor }"

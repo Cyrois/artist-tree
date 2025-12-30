@@ -1,4 +1,4 @@
-import { ref, onUnmounted, computed } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 
 interface SpotifyPlayerState {
     context: {
@@ -72,7 +72,10 @@ export function useSpotifyPlayback() {
     const startProgressTimer = () => {
         stopProgressTimer();
         progressInterval = window.setInterval(() => {
-            if (isPlaying.value && currentPosition.value < trackDuration.value) {
+            if (
+                isPlaying.value &&
+                currentPosition.value < trackDuration.value
+            ) {
                 currentPosition.value += 1000;
             } else if (currentPosition.value >= trackDuration.value) {
                 stopProgressTimer();
@@ -95,7 +98,7 @@ export function useSpotifyPlayback() {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
             });
         } catch (err) {
@@ -114,13 +117,16 @@ export function useSpotifyPlayback() {
         try {
             // Include current page URL as return_url so we can redirect back after OAuth
             const returnUrl = window.location.pathname + window.location.search;
-            const tokenUrl = new URL('/api/spotify/token', window.location.origin);
+            const tokenUrl = new URL(
+                '/api/spotify/token',
+                window.location.origin,
+            );
             tokenUrl.searchParams.set('return_url', returnUrl);
 
             const response = await fetch(tokenUrl.toString(), {
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
             });
 
@@ -132,9 +138,11 @@ export function useSpotifyPlayback() {
                     await clearToken();
                     if (allowRedirect) {
                         window.location.href = data.auth_url;
-                        throw new Error('Redirecting to Spotify authentication');
+                        throw new Error(
+                            'Redirecting to Spotify authentication',
+                        );
                     }
-                    
+
                     const error = new Error('Spotify authentication required');
                     (error as any).authUrl = data.auth_url;
                     (error as any).needsAuth = true;
@@ -154,13 +162,17 @@ export function useSpotifyPlayback() {
             if ((err as any).needsAuth) {
                 throw err;
             }
-            error.value = 'Unable to authenticate with Spotify. Please try again.';
+            error.value =
+                'Unable to authenticate with Spotify. Please try again.';
             throw err;
         }
     };
 
     // Check if user is authenticated without redirecting
-    const checkAuthentication = async (): Promise<{ authenticated: boolean; authUrl?: string }> => {
+    const checkAuthentication = async (): Promise<{
+        authenticated: boolean;
+        authUrl?: string;
+    }> => {
         try {
             await fetchAccessToken(false);
             return { authenticated: true };
@@ -207,14 +219,18 @@ export function useSpotifyPlayback() {
                 window.onSpotifyWebPlaybackSDKReady = tryCreatePlayer;
 
                 // Load SDK if not already loaded
-                if (!document.querySelector('script[src*="spotify-web-playback"]')) {
+                if (
+                    !document.querySelector(
+                        'script[src*="spotify-web-playback"]',
+                    )
+                ) {
                     const script = document.createElement('script');
                     script.src = 'https://sdk.scdn.co/spotify-player.js';
                     script.async = true;
                     document.body.appendChild(script);
                 }
             }
-        }).catch(err => {
+        }).catch((err) => {
             console.error('Spotify initialization failed:', err);
             initializationPromise = null;
             throw err;
@@ -232,77 +248,103 @@ export function useSpotifyPlayback() {
                 getOAuthToken: (cb) => {
                     // Force a re-fetch from the backend to ensure the token is not stale.
                     accessToken.value = null;
-                    fetchAccessToken().then(token => cb(token));
+                    fetchAccessToken().then((token) => cb(token));
                 },
                 volume: 0.5,
             });
 
             // Error handling
-            spotifyPlayer.addListener('initialization_error', async ({ message }: { message: string }) => {
-                console.error('Spotify SDK initialization error:', message);
-                error.value = `Initialization error: ${message}`;
-                await clearToken();
-            });
+            spotifyPlayer.addListener(
+                'initialization_error',
+                async ({ message }: { message: string }) => {
+                    console.error('Spotify SDK initialization error:', message);
+                    error.value = `Initialization error: ${message}`;
+                    await clearToken();
+                },
+            );
 
-            spotifyPlayer.addListener('authentication_error', async ({ message }: { message: string }) => {
-                console.error('Spotify SDK authentication error:', message);
-                error.value = `Authentication error: ${message}`;
-                await clearToken();
-            });
+            spotifyPlayer.addListener(
+                'authentication_error',
+                async ({ message }: { message: string }) => {
+                    console.error('Spotify SDK authentication error:', message);
+                    error.value = `Authentication error: ${message}`;
+                    await clearToken();
+                },
+            );
 
-            spotifyPlayer.addListener('account_error', ({ message }: { message: string }) => {
-                error.value = `Account error: ${message}. Please ensure you have Spotify Premium.`;
-            });
+            spotifyPlayer.addListener(
+                'account_error',
+                ({ message }: { message: string }) => {
+                    error.value = `Account error: ${message}. Please ensure you have Spotify Premium.`;
+                },
+            );
 
-            spotifyPlayer.addListener('playback_error', ({ message }: { message: string }) => {
-                error.value = `Playback error: ${message}`;
-            });
+            spotifyPlayer.addListener(
+                'playback_error',
+                ({ message }: { message: string }) => {
+                    error.value = `Playback error: ${message}`;
+                },
+            );
 
             // Ready state
-            spotifyPlayer.addListener('ready', ({ device_id }: { device_id: string }) => {
-                // Prevent duplicate ready events for the same device ID
-                if (deviceId.value === device_id) return;
+            spotifyPlayer.addListener(
+                'ready',
+                ({ device_id }: { device_id: string }) => {
+                    // Prevent duplicate ready events for the same device ID
+                    if (deviceId.value === device_id) return;
 
-                deviceId.value = device_id;
-                isReady.value = true;
-                error.value = null;
-                console.log('Spotify Player is ready with Device ID:', device_id);
-            });
+                    deviceId.value = device_id;
+                    isReady.value = true;
+                    error.value = null;
+                    console.log(
+                        'Spotify Player is ready with Device ID:',
+                        device_id,
+                    );
+                },
+            );
 
             // Not ready state
-            spotifyPlayer.addListener('not_ready', ({ device_id }: { device_id: string }) => {
-                deviceId.value = device_id;
-                isReady.value = false;
-            });
+            spotifyPlayer.addListener(
+                'not_ready',
+                ({ device_id }: { device_id: string }) => {
+                    deviceId.value = device_id;
+                    isReady.value = false;
+                },
+            );
 
             // Player state changes
-            spotifyPlayer.addListener('player_state_changed', (state: SpotifyPlayerState) => {
-                if (!state) {
-                    return;
-                }
+            spotifyPlayer.addListener(
+                'player_state_changed',
+                (state: SpotifyPlayerState) => {
+                    if (!state) {
+                        return;
+                    }
 
-                currentPosition.value = state.position;
-                isPlaying.value = !state.paused;
-                isLoading.value = state.loading;
+                    currentPosition.value = state.position;
+                    isPlaying.value = !state.paused;
+                    isLoading.value = state.loading;
 
-                // Manage progress timer based on playback state
-                if (isPlaying.value) {
-                    startProgressTimer();
-                } else {
-                    stopProgressTimer();
-                }
-                
-                // Update context
-                currentContextUri.value = state.context?.uri || null;
+                    // Manage progress timer based on playback state
+                    if (isPlaying.value) {
+                        startProgressTimer();
+                    } else {
+                        stopProgressTimer();
+                    }
 
-                if (state.track_window.current_track) {
-                    currentTrackId.value = state.track_window.current_track.id;
-                    trackDuration.value = state.track_window.current_track.duration_ms;
-                } else {
-                    currentTrackId.value = null;
-                    trackDuration.value = 0;
-                }
-            });
+                    // Update context
+                    currentContextUri.value = state.context?.uri || null;
+
+                    if (state.track_window.current_track) {
+                        currentTrackId.value =
+                            state.track_window.current_track.id;
+                        trackDuration.value =
+                            state.track_window.current_track.duration_ms;
+                    } else {
+                        currentTrackId.value = null;
+                        trackDuration.value = 0;
+                    }
+                },
+            );
 
             // Connect to player
             const connected = await spotifyPlayer.connect();
@@ -317,7 +359,10 @@ export function useSpotifyPlayback() {
     };
 
     // Play a track or album
-    const playTrack = async (spotifyId: string, type: 'track' | 'album' = 'track') => {
+    const playTrack = async (
+        spotifyId: string,
+        type: 'track' | 'album' = 'track',
+    ) => {
         if (!player.value || !deviceId.value) {
             await initializePlayer();
             await waitForPlayerReady();
@@ -335,7 +380,7 @@ export function useSpotifyPlayback() {
             await fetch(`https://api.spotify.com/v1/me/player`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -352,15 +397,18 @@ export function useSpotifyPlayback() {
                 body.context_uri = `spotify:album:${spotifyId}`;
             }
 
-            await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
+            await fetch(
+                `https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
                 },
-                body: JSON.stringify(body),
-            });
-            
+            );
+
             // Set optimistic values for immediate UI feedback
             if (type === 'track') {
                 currentTrackId.value = spotifyId;
@@ -446,7 +494,7 @@ export function useSpotifyPlayback() {
     const isTrackPlaying = (trackId: string) => {
         return currentTrackId.value === trackId && isPlaying.value;
     };
-    
+
     // Check if a specific context (album/playlist) is currently playing
     const isContextPlaying = (contextUri: string) => {
         return currentContextUri.value === contextUri && isPlaying.value;

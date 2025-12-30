@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-    ArrowLeft, 
-    Loader2, 
-    AlertCircle, 
-    Music, 
-    Youtube, 
-    Instagram, 
-    TrendingUp, 
-    Users, 
-    Plus,
-    ArrowRightLeft,
-    RefreshCw
-} from 'lucide-vue-next';
-import { ref, onMounted, computed } from 'vue';
-import { trans } from 'laravel-vue-i18n';
-import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { show as artistShowRoute } from '@/routes/api/artists';
+import { Head, router } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    ArrowLeft,
+    ArrowRightLeft,
+    Instagram,
+    Loader2,
+    Music,
+    Plus,
+    RefreshCw,
+    TrendingUp,
+    Users,
+    Youtube,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -64,7 +64,7 @@ onMounted(async () => {
         const response = await fetch(artistShowRoute.url(props.id), {
             credentials: 'include',
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
             },
         });
 
@@ -78,7 +78,10 @@ onMounted(async () => {
         const data = await response.json();
         artist.value = data.data;
     } catch (err) {
-        error.value = err instanceof Error ? err.message : trans('artists.error_load_failed');
+        error.value =
+            err instanceof Error
+                ? err.message
+                : trans('artists.error_load_failed');
     } finally {
         isLoading.value = false;
     }
@@ -92,15 +95,17 @@ const formatNumber = (num: number | null | undefined): string => {
     return num.toString();
 };
 
-const breadcrumbs = computed(() => 
+const breadcrumbs = computed(() =>
     artistBreadcrumbs(
-        artist.value?.name ?? trans('artists.show_page_title'), 
-        props.id
-    )
+        artist.value?.name ?? trans('artists.show_page_title'),
+        props.id,
+    ),
 );
 
 const pageTitle = computed(() =>
-    artist.value ? `${artist.value.name} - Artist-Tree` : `${trans('artists.show_page_title')} - Artist-Tree`
+    artist.value
+        ? `${artist.value.name} - Artist-Tree`
+        : `${trans('artists.show_page_title')} - Artist-Tree`,
 );
 </script>
 
@@ -121,10 +126,12 @@ const pageTitle = computed(() =>
                 <AlertCircle class="h-12 w-12 text-destructive" />
                 <div>
                     <p class="font-medium text-destructive">{{ error }}</p>
-                    <p class="text-sm text-muted-foreground mt-1">{{ $t('common.error_try_again') }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ $t('common.error_try_again') }}
+                    </p>
                 </div>
                 <Button variant="outline" @click="router.visit('/search')">
-                    <ArrowLeft class="w-4 h-4 mr-2" />
+                    <ArrowLeft class="mr-2 h-4 w-4" />
                     {{ $t('artists.show_back_button') }}
                 </Button>
             </div>
@@ -133,15 +140,20 @@ const pageTitle = computed(() =>
         <!-- Artist Content -->
         <div v-else-if="artist" class="space-y-6">
             <!-- Back button -->
-            <Button variant="ghost" size="sm" @click="router.visit('/search')" class="pl-0 hover:bg-transparent hover:text-primary hover:underline">
-                <ArrowLeft class="w-4 h-4 mr-2" />
+            <Button
+                variant="ghost"
+                size="sm"
+                @click="router.visit('/search')"
+                class="pl-0 hover:bg-transparent hover:text-primary hover:underline"
+            >
+                <ArrowLeft class="mr-2 h-4 w-4" />
                 {{ $t('artists.show_back_button') }}
             </Button>
 
             <!-- Artist Header -->
             <Card class="py-0">
                 <CardContent class="p-6">
-                    <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex flex-col gap-6 md:flex-row">
                         <!-- Artist Image -->
                         <div class="shrink-0">
                             <img
@@ -154,52 +166,78 @@ const pageTitle = computed(() =>
                                 v-else
                                 class="flex h-40 w-40 items-center justify-center rounded-lg bg-muted"
                             >
-                                <span class="text-4xl font-bold text-muted-foreground">
+                                <span
+                                    class="text-4xl font-bold text-muted-foreground"
+                                >
                                     {{ artist.name.charAt(0).toUpperCase() }}
                                 </span>
                             </div>
                         </div>
 
                         <!-- Info & Actions -->
-                        <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex flex-1 flex-col justify-between">
                             <div>
                                 <div class="flex items-start justify-between">
                                     <div>
-                                        <h1 class="text-3xl font-bold">{{ artist.name }}</h1>
-                                        <div v-if="artist.genres && artist.genres.length > 0" class="flex flex-wrap gap-2 mt-2">
-                                            <span 
-                                                v-for="genre in artist.genres.slice(0, 4)" 
+                                        <h1 class="text-3xl font-bold">
+                                            {{ artist.name }}
+                                        </h1>
+                                        <div
+                                            v-if="
+                                                artist.genres &&
+                                                artist.genres.length > 0
+                                            "
+                                            class="mt-2 flex flex-wrap gap-2"
+                                        >
+                                            <span
+                                                v-for="genre in artist.genres.slice(
+                                                    0,
+                                                    4,
+                                                )"
                                                 :key="genre"
-                                                class="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
+                                                class="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
                                             >
                                                 {{ genre }}
                                             </span>
                                         </div>
                                     </div>
-                                    <ScoreBadge 
-                                        v-if="artist.score" 
-                                        :score="Math.round(artist.score)" 
-                                        size="lg" 
+                                    <ScoreBadge
+                                        v-if="artist.score"
+                                        :score="Math.round(artist.score)"
+                                        size="lg"
                                         class="text-xl"
                                         title="Artist-Tree Score"
                                     />
                                 </div>
-                                
-                                <div class="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-                                    <div v-if="artist.spotify_id" class="flex items-center gap-1">
-                                        <Music class="w-4 h-4" />
-                                        <span>{{ $t('artists.show_verified_spotify') }}</span>
+
+                                <div
+                                    class="mt-4 flex items-center gap-4 text-sm text-muted-foreground"
+                                >
+                                    <div
+                                        v-if="artist.spotify_id"
+                                        class="flex items-center gap-1"
+                                    >
+                                        <Music class="h-4 w-4" />
+                                        <span>{{
+                                            $t('artists.show_verified_spotify')
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex gap-3 mt-6">
+                            <div class="mt-6 flex gap-3">
                                 <Button disabled class="gap-2">
-                                    <Plus class="w-4 h-4" />
-                                    {{ $t('artists.show_add_to_lineup_button') }}
+                                    <Plus class="h-4 w-4" />
+                                    {{
+                                        $t('artists.show_add_to_lineup_button')
+                                    }}
                                 </Button>
-                                <Button disabled variant="outline" class="gap-2">
-                                    <ArrowRightLeft class="w-4 h-4" />
+                                <Button
+                                    disabled
+                                    variant="outline"
+                                    class="gap-2"
+                                >
+                                    <ArrowRightLeft class="h-4 w-4" />
                                     {{ $t('artists.show_compare_button') }}
                                 </Button>
                             </div>
@@ -211,17 +249,25 @@ const pageTitle = computed(() =>
             <!-- Tabs Navigation -->
             <div class="border-b">
                 <div class="flex gap-6">
-                    <button 
+                    <button
                         @click="activeTab = 'overview'"
-                        class="pb-2 text-sm font-medium transition-colors border-b-2"
-                        :class="activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+                        class="border-b-2 pb-2 text-sm font-medium transition-colors"
+                        :class="
+                            activeTab === 'overview'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        "
                     >
                         {{ $t('artists.show_tab_overview') }}
                     </button>
-                    <button 
+                    <button
                         @click="activeTab = 'data'"
-                        class="pb-2 text-sm font-medium transition-colors border-b-2"
-                        :class="activeTab === 'data' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'"
+                        class="border-b-2 pb-2 text-sm font-medium transition-colors"
+                        :class="
+                            activeTab === 'data'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        "
                     >
                         {{ $t('artists.show_tab_data') }}
                     </button>
@@ -231,44 +277,94 @@ const pageTitle = computed(() =>
             <!-- Overview Tab -->
             <div v-if="activeTab === 'overview'" class="space-y-6">
                 <!-- Description (Generic for now) -->
-                <p class="text-muted-foreground leading-relaxed">
-                    {{ $t('artists.show_description_template', { name: artist.name }) }}
+                <p class="leading-relaxed text-muted-foreground">
+                    {{
+                        $t('artists.show_description_template', {
+                            name: artist.name,
+                        })
+                    }}
                 </p>
 
                 <!-- Quick Metrics Row -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <Card class="py-0">
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_spotify_popularity') }}</p>
+                            <p
+                                class="text-xs font-medium text-muted-foreground uppercase"
+                            >
+                                {{ $t('artists.metric_spotify_popularity') }}
+                            </p>
                             <div class="mt-1">
-                                <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_popularity) }}</p>
+                                <p class="mt-1 text-2xl font-bold">
+                                    {{
+                                        formatNumber(
+                                            artist.metrics?.spotify_popularity,
+                                        )
+                                    }}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
                     <Card class="py-0">
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_spotify_followers') }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
+                            <p
+                                class="text-xs font-medium text-muted-foreground uppercase"
+                            >
+                                {{ $t('artists.show_spotify_followers') }}
+                            </p>
+                            <p class="mt-1 text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.spotify_followers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                     <Card class="py-0">
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.metric_youtube_subs') }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
+                            <p
+                                class="text-xs font-medium text-muted-foreground uppercase"
+                            >
+                                {{ $t('artists.metric_youtube_subs') }}
+                            </p>
+                            <p class="mt-1 text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.youtube_subscribers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                     <Card class="py-0">
                         <CardContent class="p-4">
-                            <p class="text-xs text-muted-foreground font-medium uppercase">{{ $t('artists.show_instagram') }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
+                            <p
+                                class="text-xs font-medium text-muted-foreground uppercase"
+                            >
+                                {{ $t('artists.show_instagram') }}
+                            </p>
+                            <p class="mt-1 text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.instagram_followers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
 
                 <!-- Content Grid: Top Tracks & Releases -->
-                <div class="grid md:grid-cols-2 gap-6">
-                    <ArtistMediaList :artist-id="props.id" variant="top-tracks" />
-                    <ArtistMediaList :artist-id="props.id" variant="recent-releases" />
+                <div class="grid gap-6 md:grid-cols-2">
+                    <ArtistMediaList
+                        :artist-id="props.id"
+                        variant="top-tracks"
+                    />
+                    <ArtistMediaList
+                        :artist-id="props.id"
+                        variant="recent-releases"
+                    />
                 </div>
 
                 <!-- Similar Artists -->
@@ -276,25 +372,39 @@ const pageTitle = computed(() =>
 
                 <!-- External Links -->
                 <div>
-                    <h3 class="font-semibold text-lg mb-4">{{ $t('artists.show_external_links') }}</h3>
+                    <h3 class="mb-4 text-lg font-semibold">
+                        {{ $t('artists.show_external_links') }}
+                    </h3>
                     <div class="flex flex-wrap gap-3">
-                        <Button 
+                        <Button
                             v-if="artist.spotify_id"
                             as-child
-                            variant="outline" 
-                            class="gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            variant="outline"
+                            class="gap-2 text-green-600 hover:bg-green-50 hover:text-green-700"
                         >
-                            <a :href="`https://open.spotify.com/artist/${artist.spotify_id}`" target="_blank" rel="noopener noreferrer">
-                                <Music class="w-4 h-4" />
+                            <a
+                                :href="`https://open.spotify.com/artist/${artist.spotify_id}`"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Music class="h-4 w-4" />
                                 Spotify
                             </a>
                         </Button>
-                        <Button variant="outline" disabled class="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <Youtube class="w-4 h-4" />
+                        <Button
+                            variant="outline"
+                            disabled
+                            class="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                            <Youtube class="h-4 w-4" />
                             YouTube
                         </Button>
-                        <Button variant="outline" disabled class="gap-2 text-pink-600 hover:text-pink-700 hover:bg-pink-50">
-                            <Instagram class="w-4 h-4" />
+                        <Button
+                            variant="outline"
+                            disabled
+                            class="gap-2 text-pink-600 hover:bg-pink-50 hover:text-pink-700"
+                        >
+                            <Instagram class="h-4 w-4" />
                             Instagram
                         </Button>
                     </div>
@@ -304,26 +414,43 @@ const pageTitle = computed(() =>
             <!-- Data Tab -->
             <div v-else-if="activeTab === 'data'" class="space-y-6">
                 <!-- Detailed Metrics Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Users class="w-4 h-4" />
-                                <span>{{ $t('artists.show_spotify_followers') }}</span>
+                        <CardContent class="space-y-2 p-4">
+                            <div
+                                class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                            >
+                                <Users class="h-4 w-4" />
+                                <span>{{
+                                    $t('artists.show_spotify_followers')
+                                }}</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.spotify_followers) }}</p>
+                            <p class="text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.spotify_followers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <TrendingUp class="w-4 h-4" />
-                                <span>{{ $t('artists.show_spotify_popularity') }}</span>
+                        <CardContent class="space-y-2 p-4">
+                            <div
+                                class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                            >
+                                <TrendingUp class="h-4 w-4" />
+                                <span>{{
+                                    $t('artists.show_spotify_popularity')
+                                }}</span>
                             </div>
                             <div>
-                                <ScoreBadge 
-                                    v-if="artist.metrics?.spotify_popularity !== null" 
-                                    :score="artist.metrics!.spotify_popularity" 
+                                <ScoreBadge
+                                    v-if="
+                                        artist.metrics?.spotify_popularity !==
+                                        null
+                                    "
+                                    :score="artist.metrics!.spotify_popularity"
                                     size="md"
                                 />
                                 <p v-else class="text-2xl font-bold">-</p>
@@ -331,70 +458,148 @@ const pageTitle = computed(() =>
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Youtube class="w-4 h-4" />
-                                <span>{{ $t('artists.show_youtube_subscribers') }}</span>
+                        <CardContent class="space-y-2 p-4">
+                            <div
+                                class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                            >
+                                <Youtube class="h-4 w-4" />
+                                <span>{{
+                                    $t('artists.show_youtube_subscribers')
+                                }}</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.youtube_subscribers) }}</p>
+                            <p class="text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.youtube_subscribers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
-                     <Card>
-                        <CardContent class="p-4 space-y-2">
-                            <div class="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                <Instagram class="w-4 h-4" />
+                    <Card>
+                        <CardContent class="space-y-2 p-4">
+                            <div
+                                class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                            >
+                                <Instagram class="h-4 w-4" />
                                 <span>{{ $t('artists.show_instagram') }}</span>
                             </div>
-                            <p class="text-2xl font-bold">{{ formatNumber(artist.metrics?.instagram_followers) }}</p>
+                            <p class="text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.instagram_followers,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
 
                 <!-- Charts Area (Placeholder for now, but using real data if possible) -->
-                <div class="grid md:grid-cols-3 gap-6">
+                <div class="grid gap-6 md:grid-cols-3">
                     <Card class="md:col-span-2">
                         <CardHeader>
-                            <CardTitle class="text-base">{{ $t('artists.show_metric_comparison') }}</CardTitle>
+                            <CardTitle class="text-base">{{
+                                $t('artists.show_metric_comparison')
+                            }}</CardTitle>
                         </CardHeader>
-                        <CardContent class="h-64 flex items-center justify-center">
-                            <p class="text-muted-foreground text-sm">{{ $t('artists.show_metric_history_placeholder') }}</p>
+                        <CardContent
+                            class="flex h-64 items-center justify-center"
+                        >
+                            <p class="text-sm text-muted-foreground">
+                                {{
+                                    $t(
+                                        'artists.show_metric_history_placeholder',
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                         <CardHeader>
-                            <CardTitle class="text-base">{{ $t('artists.show_score_breakdown_title') }}</CardTitle>
+                        <CardHeader>
+                            <CardTitle class="text-base">{{
+                                $t('artists.show_score_breakdown_title')
+                            }}</CardTitle>
                         </CardHeader>
                         <CardContent v-if="artist.metrics" class="space-y-6">
-                             <div class="space-y-2">
+                            <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
-                                    <span>{{ $t('artists.show_spotify_followers') }}</span>
-                                    <span class="font-medium">{{ Math.round((Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100) }} / 100</span>
+                                    <span>{{
+                                        $t('artists.show_spotify_followers')
+                                    }}</span>
+                                    <span class="font-medium"
+                                        >{{
+                                            Math.round(
+                                                (Math.log10(
+                                                    (artist.metrics
+                                                        .spotify_followers ||
+                                                        0) + 1,
+                                                ) /
+                                                    Math.log10(100000000)) *
+                                                    100,
+                                            )
+                                        }}
+                                        / 100</span
+                                    >
                                 </div>
-                                <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" :style="{ width: `${(Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100}%` }"></div>
+                                <div
+                                    class="h-2 overflow-hidden rounded-full bg-muted"
+                                >
+                                    <div
+                                        class="h-full bg-primary"
+                                        :style="{
+                                            width: `${(Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100}%`,
+                                        }"
+                                    ></div>
                                 </div>
                             </div>
                             <div class="space-y-2">
                                 <div class="flex justify-between text-sm">
-                                    <span>{{ $t('artists.show_spotify_popularity') }}</span>
-                                    <span class="font-medium">{{ artist.metrics.spotify_popularity }} / 100</span>
+                                    <span>{{
+                                        $t('artists.show_spotify_popularity')
+                                    }}</span>
+                                    <span class="font-medium"
+                                        >{{
+                                            artist.metrics.spotify_popularity
+                                        }}
+                                        / 100</span
+                                    >
                                 </div>
-                                <div class="h-2 bg-muted rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" :style="{ width: `${artist.metrics.spotify_popularity}%` }"></div>
+                                <div
+                                    class="h-2 overflow-hidden rounded-full bg-muted"
+                                >
+                                    <div
+                                        class="h-full bg-primary"
+                                        :style="{
+                                            width: `${artist.metrics.spotify_popularity}%`,
+                                        }"
+                                    ></div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
-                
-                <div v-if="artist.metrics?.refreshed_at" class="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
-                    <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <RefreshCw class="w-4 h-4" />
-                        <span>{{ $t('artists.show_data_last_updated') }} {{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</span>
+
+                <div
+                    v-if="artist.metrics?.refreshed_at"
+                    class="flex items-center justify-between rounded-lg border bg-muted/30 p-4"
+                >
+                    <div
+                        class="flex items-center gap-2 text-sm text-muted-foreground"
+                    >
+                        <RefreshCw class="h-4 w-4" />
+                        <span
+                            >{{ $t('artists.show_data_last_updated') }}
+                            {{
+                                new Date(
+                                    artist.metrics.refreshed_at,
+                                ).toLocaleString()
+                            }}</span
+                        >
                     </div>
                     <Button variant="outline" size="sm" class="gap-2" disabled>
-                        <RefreshCw class="w-3 h-3" />
+                        <RefreshCw class="h-3 w-3" />
                         {{ $t('artists.show_refresh_data_button') }}
                     </Button>
                 </div>
@@ -402,8 +607,10 @@ const pageTitle = computed(() =>
         </div>
 
         <!-- Not Found (fallback) -->
-        <div v-else class="text-center py-12">
-            <p class="text-muted-foreground">{{ $t('artists.show_not_found') }}</p>
+        <div v-else class="py-12 text-center">
+            <p class="text-muted-foreground">
+                {{ $t('artists.show_not_found') }}
+            </p>
             <Button class="mt-4" @click="router.visit('/search')">
                 {{ $t('artists.show_back_button') }}
             </Button>

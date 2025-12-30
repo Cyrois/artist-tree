@@ -15,7 +15,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const totalScore = computed(() =>
-    props.metrics.reduce((sum, m) => sum + m.contribution, 0)
+    props.metrics.reduce((sum, m) => sum + m.contribution, 0),
 );
 </script>
 
@@ -26,17 +26,21 @@ const totalScore = computed(() =>
                 <span class="text-muted-foreground">{{ metric.label }}</span>
                 <span class="font-medium">
                     {{ metric.contribution.toFixed(1) }}
-                    <span class="text-muted-foreground text-xs">({{ (metric.weight * 100).toFixed(0) }}%)</span>
+                    <span class="text-xs text-muted-foreground"
+                        >({{ (metric.weight * 100).toFixed(0) }}%)</span
+                    >
                 </span>
             </div>
-            <div class="h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div class="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                     class="h-full rounded-full bg-primary transition-all duration-500"
-                    :style="{ width: `${(metric.contribution / totalScore) * 100}%` }"
+                    :style="{
+                        width: `${(metric.contribution / totalScore) * 100}%`,
+                    }"
                 />
             </div>
         </div>
-        <div class="flex items-center justify-between pt-2 border-t">
+        <div class="flex items-center justify-between border-t pt-2">
             <span class="font-medium">Total Score</span>
             <span class="text-lg font-bold">{{ totalScore.toFixed(0) }}</span>
         </div>

@@ -10,9 +10,9 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { disable, enable, show } from '@/routes/two-factor';
 import { BreadcrumbItem } from '@/types';
 import { Form, Head } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
 import { onUnmounted, ref } from 'vue';
-import { trans } from 'laravel-vue-i18n';
 
 interface Props {
     requiresConfirmation?: boolean;
@@ -53,7 +53,9 @@ onUnmounted(() => {
                     v-if="!twoFactorEnabled"
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="destructive">{{ $t('settings.two_factor_disabled_badge') }}</Badge>
+                    <Badge variant="destructive">{{
+                        $t('settings.two_factor_disabled_badge')
+                    }}</Badge>
 
                     <p class="text-muted-foreground">
                         {{ $t('settings.two_factor_disabled_description') }}
@@ -64,7 +66,9 @@ onUnmounted(() => {
                             v-if="hasSetupData"
                             @click="showSetupModal = true"
                         >
-                            <ShieldCheck />{{ $t('settings.two_factor_continue_setup') }}
+                            <ShieldCheck />{{
+                                $t('settings.two_factor_continue_setup')
+                            }}
                         </Button>
                         <Form
                             v-else
@@ -73,7 +77,9 @@ onUnmounted(() => {
                             #default="{ processing }"
                         >
                             <Button type="submit" :disabled="processing">
-                                <ShieldCheck />{{ $t('settings.two_factor_enable_button') }}</Button
+                                <ShieldCheck />{{
+                                    $t('settings.two_factor_enable_button')
+                                }}</Button
                             ></Form
                         >
                     </div>
@@ -83,7 +89,9 @@ onUnmounted(() => {
                     v-else
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="default">{{ $t('settings.two_factor_enabled_badge') }}</Badge>
+                    <Badge variant="default">{{
+                        $t('settings.two_factor_enabled_badge')
+                    }}</Badge>
 
                     <p class="text-muted-foreground">
                         {{ $t('settings.two_factor_enabled_description') }}
