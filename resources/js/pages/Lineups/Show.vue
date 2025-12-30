@@ -258,65 +258,83 @@ const breadcrumbs = computed(() =>
 
             <!-- Lineup Content -->
             <div class="space-y-6">
-                <!-- Artist Actions Panel -->
                 <Card 
-                    class="relative transition-all duration-300 ease-in-out p-2 gap-0" 
+                    class="relative transition-all duration-300 ease-in-out p-1 gap-0" 
                     :class="{
                         'overflow-visible': isSearchExpanded, 
                         'overflow-hidden': !isSearchExpanded,
                         'rounded-b-none': isSearchExpanded && searchQuery.length >= 2
                     }"
                 >
-                    <div class="p-2 flex items-center gap-2">
+                    <div class="p-1 flex items-center">
                         <!-- Search Section -->
                         <div 
-                            class="relative transition-all duration-300 ease-in-out"
-                            :class="[isSearchExpanded ? 'flex-1' : 'w-full sm:w-auto sm:flex-1']"
+                            class="relative flex-1 transition-all duration-300 ease-in-out"
                         >
                             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                             <Input
                                 v-model="searchQuery"
                                 type="text"
                                 :placeholder="isSearchExpanded ? 'Search artists...' : 'Search and add artists...'"
-                                class="pl-9 border-none focus-visible:ring-0 transition-all shadow-none"
+                                class="pl-9 border-none focus-visible:ring-0 transition-all shadow-none h-10"
                                 :class="isSearchExpanded ? 'bg-transparent' : 'bg-muted/50'"
                                 @focus="expandSearch"
                             />
                         </div>
 
-                        <!-- Actions Section (Hidden when expanded) -->
-                        <template v-if="!isSearchExpanded">
-                            <div class="w-[1px] h-8 bg-border mx-2" />
-                            <div class="flex gap-2 hidden sm:flex">
-                                <Button
-                                    variant="outline"
-                                    disabled
-                                    class="gap-2"
-                                >
-                                    <Layers class="w-4 h-4" />
-                                    {{ $t('lineups.show_stack_button') }}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    disabled
-                                    class="gap-2"
-                                >
-                                    <Scale class="w-4 h-4" />
-                                    {{ $t('lineups.show_compare_button') }}
-                                </Button>
-                            </div>
-                        </template>
+                        <!-- Actions Section & Close Button Transition -->
+                        <div class="flex items-center overflow-hidden">
+                            <Transition
+                                enter-active-class="transition-all duration-300 ease-in-out"
+                                leave-active-class="transition-all duration-300 ease-in-out"
+                                enter-from-class="max-w-0 opacity-0"
+                                enter-to-class="max-w-[300px] opacity-100"
+                                leave-from-class="max-w-[300px] opacity-100"
+                                leave-to-class="max-w-0 opacity-0"
+                            >
+                                <div v-if="!isSearchExpanded" class="flex items-center shrink-0 overflow-hidden whitespace-nowrap">
+                                    <div class="w-[1px] h-8 bg-border mx-2" />
+                                    <div class="flex gap-2 hidden sm:flex mr-2">
+                                        <Button
+                                            variant="outline"
+                                            disabled
+                                            class="gap-2 h-9"
+                                        >
+                                            <Layers class="w-4 h-4" />
+                                            {{ $t('lineups.show_stack_button') }}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            disabled
+                                            class="gap-2 h-9"
+                                        >
+                                            <Scale class="w-4 h-4" />
+                                            {{ $t('lineups.show_compare_button') }}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Transition>
 
-                        <!-- Close Search Button -->
-                        <Button 
-                            v-else 
-                            variant="ghost" 
-                            size="icon" 
-                            class="shrink-0"
-                            @click="closeSearch"
-                        >
-                            <X class="w-4 h-4" />
-                        </Button>
+                            <Transition
+                                enter-active-class="transition-all duration-300 ease-in-out"
+                                leave-active-class="transition-all duration-300 ease-in-out"
+                                enter-from-class="max-w-0 opacity-0"
+                                enter-to-class="max-w-[50px] opacity-100"
+                                leave-from-class="max-w-[50px] opacity-100"
+                                leave-to-class="max-w-0 opacity-0"
+                            >
+                                <div v-if="isSearchExpanded" class="overflow-hidden">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        class="shrink-0 h-9 w-9 ml-2"
+                                        @click="closeSearch"
+                                    >
+                                        <X class="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </Transition>
+                        </div>
                     </div>
 
                     <!-- Search Dropdown (Absolute) -->
