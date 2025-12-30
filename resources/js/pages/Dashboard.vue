@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import LineupCard from '@/components/lineup/LineupCard.vue';
+import LineupCard from '@/components/dashboard/LineupCard.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
