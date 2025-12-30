@@ -19,6 +19,13 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Lineup Search UI Improvements (2025-12-29)
+**Summary:** Refined the Lineup Artist Search UI to create a seamless visual connection between the search input and results dropdown.
+- **Frontend:**
+  - Modified `Lineups/Show.vue` Card component to dynamically remove bottom rounded corners when results are shown.
+  - Updated Dropdown styling to remove top margin and border, creating a unified component look.
+  - Made search input transparent when expanded to maintain visual consistency.
+
 ### Lineup List Resource Conversion (2025-12-29)
 **Summary:** Converted the Lineup list response to use a standard API Resource class, optimized database queries, and aligned frontend implementation.
 - **Backend:**
@@ -30,16 +37,19 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
   - Updated `LineupControllerTest` to generate real database records instead of relying on non-existent mocks, and verified the correct response structure.
 
 ### Add Artist to Lineup (2025-12-29)
-**Summary:** Implemented the ability to search for and add artists to a specific lineup.
-- **Backend:**
-  - Added `AddArtistToLineupRequest` for validation.
-  - Implemented `LineupController::addArtist` to attach artists to lineups (defaulting to 'undercard').
-  - Added `POST /lineups/{lineup}/artists` route.
+**Summary:** Implemented the inline artist search and add interface on the Lineup Detail page with a floating full-width dropdown.
 - **Frontend:**
-  - Created `AddArtistModal.vue` component with artist search and "Add" functionality.
-  - Integrated modal into `Lineups/Show.vue` with an "Add Artist" button.
+  - Refactored the lineup toolbar into an "Artist Actions Panel".
+  - Implemented an expandable search input that transitions to a full-width search interface.
+  - Implemented search results as a **floating full-width dropdown** (absolute positioned), matching the dashboard's search behavior but spanning the entire panel width.
+  - Added real-time artist search with debouncing, displaying artist scores and genre chips.
+  - Limited dropdown results to 3 artists with a "View all results" link leading to the main search page.
+  - Implemented "Add to Lineup" functionality directly from search results with visual feedback.
+  - UI Polish: Added a vertical divider, removed borders on focus, and matched existing design patterns.
+- **Backend:**
+  - (Existing) `LineupController::addArtist` endpoint handles the attachment.
 - **Testing:**
-  - Added feature tests for adding artists, handling duplicates, and validation.
+  - Verified `LineupControllerTest` passes.
 
 ### Create Lineup Flow (2025-12-29)
 **Summary:** Implemented the "Create New Lineup" flow, including backend API, validation, and frontend modal UI.
