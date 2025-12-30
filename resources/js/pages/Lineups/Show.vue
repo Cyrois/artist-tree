@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
+import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
@@ -13,35 +14,25 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { tierOrder } from '@/data/constants';
 import type { TierType } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
-import { search as artistSearchRoute } from '@/routes/api/artists';
 import { Head, router } from '@inertiajs/vue3';
-import { useDebounceFn } from '@vueuse/core';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
 import {
-    Check,
-    ChevronRight,
     Download,
-    Layers,
-    Loader2,
     MoreHorizontal,
     Pencil,
-    Plus,
-    Scale,
-    Search,
     Trash2,
     Users,
-    X,
 } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 interface ApiArtist {
     id: number;
+    spotify_id: string;
     name: string;
     genres: string[];
     image_url: string | null;
@@ -93,10 +84,6 @@ const compareMode = ref(false);
 const selectedArtistIds = ref<number[]>([]);
 
 // Search State
-const searchQuery = ref('');
-const isSearchExpanded = ref(false);
-const searchResults = ref<SearchResultArtist[]>([]);
-const isSearching = ref(false);
 const addingArtistId = ref<string | number | null>(null);
 
 // Add to Lineup Modal State
@@ -104,8 +91,6 @@ const isAddModalOpen = ref(false);
 const artistToAdd = ref<SearchResultArtist | null>(null);
 const suggestedTier = ref<TierType | null>(null);
 const isAddingToLineup = ref(false);
-
-const displayedResults = computed(() => searchResults.value.slice(0, 3));
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
@@ -143,46 +128,6 @@ function clearSelection() {
 function exitCompareMode() {
     compareMode.value = false;
     selectedArtistIds.value = [];
-}
-
-// Search Logic
-const performSearch = useDebounceFn(async (query: string) => {
-    if (!query || query.length < 2) {
-        searchResults.value = [];
-        return;
-    }
-
-    isSearching.value = true;
-    try {
-        const response = await fetch(
-            artistSearchRoute.url({ query: { q: query } }),
-            {
-                headers: { Accept: 'application/json' },
-            },
-        );
-        const data = await response.json();
-        searchResults.value = data.data || [];
-    } catch (e) {
-        console.error('Search failed', e);
-        searchResults.value = [];
-    } finally {
-        isSearching.value = false;
-    }
-}, 300);
-
-watch(searchQuery, (newVal) => {
-    if (newVal.length >= 2) isSearching.value = true;
-    performSearch(newVal);
-});
-
-function expandSearch() {
-    isSearchExpanded.value = true;
-}
-
-function closeSearch() {
-    isSearchExpanded.value = false;
-    searchQuery.value = '';
-    searchResults.value = [];
 }
 
 function calculateSuggestedTier(artistScore: number): TierType | null {
@@ -256,14 +201,12 @@ async function confirmAddArtist(payload: {
 }
 
 function isArtistInLineup(artist: SearchResultArtist) {
-    if (artist.id) {
-        return allArtists.value.some((a) => a.id === artist.id);
-    }
-    return false;
-}
-
-function handleViewAllResults() {
-    router.visit(artistSearchRoute.url({ query: { q: searchQuery.value } }));
+    return allArtists.value.some((a) => {
+        if (artist.id && a.id === artist.id) return true;
+        if (artist.spotify_id && a.spotify_id === artist.spotify_id)
+            return true;
+        return false;
+    });
 }
 
 const breadcrumbs = computed(() =>
@@ -386,223 +329,12 @@ const breadcrumbs = computed(() =>
 
             <!-- Lineup Content -->
             <div class="space-y-6">
-                <Card
-                    class="relative gap-0 p-1 transition-all duration-300 ease-in-out"
-                    :class="{
-                        'overflow-visible': isSearchExpanded,
-                        'overflow-hidden': !isSearchExpanded,
-                        'rounded-b-none':
-                            isSearchExpanded && searchQuery.length >= 2,
-                    }"
-                >
-                    <div class="flex items-center p-1">
-                        <!-- Search Section -->
-                        <div
-                            class="relative flex-1 transition-all duration-300 ease-in-out"
-                        >
-                            <Search
-                                class="absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                            />
-                            <Input
-                                v-model="searchQuery"
-                                type="text"
-                                :placeholder="
-                                    isSearchExpanded
-                                        ? $t('dashboard.search_placeholder')
-                                        : $t('lineups.show_search_placeholder')
-                                "
-                                class="h-10 border-none pl-9 shadow-none transition-all focus-visible:ring-0"
-                                :class="
-                                    isSearchExpanded
-                                        ? 'bg-transparent'
-                                        : 'bg-muted/50'
-                                "
-                                @focus="expandSearch"
-                            />
-                        </div>
-
-                        <!-- Actions Section & Close Button Transition -->
-                        <div class="flex items-center overflow-hidden">
-                            <Transition
-                                enter-active-class="transition-all duration-300 ease-in-out"
-                                leave-active-class="transition-all duration-300 ease-in-out"
-                                enter-from-class="max-w-0 opacity-0"
-                                enter-to-class="max-w-[300px] opacity-100"
-                                leave-from-class="max-w-[300px] opacity-100"
-                                leave-to-class="max-w-0 opacity-0"
-                            >
-                                <div
-                                    v-if="!isSearchExpanded"
-                                    class="flex shrink-0 items-center overflow-hidden whitespace-nowrap"
-                                >
-                                    <div class="mx-2 h-8 w-[1px] bg-border" />
-                                    <div class="mr-2 flex hidden gap-2 sm:flex">
-                                        <Button
-                                            variant="outline"
-                                            disabled
-                                            class="h-9 gap-2"
-                                        >
-                                            <Layers class="h-4 w-4" />
-                                            {{
-                                                $t('lineups.show_stack_button')
-                                            }}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            disabled
-                                            class="h-9 gap-2"
-                                        >
-                                            <Scale class="h-4 w-4" />
-                                            {{
-                                                $t(
-                                                    'lineups.show_compare_button',
-                                                )
-                                            }}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </Transition>
-
-                            <Transition
-                                enter-active-class="transition-all duration-300 ease-in-out"
-                                leave-active-class="transition-all duration-300 ease-in-out"
-                                enter-from-class="max-w-0 opacity-0"
-                                enter-to-class="max-w-[50px] opacity-100"
-                                leave-from-class="max-w-[50px] opacity-100"
-                                leave-to-class="max-w-0 opacity-0"
-                            >
-                                <div
-                                    v-if="isSearchExpanded"
-                                    class="overflow-hidden"
-                                >
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        class="ml-2 h-9 w-9 shrink-0"
-                                        @click="closeSearch"
-                                    >
-                                        <X class="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </Transition>
-                        </div>
-                    </div>
-
-                    <!-- Search Dropdown (Absolute) -->
-                    <div
-                        v-if="isSearchExpanded && searchQuery.length >= 2"
-                        class="absolute top-full right-[-1px] left-[-1px] z-50 mt-0 overflow-hidden rounded-b-lg border bg-background shadow-xl"
-                    >
-                        <div
-                            v-if="isSearching"
-                            class="flex items-center justify-center py-8"
-                        >
-                            <Loader2
-                                class="h-6 w-6 animate-spin text-muted-foreground"
-                            />
-                        </div>
-
-                        <div
-                            v-else-if="searchResults.length === 0"
-                            class="py-8 text-center text-muted-foreground"
-                        >
-                            {{ $t('lineups.show_search_no_results', { query: searchQuery }) }}
-                        </div>
-
-                        <div v-else>
-                            <div class="divide-y">
-                                <div
-                                    v-for="artist in displayedResults"
-                                    :key="artist.spotify_id"
-                                    class="flex items-center justify-between p-3 transition-colors hover:bg-muted/50"
-                                >
-                                    <div
-                                        class="flex min-w-0 flex-1 items-center gap-3"
-                                    >
-                                        <img
-                                            :src="
-                                                artist.image_url ||
-                                                '/placeholder.png'
-                                            "
-                                            :alt="artist.name"
-                                            class="h-10 w-10 flex-shrink-0 rounded-md bg-muted object-cover"
-                                        />
-                                        <div class="min-w-0 flex-1">
-                                            <p
-                                                class="truncate text-sm font-medium"
-                                            >
-                                                {{ artist.name }}
-                                            </p>
-                                            <div
-                                                class="mt-0.5 flex flex-wrap gap-1"
-                                            >
-                                                <Badge
-                                                    v-for="genre in artist.genres.slice(
-                                                        0,
-                                                        2,
-                                                    )"
-                                                    :key="genre"
-                                                    variant="secondary"
-                                                    class="h-4 px-1.5 py-0 text-[10px]"
-                                                >
-                                                    {{ genre }}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center gap-3">
-                                        <ScoreBadge
-                                            :score="
-                                                artist.score ||
-                                                artist.spotify_popularity ||
-                                                0
-                                            "
-                                        />
-
-                                        <Button
-                                            v-if="!isArtistInLineup(artist)"
-                                            size="sm"
-                                            variant="ghost"
-                                            class="h-8 w-8 p-0"
-                                            :disabled="!!addingArtistId"
-                                            @click="openAddModal(artist)"
-                                        >
-                                            <Loader2
-                                                v-if="
-                                                    addingArtistId ===
-                                                    (artist.id ||
-                                                        artist.spotify_id)
-                                                "
-                                                class="h-4 w-4 animate-spin"
-                                            />
-                                            <Plus v-else class="h-4 w-4" />
-                                        </Button>
-                                        <div
-                                            v-else
-                                            class="flex h-8 w-8 items-center justify-center"
-                                        >
-                                            <Check
-                                                class="h-4 w-4 text-green-500"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- View All Link -->
-                            <div class="border-t bg-muted/30 p-2 text-center">
-                                <button
-                                    class="flex w-full cursor-pointer items-center justify-center gap-1 py-1 text-xs font-medium text-primary hover:underline"
-                                    @click="handleViewAllResults"
-                                >
-                                    {{ $t('lineups.show_search_view_all', { query: searchQuery }) }}
-                                    <ChevronRight class="h-3 w-3" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
+                <!-- Artist Search Component -->
+                <ArtistSearch
+                    :adding-artist-id="addingArtistId"
+                    :is-artist-in-lineup="isArtistInLineup"
+                    @add-artist="openAddModal"
+                />
 
                 <!-- Mode Banners -->
                 <div

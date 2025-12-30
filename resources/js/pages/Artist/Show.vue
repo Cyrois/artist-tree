@@ -18,7 +18,6 @@ import {
 } from 'lucide-vue-next';
 import { ref, onMounted, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
-import { show as artistShowRoute } from '@/routes/api/artists';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
@@ -61,7 +60,7 @@ const activeTab = ref<'overview' | 'data'>('overview');
 // Fetch artist details on mount
 onMounted(async () => {
     try {
-        const response = await fetch(artistShowRoute.url(props.id), {
+        const response = await fetch(`/api/artists/${props.id}`, {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
@@ -103,7 +102,6 @@ const pageTitle = computed(() =>
     artist.value ? `${artist.value.name} - Artist-Tree` : `${trans('artists.show_page_title')} - Artist-Tree`
 );
 </script>
-
 <template>
     <Head :title="pageTitle" />
     <MainLayout :breadcrumbs="breadcrumbs">
