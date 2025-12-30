@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -52,35 +51,45 @@ function handleSubmit() {
 
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">
-        <DialogContent class="sm:max-w-[425px]">
-            <DialogHeader>
-                <div class="flex items-center justify-between">
-                    <DialogTitle
-                        >{{ $t('common.action_edit') }}
-                        {{ $t('common.navigation_lineups') }}</DialogTitle
-                    >
-                </div>
+        <DialogContent
+            class="overflow-hidden border-none p-0 shadow-2xl sm:max-w-[480px]"
+        >
+            <DialogHeader class="p-8 pb-0">
+                <DialogTitle class="text-2xl font-bold text-foreground">{{
+                    $t('common.action_edit')
+                }}</DialogTitle>
             </DialogHeader>
 
-            <form @submit.prevent="handleSubmit" class="space-y-4 py-4">
+            <form @submit.prevent="handleSubmit" class="space-y-6 p-8 pt-6">
                 <div class="space-y-2">
-                    <Label for="name">{{
-                        $t('lineups.create_name_label')
-                    }}</Label>
+                    <Label
+                        for="name"
+                        class="text-sm font-semibold text-foreground"
+                        >{{ $t('lineups.create_name_label') }}</Label
+                    >
                     <Input
                         id="name"
                         v-model="form.name"
                         :placeholder="$t('lineups.create_name_placeholder')"
-                        :class="{ 'border-destructive': form.errors.name }"
+                        :class="[
+                            'h-12 border-2 text-base transition-colors focus-visible:border-foreground focus-visible:ring-0',
+                            { 'border-destructive': form.errors.name },
+                        ]"
                         required
                     />
-                    <p v-if="form.errors.name" class="text-sm text-destructive">
+                    <div
+                        v-if="form.errors.name"
+                        class="mt-1 text-xs font-medium text-destructive"
+                    >
                         {{ form.errors.name }}
-                    </p>
+                    </div>
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="description">
+                    <Label
+                        for="description"
+                        class="text-sm font-semibold text-foreground"
+                    >
                         {{ $t('lineups.create_description_label_optional') }}
                     </Label>
                     <textarea
@@ -89,35 +98,40 @@ function handleSubmit() {
                         :placeholder="
                             $t('lineups.create_description_placeholder')
                         "
-                        class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        class="flex min-h-[120px] w-full resize-none rounded-md border-2 border-input bg-transparent px-3 py-3 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:border-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                         :class="{
                             'border-destructive': form.errors.description,
                         }"
                     />
-                    <p
+                    <div
                         v-if="form.errors.description"
-                        class="text-sm text-destructive"
+                        class="mt-1 text-xs font-medium text-destructive"
                     >
                         {{ form.errors.description }}
-                    </p>
+                    </div>
                 </div>
 
-                <DialogFooter>
+                <div class="flex gap-4 pt-2">
                     <Button
                         type="button"
-                        variant="ghost"
+                        variant="secondary"
+                        class="h-14 flex-1 border-none bg-[#F1F3F5] text-base font-bold text-[#495057] transition-all hover:bg-[#E9ECEF] dark:bg-muted dark:text-foreground dark:hover:bg-muted/80"
                         @click="$emit('update:open', false)"
                     >
                         {{ $t('common.action_cancel') }}
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button
+                        type="submit"
+                        class="h-14 flex-1 border-none bg-[#EE6055] text-base font-bold text-white shadow-lg shadow-[#EE6055]/20 transition-all hover:bg-[#D54B41] active:scale-[0.98]"
+                        :disabled="form.processing"
+                    >
                         <Loader2
                             v-if="form.processing"
                             class="mr-2 h-4 w-4 animate-spin"
                         />
                         {{ $t('common.action_save') }}
                     </Button>
-                </DialogFooter>
+                </div>
             </form>
         </DialogContent>
     </Dialog>
