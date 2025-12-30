@@ -44,15 +44,7 @@ class LineupController extends Controller
         $validated = $request->validated();
         
         $artist = Artist::findOrFail($validated['artist_id']);
-
-        // Default tier if not provided
-        if (isset($validated['tier'])) {
-            $tier = $validated['tier'];
-        } else {
-            // Calculate tier based on score relative to lineup
-            $tierService = app(\App\Services\TierCalculationService::class);
-            $tier = $tierService->determineTier($artist, $lineup);
-        }
+        $tier = $validated['tier'];
 
         // Attach artist if not already in lineup
         if (!$lineup->artists()->where('artist_id', $artist->id)->exists()) {
