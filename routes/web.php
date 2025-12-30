@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('artist/{id}', fn ($id) => Inertia::render('Artist/Show', ['id' => (int) $id]))->name('artist.show');
     Route::get('lineups', [LineupController::class, 'index'])->name('lineups.index');
     Route::post('lineups', [LineupController::class, 'store'])->name('lineups.store');
+    Route::put('lineups/{lineup}', [LineupController::class, 'update'])->name('lineups.update');
     Route::get('lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
     Route::post('lineups/{lineup}/artists', [LineupController::class, 'addArtist'])->name('lineups.artists.store');
     // Settings routes are in routes/settings.php

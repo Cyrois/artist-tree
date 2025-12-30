@@ -81,12 +81,15 @@ const performSearch = useDebounceFn(async (query: string) => {
     hasSearched.value = true;
 
     try {
-        const response = await fetch(`/api/artists/search?q=${encodeURIComponent(query)}`, {
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
+        const response = await fetch(
+            `/api/artists/search?q=${encodeURIComponent(query)}`,
+            {
+                credentials: 'include',
+                headers: {
+                    Accept: 'application/json',
+                },
             },
-        });
+        );
 
         if (!response.ok) {
             throw new Error(`Search failed: ${response.statusText}`);
