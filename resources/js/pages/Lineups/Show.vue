@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import TierSection from '@/components/lineup/TierSection.vue';
+import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { tierOrder } from '@/data/constants';
@@ -77,6 +78,12 @@ const isSearchExpanded = ref(false);
 const searchResults = ref<SearchResultArtist[]>([]);
 const isSearching = ref(false);
 const addingArtistId = ref<string | number | null>(null);
+
+// Add to Lineup Modal State
+const isAddModalOpen = ref(false);
+const artistToAdd = ref<SearchResultArtist | null>(null);
+const suggestedTier = ref<TierType | null>(null);
+const isAddingToLineup = ref(false);
 
 const displayedResults = computed(() => searchResults.value.slice(0, 3));
 
@@ -155,11 +162,49 @@ function closeSearch() {
     searchResults.value = [];
 }
 
-async function addArtistToLineup(artist: SearchResultArtist) {
-    if (addingArtistId.value) return;
+function calculateSuggestedTier(artistScore: number): TierType | null {
+    if (!props.lineup || props.lineup.stats.artistCount === 0) return null;
+
+    let bestTier: TierType | null = null;
+    let minDiff = Infinity;
+
+    for (const tier of tierOrder) {
+        const artists = props.lineup.artists[tier];
+        // If a tier has no artists, we can skip it for average calculation purposes 
+        // OR we might consider "empty tiers" as valid targets if we had a baseline average for them.
+        // For now, based on "relative to lineup's tier averages", we only compare against existing averages.
+        // If all tiers are empty, we return null (handled by artistCount check above).
+        if (!artists || artists.length === 0) continue;
+
+        const totalScore = artists.reduce((sum, a) => sum + a.score, 0);
+        const avg = totalScore / artists.length;
+        const diff = Math.abs(artistScore - avg);
+
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestTier = tier;
+        }
+    }
     
-    addingArtistId.value = artist.id || artist.spotify_id;
+    // If we couldn't find a best tier (e.g. all tiers empty somehow despite artistCount > 0), return null.
+    return bestTier;
+}
+
+function openAddModal(artist: SearchResultArtist) {
+    if (addingArtistId.value) return; 
     
+    artistToAdd.value = artist;
+    const score = artist.score || artist.spotify_popularity || 0;
+    suggestedTier.value = calculateSuggestedTier(score);
+    isAddModalOpen.value = true;
+}
+
+async function confirmAddArtist(payload: { artist: SearchResultArtist, tier: TierType }) {
+    const { artist, tier } = payload;
+    
+    isAddingToLineup.value = true;
+    addingArtistId.value = artist.id || artist.spotify_id; // To show spinner in search list if visible
+
     try {
         let artistId = artist.id;
         
@@ -171,13 +216,16 @@ async function addArtistToLineup(artist: SearchResultArtist) {
         }
 
         await axios.post(route('lineups.artists.store', props.id), {
-            artist_id: artistId
+            artist_id: artistId,
+            tier: tier
         });
         
+        isAddModalOpen.value = false;
         router.reload({ only: ['lineup'] });
     } catch (e) {
         console.error('Failed to add artist', e);
     } finally {
+        isAddingToLineup.value = false;
         addingArtistId.value = null;
     }
 }
@@ -387,7 +435,7 @@ const breadcrumbs = computed(() =>
                                             variant="ghost"
                                             class="h-8 w-8 p-0"
                                             :disabled="!!addingArtistId"
-                                            @click="addArtistToLineup(artist)"
+                                            @click="openAddModal(artist)"
                                         >
                                             <Loader2 v-if="addingArtistId === (artist.id || artist.spotify_id)" class="w-4 h-4 animate-spin" />
                                             <Plus v-else class="w-4 h-4" />
@@ -477,5 +525,15 @@ const breadcrumbs = computed(() =>
                 {{ $t('lineups.show_back_button') }}
             </Button>
         </div>
+
+        <AddToLineupModal 
+            v-if="props.lineup"
+            v-model:open="isAddModalOpen"
+            :artist="artistToAdd"
+            :lineup-name="props.lineup.name"
+            :suggested-tier="suggestedTier"
+            :is-adding="isAddingToLineup"
+            @add="confirmAddArtist"
+        />
     </MainLayout>
 </template>
