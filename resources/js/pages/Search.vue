@@ -18,7 +18,6 @@ import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
-import { search as artistSearchRoute } from '@/routes/api/artists';
 import { Head, router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import axios from 'axios';

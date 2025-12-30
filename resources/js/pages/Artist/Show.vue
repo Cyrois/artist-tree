@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import MainLayout from '@/layouts/MainLayout.vue';
-import { show as artistShowRoute } from '@/routes/api/artists';
 import { Head, router } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
 import {
