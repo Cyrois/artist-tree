@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
+use App\Services\TierCalculationService;
+
 class LineupController extends Controller
 {
     public function index()
@@ -26,6 +28,22 @@ class LineupController extends Controller
 
         return Inertia::render('Lineups/Index', [
             'lineups' => \App\Http\Resources\LineupResource::collection($lineups)
+        ]);
+    }
+
+    public function suggestTier(Request $request, Lineup $lineup, TierCalculationService $tierService, ArtistScoringService $scoringService)
+    {
+        $request->validate([
+            'artist_id' => 'required|exists:artists,id',
+        ]);
+
+        $artist = Artist::findOrFail($request->artist_id);
+        $score = $scoringService->calculateScore($artist);
+        
+        $suggestedTier = $tierService->suggestTier($lineup, $score);
+
+        return response()->json([
+            'suggested_tier' => $suggestedTier,
         ]);
     }
 
