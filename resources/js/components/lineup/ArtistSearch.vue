@@ -35,7 +35,7 @@ interface Props {
     isArtistInLineup: (artist: SearchResultArtist) => boolean;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     'add-artist': [artist: SearchResultArtist];
