@@ -43,14 +43,21 @@ class LineupController extends Controller
         // $this->authorize('update', $lineup); // Policy not implemented yet
         $validated = $request->validated();
         
-        // Default tier if not provided (should be calculated, but MVP default)
-        $tier = $validated['tier'] ?? 'undercard';
+        $artist = Artist::findOrFail($validated['artist_id']);
+
+        // Default tier if not provided
+        if (isset($validated['tier'])) {
+            $tier = $validated['tier'];
+        } else {
+            // Calculate tier based on score relative to lineup
+            $tierService = app(\App\Services\TierCalculationService::class);
+            $tier = $tierService->determineTier($artist, $lineup);
+        }
 
         // Attach artist if not already in lineup
-        if (!$lineup->artists()->where('artist_id', $validated['artist_id'])->exists()) {
-            $lineup->artists()->attach($validated['artist_id'], [
+        if (!$lineup->artists()->where('artist_id', $artist->id)->exists()) {
+            $lineup->artists()->attach($artist->id, [
                 'tier' => $tier,
-                // 'suggested_tier' => ... // logic to be added
             ]);
         }
 
