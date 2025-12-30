@@ -11,9 +11,6 @@ import { Label } from '@/components/ui/label';
 import { useForm } from '@inertiajs/vue3';
 
 interface Props {
-}
-
-interface Props {
     open: boolean;
 }
 

@@ -141,7 +141,7 @@ const displayScore = computed(() => {
                                     />
                                 </div>
                                 <span class="font-medium">{{
-                                    tierLabels[tier]
+                                    $t('lineups.tier_' + tier)
                                 }}</span>
 
                                 <Badge
