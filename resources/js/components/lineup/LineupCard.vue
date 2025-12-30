@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getArtistsByIds } from '@/data/artists';
 import { formatCurrency } from '@/data/constants';
-import { getLineupStats } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
 import { trans } from 'laravel-vue-i18n';
 import { Calendar, Check, Clock, DollarSign, Users } from 'lucide-vue-next';
@@ -18,15 +16,16 @@ const emit = defineEmits<{
     click: [lineup: Lineup];
 }>();
 
-const stats = computed(() => getLineupStats(props.lineup));
+const stats = computed(() => props.lineup.stats || {
+    artistCount: 0,
+    avgScore: 0,
+    confirmedCount: 0,
+    pendingCount: 0,
+    totalBudget: 0,
+});
 
 // Get first few artists for preview
-const previewArtists = computed(() => {
-    const headliners = getArtistsByIds(
-        props.lineup.artists.headliner.slice(0, 3),
-    );
-    return headliners;
-});
+const previewArtists = computed(() => props.lineup.previewArtists || []);
 </script>
 
 <template>

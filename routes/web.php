@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LineupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ Route::get('/', function () {
 
 // Authenticated routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('search', fn () => Inertia::render('Search'))->name('search');
     Route::get('artist/{id}', fn ($id) => Inertia::render('Artist/Show', ['id' => (int) $id]))->name('artist.show');
     Route::get('lineups', [LineupController::class, 'index'])->name('lineups.index');

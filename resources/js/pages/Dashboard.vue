@@ -4,7 +4,6 @@ import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { search as searchRoute } from '@/routes';
@@ -25,7 +24,9 @@ interface ArtistSearchResult {
     spotify_popularity: number;
 }
 
-const lineups = getLineups();
+const props = defineProps<{
+    lineups: { data: Lineup[] };
+}>();
 
 const searchQuery = ref('');
 const searchResults = ref<ArtistSearchResult[]>([]);
@@ -235,7 +236,7 @@ const breadcrumbs = [
                     class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <LineupCard
-                        v-for="lineup in lineups"
+                        v-for="lineup in props.lineups.data"
                         :key="lineup.id"
                         :lineup="lineup"
                         @click="handleLineupClick"

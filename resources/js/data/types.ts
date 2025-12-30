@@ -67,8 +67,20 @@ export interface Lineup {
     description: string;
     updatedAt: string;
     createdAt: string;
-    artists: Record<TierType, number[]>;
-    artistStatuses: Record<number, ArtistStatus>;
+    artists: Record<TierType, number[]> | any[]; // Allow array from API
+    artistStatuses?: Record<number, ArtistStatus>; // Optional now
+    stats?: {
+        artistCount: number;
+        avgScore: number;
+        confirmedCount: number;
+        pendingCount: number;
+        totalBudget: number;
+    };
+    previewArtists?: {
+        id: number;
+        name: string;
+        image: string | null;
+    }[];
 }
 
 // Schedule Types
