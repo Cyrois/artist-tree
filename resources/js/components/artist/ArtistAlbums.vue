@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Disc, AlertCircle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    ChevronDown,
+    ChevronUp,
+    Disc,
+    ExternalLink,
+    Loader2,
+} from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
 
 interface Album {
     spotify_id: string;
@@ -25,9 +32,13 @@ const props = defineProps<Props>();
 const isExpanded = ref(false);
 const isLoadingMore = ref(false);
 
-const { data: albums, loading, error, meta, load } = useAsyncSpotifyData<Album[]>(
-    `/api/artists/${props.artistId}/albums`
-);
+const {
+    data: albums,
+    loading,
+    error,
+    meta,
+    load,
+} = useAsyncSpotifyData<Album[]>(`/api/artists/${props.artistId}/albums`);
 
 onMounted(() => {
     load({ limit: 5 });
@@ -52,7 +63,10 @@ const formatReleaseDate = (date: string): string => {
     const parts = date.split('-');
     if (parts.length === 1) return parts[0]; // Year only
     if (parts.length === 2) return `${parts[1]}/${parts[0]}`; // Month/Year
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+    });
 };
 
 const getAlbumTypeLabel = (type: string): string => {
@@ -62,9 +76,11 @@ const getAlbumTypeLabel = (type: string): string => {
 
 <template>
     <Card>
-        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader
+            class="flex flex-row items-center justify-between space-y-0 pb-2"
+        >
             <CardTitle class="flex items-center gap-2">
-                <Disc class="w-5 h-5" />
+                <Disc class="h-5 w-5" />
                 {{ trans('artists.show_albums_singles_title') }}
             </CardTitle>
             <Button
@@ -72,13 +88,20 @@ const getAlbumTypeLabel = (type: string): string => {
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
-                :aria-label="isLoadingMore ? trans('artists.show_albums_loading_more') : trans('artists.show_albums_view_all')"
+                :aria-label="
+                    isLoadingMore
+                        ? trans('artists.show_albums_loading_more')
+                        : trans('artists.show_albums_view_all')
+                "
                 aria-controls="albums-grid"
                 :aria-expanded="false"
                 @click="handleViewAll"
             >
-                <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
-                <ChevronDown v-else class="h-4 w-4 mr-1" />
+                <Loader2
+                    v-if="isLoadingMore"
+                    class="mr-1 h-4 w-4 animate-spin"
+                />
+                <ChevronDown v-else class="mr-1 h-4 w-4" />
                 {{ trans('artists.show_albums_view_all') }}
             </Button>
             <Button
@@ -86,13 +109,20 @@ const getAlbumTypeLabel = (type: string): string => {
                 variant="ghost"
                 size="sm"
                 :disabled="isLoadingMore"
-                :aria-label="isLoadingMore ? trans('artists.show_albums_loading_progress') : trans('artists.show_albums_show_less')"
+                :aria-label="
+                    isLoadingMore
+                        ? trans('artists.show_albums_loading_progress')
+                        : trans('artists.show_albums_show_less')
+                "
                 aria-controls="albums-grid"
                 :aria-expanded="true"
                 @click="handleShowLess"
             >
-                <Loader2 v-if="isLoadingMore" class="h-4 w-4 animate-spin mr-1" />
-                <ChevronUp v-else class="h-4 w-4 mr-1" />
+                <Loader2
+                    v-if="isLoadingMore"
+                    class="mr-1 h-4 w-4 animate-spin"
+                />
+                <ChevronUp v-else class="mr-1 h-4 w-4" />
                 {{ trans('artists.show_albums_show_less') }}
             </Button>
         </CardHeader>
@@ -100,26 +130,44 @@ const getAlbumTypeLabel = (type: string): string => {
             <!-- Loading State -->
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3">
-                    <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_loading') }}</p>
+                    <Loader2
+                        class="h-6 w-6 animate-spin text-muted-foreground"
+                    />
+                    <p class="text-sm text-muted-foreground">
+                        {{ trans('artists.show_albums_loading') }}
+                    </p>
                 </div>
             </div>
 
             <!-- Error State -->
-            <div v-else-if="error" class="flex items-center justify-center py-12">
+            <div
+                v-else-if="error"
+                class="flex items-center justify-center py-12"
+            >
                 <div class="flex flex-col items-center gap-3 text-center">
                     <AlertCircle class="h-8 w-8 text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_error') }}</p>
+                    <p class="text-sm text-muted-foreground">
+                        {{ trans('artists.show_albums_error') }}
+                    </p>
                 </div>
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="!albums || albums.length === 0" class="flex items-center justify-center py-12">
-                <p class="text-sm text-muted-foreground">{{ trans('artists.show_albums_empty') }}</p>
+            <div
+                v-else-if="!albums || albums.length === 0"
+                class="flex items-center justify-center py-12"
+            >
+                <p class="text-sm text-muted-foreground">
+                    {{ trans('artists.show_albums_empty') }}
+                </p>
             </div>
 
             <!-- Albums Grid -->
-            <div v-else id="albums-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div
+                v-else
+                id="albums-grid"
+                class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+            >
                 <a
                     v-for="album in albums"
                     :key="album.spotify_id"
@@ -130,32 +178,47 @@ const getAlbumTypeLabel = (type: string): string => {
                 >
                     <div class="space-y-2">
                         <!-- Album Cover -->
-                        <div class="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                        <div
+                            class="relative aspect-square overflow-hidden rounded-lg bg-muted"
+                        >
                             <img
                                 v-if="album.image_url"
                                 :src="album.image_url"
                                 :alt="album.name"
-                                class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                class="h-full w-full object-cover transition-transform group-hover:scale-105"
                             />
-                            <div v-else class="w-full h-full flex items-center justify-center">
-                                <Disc class="w-12 h-12 text-muted-foreground" />
+                            <div
+                                v-else
+                                class="flex h-full w-full items-center justify-center"
+                            >
+                                <Disc class="h-12 w-12 text-muted-foreground" />
                             </div>
 
                             <!-- Hover Overlay -->
-                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <ExternalLink class="w-6 h-6 text-white" />
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                                <ExternalLink class="h-6 w-6 text-white" />
                             </div>
                         </div>
 
                         <!-- Album Info -->
                         <div class="space-y-1">
-                            <p class="font-medium text-sm line-clamp-2 group-hover:underline">
+                            <p
+                                class="line-clamp-2 text-sm font-medium group-hover:underline"
+                            >
                                 {{ album.name }}
                             </p>
-                            <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{{ formatReleaseDate(album.release_date) }}</span>
+                            <div
+                                class="flex items-center gap-2 text-xs text-muted-foreground"
+                            >
+                                <span>{{
+                                    formatReleaseDate(album.release_date)
+                                }}</span>
                                 <span>•</span>
-                                <span>{{ getAlbumTypeLabel(album.album_type) }}</span>
+                                <span>{{
+                                    getAlbumTypeLabel(album.album_type)
+                                }}</span>
                             </div>
                         </div>
                     </div>

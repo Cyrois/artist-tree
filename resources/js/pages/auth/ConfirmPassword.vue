@@ -23,7 +23,9 @@ import { Form, Head } from '@inertiajs/vue3';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">{{ $t('auth.confirm_password_password_label') }}</Label>
+                    <Label htmlFor="password">{{
+                        $t('auth.confirm_password_password_label')
+                    }}</Label>
                     <Input
                         id="password"
                         type="password"

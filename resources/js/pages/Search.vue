@@ -1,24 +1,35 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import ArtistCard from '@/components/artist/ArtistCard.vue';
+import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import RecentSearches from '@/components/artist/RecentSearches.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import { useRecentSearches } from '@/composables/useRecentSearches';
 import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
-import { Search, SlidersHorizontal, ChevronDown, Loader2, AlertCircle } from 'lucide-vue-next';
-import { ref, computed, watch, onMounted } from 'vue';
-import { trans } from 'laravel-vue-i18n';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { Head, router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
-import { useRecentSearches } from '@/composables/useRecentSearches';
 import axios from 'axios';
-import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    ChevronDown,
+    Loader2,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
 
 // API response type matching backend structure
 interface ApiArtist {
@@ -84,7 +95,10 @@ const performSearch = useDebounceFn(async (query: string) => {
         const data = await response.json();
         searchResults.value = data.data || [];
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An error occurred while searching';
+        error.value =
+            err instanceof Error
+                ? err.message
+                : 'An error occurred while searching';
         searchResults.value = [];
     } finally {
         isLoading.value = false;
@@ -129,17 +143,23 @@ const filteredArtists = computed(() => {
         _spotifyId: apiArtist.spotify_id,
         _existsInDatabase: apiArtist.exists_in_database,
         _source: apiArtist.source,
-    })) as (Artist & { _spotifyId: string; _existsInDatabase: boolean; _source: string })[];
+    })) as (Artist & {
+        _spotifyId: string;
+        _existsInDatabase: boolean;
+        _source: string;
+    })[];
 
     // Genre filter
     if (selectedGenres.value.length > 0) {
-        results = results.filter(a =>
-            a.genre.some(g => selectedGenres.value.includes(g))
+        results = results.filter((a) =>
+            a.genre.some((g) => selectedGenres.value.includes(g)),
         );
     }
 
     // Score range filter (only applicable if we have scores)
-    results = results.filter(a => a.score >= scoreMin.value && a.score <= scoreMax.value);
+    results = results.filter(
+        (a) => a.score >= scoreMin.value && a.score <= scoreMax.value,
+    );
 
     // Sort
     results.sort((a, b) => {
@@ -186,7 +206,9 @@ function clearFilters() {
     scoreMax.value = 100;
 }
 
-async function handleArtistClick(artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean }) {
+async function handleArtistClick(
+    artist: Artist & { _spotifyId?: string; _existsInDatabase?: boolean },
+) {
     // Add to recent searches
     if (artist._spotifyId) {
         addSearch({
@@ -197,7 +219,7 @@ async function handleArtistClick(artist: Artist & { _spotifyId?: string; _exists
             image_url: artist.image || null,
             spotify_popularity: artist.spotifyPopularity || 0,
             spotify_followers: artist.spotifyFollowers || 0,
-            score: artist.score || 0
+            score: artist.score || 0,
         });
     }
 
@@ -208,7 +230,7 @@ async function handleArtistClick(artist: Artist & { _spotifyId?: string; _exists
         try {
             // Select (create) artist in backend using Spotify ID
             const response = await axios.post('/api/artists/select', {
-                spotify_id: artist._spotifyId
+                spotify_id: artist._spotifyId,
             });
             const newId = response.data.data.id;
             router.visit(`/artist/${newId}`);
@@ -235,10 +257,12 @@ const breadcrumbs = searchBreadcrumbs();
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6">
             <!-- Search Header -->
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col gap-4 sm:flex-row">
                 <!-- Search Input -->
                 <div class="relative flex-1">
-                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Search
+                        class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                    />
                     <Input
                         v-model="searchQuery"
                         type="text"
@@ -253,9 +277,13 @@ const breadcrumbs = searchBreadcrumbs();
                     @click="showFilters = !showFilters"
                     :class="{ 'border-primary': showFilters }"
                 >
-                    <SlidersHorizontal class="w-4 h-4 mr-2" />
+                    <SlidersHorizontal class="mr-2 h-4 w-4" />
                     {{ $t('artists.search_filters_button') }}
-                    <Badge v-if="activeFilterCount > 0" variant="secondary" class="ml-2">
+                    <Badge
+                        v-if="activeFilterCount > 0"
+                        variant="secondary"
+                        class="ml-2"
+                    >
                         {{ activeFilterCount }}
                     </Badge>
                 </Button>
@@ -265,7 +293,7 @@ const breadcrumbs = searchBreadcrumbs();
                     <DropdownMenuTrigger as-child>
                         <Button variant="outline">
                             {{ $t('artists.search_sort_button') }}
-                            <ChevronDown class="w-4 h-4 ml-2" />
+                            <ChevronDown class="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -282,16 +310,25 @@ const breadcrumbs = searchBreadcrumbs();
             </div>
 
             <!-- Recent Searches -->
-            <RecentSearches v-if="!hasSearched && !isLoading && searchQuery.length < 2" />
+            <RecentSearches
+                v-if="!hasSearched && !isLoading && searchQuery.length < 2"
+            />
 
             <!-- Filter Panel -->
             <Card v-if="showFilters">
-                <CardContent class="pt-6 space-y-6">
+                <CardContent class="space-y-6 pt-6">
                     <!-- Genres -->
                     <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-medium">{{ $t('artists.search_genres_title') }}</h3>
-                            <Button v-if="selectedGenres.length > 0" variant="ghost" size="sm" @click="selectedGenres = []">
+                        <div class="mb-3 flex items-center justify-between">
+                            <h3 class="font-medium">
+                                {{ $t('artists.search_genres_title') }}
+                            </h3>
+                            <Button
+                                v-if="selectedGenres.length > 0"
+                                variant="ghost"
+                                size="sm"
+                                @click="selectedGenres = []"
+                            >
                                 {{ $t('artists.search_clear_button') }}
                             </Button>
                         </div>
@@ -299,7 +336,11 @@ const breadcrumbs = searchBreadcrumbs();
                             <Badge
                                 v-for="genre in allGenres.slice(0, 15)"
                                 :key="genre"
-                                :variant="selectedGenres.includes(genre) ? 'default' : 'outline'"
+                                :variant="
+                                    selectedGenres.includes(genre)
+                                        ? 'default'
+                                        : 'outline'
+                                "
                                 class="cursor-pointer transition-colors"
                                 @click="toggleGenre(genre)"
                             >
@@ -310,10 +351,14 @@ const breadcrumbs = searchBreadcrumbs();
 
                     <!-- Score Range -->
                     <div>
-                        <h3 class="font-medium mb-3">{{ $t('artists.search_score_range_title') }}</h3>
+                        <h3 class="mb-3 font-medium">
+                            {{ $t('artists.search_score_range_title') }}
+                        </h3>
                         <div class="flex items-center gap-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">{{ $t('artists.search_score_min') }}</span>
+                                <span class="text-sm text-muted-foreground">{{
+                                    $t('artists.search_score_min')
+                                }}</span>
                                 <Input
                                     v-model.number="scoreMin"
                                     type="number"
@@ -324,7 +369,9 @@ const breadcrumbs = searchBreadcrumbs();
                             </div>
                             <span class="text-muted-foreground">-</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-muted-foreground">{{ $t('artists.search_score_max') }}</span>
+                                <span class="text-sm text-muted-foreground">{{
+                                    $t('artists.search_score_max')
+                                }}</span>
                                 <Input
                                     v-model.number="scoreMax"
                                     type="number"
@@ -337,7 +384,7 @@ const breadcrumbs = searchBreadcrumbs();
                     </div>
 
                     <!-- Clear All -->
-                    <div class="flex justify-end pt-2 border-t">
+                    <div class="flex justify-end border-t pt-2">
                         <Button variant="outline" @click="clearFilters">
                             {{ $t('artists.search_clear_all_filters') }}
                         </Button>
@@ -346,31 +393,56 @@ const breadcrumbs = searchBreadcrumbs();
             </Card>
 
             <!-- Loading State -->
-            <div v-if="isLoading" class="flex items-center justify-center py-12">
+            <div
+                v-if="isLoading"
+                class="flex items-center justify-center py-12"
+            >
                 <Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-                <span class="ml-3 text-muted-foreground">{{ $t('common.loading') }}</span>
+                <span class="ml-3 text-muted-foreground">{{
+                    $t('common.loading')
+                }}</span>
             </div>
 
             <!-- Error State -->
             <Card v-else-if="error" class="border-destructive">
-                <CardContent class="flex items-center gap-3 pt-6 text-destructive">
+                <CardContent
+                    class="flex items-center gap-3 pt-6 text-destructive"
+                >
                     <AlertCircle class="h-5 w-5" />
                     <p>{{ error }}</p>
                 </CardContent>
             </Card>
 
             <!-- Results Count -->
-            <div v-else-if="hasSearched" class="flex items-center justify-between">
+            <div
+                v-else-if="hasSearched"
+                class="flex items-center justify-between"
+            >
                 <p class="text-muted-foreground">
-                    <span class="font-medium text-foreground">{{ filteredArtists.length }}</span> {{ $t('artists.search_results_count') }}
+                    <span class="font-medium text-foreground">{{
+                        filteredArtists.length
+                    }}</span>
+                    {{ $t('artists.search_results_count') }}
                 </p>
             </div>
 
             <!-- No Results Message -->
-            <div v-if="hasSearched && !isLoading && !error && filteredArtists.length === 0" class="py-12 text-center">
+            <div
+                v-if="
+                    hasSearched &&
+                    !isLoading &&
+                    !error &&
+                    filteredArtists.length === 0
+                "
+                class="py-12 text-center"
+            >
                 <Search class="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <h3 class="mt-4 text-lg font-medium">{{ $t('artists.search_no_results_title') }}</h3>
-                <p class="mt-2 text-muted-foreground">{{ $t('artists.search_no_results_description') }}</p>
+                <h3 class="mt-4 text-lg font-medium">
+                    {{ $t('artists.search_no_results_title') }}
+                </h3>
+                <p class="mt-2 text-muted-foreground">
+                    {{ $t('artists.search_no_results_description') }}
+                </p>
             </div>
 
             <!-- Results Grid -->
@@ -382,9 +454,14 @@ const breadcrumbs = searchBreadcrumbs();
             />
 
             <!-- Similar Artists (if searching) -->
-            <div v-if="similarArtists.length > 0 && searchQuery.length >= 2" class="pt-6 border-t">
-                <h3 class="text-lg font-semibold mb-4">{{ $t('artists.search_similar_artists_title') }}</h3>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div
+                v-if="similarArtists.length > 0 && searchQuery.length >= 2"
+                class="border-t pt-6"
+            >
+                <h3 class="mb-4 text-lg font-semibold">
+                    {{ $t('artists.search_similar_artists_title') }}
+                </h3>
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
                     <ArtistCard
                         v-for="artist in similarArtists"
                         :key="artist.id"

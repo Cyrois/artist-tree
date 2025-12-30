@@ -41,7 +41,7 @@ export function useAsyncSpotifyData<T>(baseUrl: string): AsyncState<T> {
             const response = await fetch(url.toString(), {
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                 },
             });
 
@@ -56,7 +56,9 @@ export function useAsyncSpotifyData<T>(baseUrl: string): AsyncState<T> {
                     503: 'Service temporarily unavailable. Please try again later.',
                 };
 
-                const message = statusMessages[response.status] || `Unable to load data (Error ${response.status})`;
+                const message =
+                    statusMessages[response.status] ||
+                    `Unable to load data (Error ${response.status})`;
                 throw new Error(message);
             }
 
@@ -64,7 +66,10 @@ export function useAsyncSpotifyData<T>(baseUrl: string): AsyncState<T> {
             data.value = result.data as T;
             meta.value = result.meta ?? null;
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
+            error.value =
+                err instanceof Error
+                    ? err.message
+                    : 'An unexpected error occurred. Please try again.';
             data.value = null;
         } finally {
             loading.value = false;

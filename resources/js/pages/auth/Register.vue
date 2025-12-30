@@ -26,7 +26,9 @@ import { Form, Head } from '@inertiajs/vue3';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">{{ $t('auth.register_name_label') }}</Label>
+                    <Label for="name">{{
+                        $t('auth.register_name_label')
+                    }}</Label>
                     <Input
                         id="name"
                         type="text"
@@ -41,7 +43,9 @@ import { Form, Head } from '@inertiajs/vue3';
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">{{ $t('auth.register_email_label') }}</Label>
+                    <Label for="email">{{
+                        $t('auth.register_email_label')
+                    }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -55,7 +59,9 @@ import { Form, Head } from '@inertiajs/vue3';
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">{{ $t('auth.register_password_label') }}</Label>
+                    <Label for="password">{{
+                        $t('auth.register_password_label')
+                    }}</Label>
                     <Input
                         id="password"
                         type="password"
@@ -69,7 +75,9 @@ import { Form, Head } from '@inertiajs/vue3';
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">{{ $t('auth.register_password_confirmation_label') }}</Label>
+                    <Label for="password_confirmation">{{
+                        $t('auth.register_password_confirmation_label')
+                    }}</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -77,7 +85,11 @@ import { Form, Head } from '@inertiajs/vue3';
                         :tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        :placeholder="$t('auth.register_password_confirmation_placeholder')"
+                        :placeholder="
+                            $t(
+                                'auth.register_password_confirmation_placeholder',
+                            )
+                        "
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>

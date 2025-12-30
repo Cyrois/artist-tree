@@ -51,7 +51,14 @@ const sizeClasses = computed(() => {
 
 <template>
     <div
-        :class="cn('inline-flex items-center justify-center rounded-full font-bold', scoreStyle.bg, scoreStyle.text, sizeClasses)"
+        :class="
+            cn(
+                'inline-flex items-center justify-center rounded-full font-bold',
+                scoreStyle.bg,
+                scoreStyle.text,
+                sizeClasses,
+            )
+        "
         data-slot="score-badge"
     >
         {{ score }}

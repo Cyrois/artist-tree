@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import WeightSlider from '@/components/settings/WeightSlider.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { metricPresets } from '@/data/constants';
-import { Music, Youtube, TrendingUp, AlertCircle, Check } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    Check,
+    Music,
+    TrendingUp,
+    Youtube,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 // Weights state
 const weights = ref({
@@ -17,7 +29,11 @@ const weights = ref({
 });
 
 const totalWeight = computed(() => {
-    return weights.value.spotifyListeners + weights.value.spotifyPopularity + weights.value.youtubeSubscribers;
+    return (
+        weights.value.spotifyListeners +
+        weights.value.spotifyPopularity +
+        weights.value.youtubeSubscribers
+    );
 });
 
 const isValidTotal = computed(() => Math.abs(totalWeight.value - 1) < 0.001);
@@ -30,10 +46,12 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
 </script>
 
 <template>
-    <div class="space-y-6 max-w-3xl">
+    <div class="max-w-3xl space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>{{ trans('settings.scoring_weights_title') }}</CardTitle>
+                <CardTitle>{{
+                    trans('settings.scoring_weights_title')
+                }}</CardTitle>
                 <CardDescription>
                     {{ trans('settings.scoring_weights_subtitle') }}
                 </CardDescription>
@@ -41,7 +59,9 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
             <CardContent class="space-y-6">
                 <!-- Presets -->
                 <div>
-                    <p class="text-sm font-medium mb-3">{{ trans('settings.scoring_presets_title') }}</p>
+                    <p class="mb-3 text-sm font-medium">
+                        {{ trans('settings.scoring_presets_title') }}
+                    </p>
                     <div class="flex flex-wrap gap-2">
                         <Button
                             v-for="(preset, key) in metricPresets"
@@ -80,17 +100,24 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
 
                 <!-- Total -->
                 <div class="flex items-center justify-between">
-                    <span class="font-medium">{{ trans('settings.scoring_total_weight') }}</span>
+                    <span class="font-medium">{{
+                        trans('settings.scoring_total_weight')
+                    }}</span>
                     <div class="flex items-center gap-2">
                         <span
                             :class="[
                                 'text-lg font-bold',
-                                isValidTotal ? 'text-[hsl(var(--score-high))]' : 'text-[hsl(var(--score-critical))]'
+                                isValidTotal
+                                    ? 'text-[hsl(var(--score-high))]'
+                                    : 'text-[hsl(var(--score-critical))]',
                             ]"
                         >
                             {{ Math.round(totalWeight * 100) }}%
                         </span>
-                        <Check v-if="isValidTotal" class="w-5 h-5 text-[hsl(var(--score-high))]" />
+                        <Check
+                            v-if="isValidTotal"
+                            class="h-5 w-5 text-[hsl(var(--score-high))]"
+                        />
                     </div>
                 </div>
 
@@ -98,7 +125,11 @@ function applyPreset(presetKey: keyof typeof metricPresets) {
                 <Alert v-if="!isValidTotal" variant="destructive">
                     <AlertCircle class="h-4 w-4" />
                     <AlertDescription>
-                        {{ trans('settings.scoring_weights_error', { total: Math.round(totalWeight * 100) }) }}
+                        {{
+                            trans('settings.scoring_weights_error', {
+                                total: Math.round(totalWeight * 100),
+                            })
+                        }}
                     </AlertDescription>
                 </Alert>
 

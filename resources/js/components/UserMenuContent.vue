@@ -10,8 +10,8 @@ import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from 'lucide-vue-next';
 import { trans } from 'laravel-vue-i18n';
+import { LogOut, Settings } from 'lucide-vue-next';
 
 interface Props {
     user: User;

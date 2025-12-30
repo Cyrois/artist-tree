@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import LineupCard from '@/components/lineup/LineupCard.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { getLineups } from '@/data/lineups';
 import type { Lineup } from '@/data/types';
-import { Search, Music, ChevronRight } from 'lucide-vue-next';
-import { ref, watch, computed } from 'vue';
-import { trans } from 'laravel-vue-i18n';
-import axios from 'axios';
+import MainLayout from '@/layouts/MainLayout.vue';
 import { search as searchRoute } from '@/routes';
+import { Head, router } from '@inertiajs/vue3';
+import axios from 'axios';
+import { trans } from 'laravel-vue-i18n';
+import { ChevronRight, Music, Search } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
 interface ArtistSearchResult {
     id: number | null;
@@ -45,7 +45,7 @@ watch(searchQuery, (query) => {
     searchTimeout = setTimeout(async () => {
         try {
             const response = await axios.get('/api/artists/search', {
-                params: { q: query }
+                params: { q: query },
             });
             searchResults.value = response.data.data;
             showSearchDropdown.value = searchResults.value.length > 0;
@@ -70,7 +70,7 @@ async function handleArtistClick(artist: ArtistSearchResult) {
         // Artist exists on Spotify but not in DB yet
         try {
             const response = await axios.post('/api/artists/select', {
-                spotify_id: artist.spotify_id
+                spotify_id: artist.spotify_id,
             });
             const newId = response.data.data.id;
             router.visit(`/artist/${newId}`);
@@ -98,7 +98,9 @@ function handleSearchBlur() {
     }, 200);
 }
 
-const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dashboard' }];
+const breadcrumbs = [
+    { title: trans('common.breadcrumb_dashboard'), href: '/dashboard' },
+];
 </script>
 
 <template>
@@ -106,29 +108,37 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-8">
             <!-- Hero Section -->
-            <div class="relative rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-8 md:p-12">
-                <div class="max-w-2xl mx-auto text-center space-y-4">
-                    <div class="flex items-center justify-center gap-3 mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-                            <Music class="w-6 h-6 text-primary-foreground" />
+            <div
+                class="relative rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-8 md:p-12"
+            >
+                <div class="mx-auto max-w-2xl space-y-4 text-center">
+                    <div class="mb-4 flex items-center justify-center gap-3">
+                        <div
+                            class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary"
+                        >
+                            <Music class="h-6 w-6 text-primary-foreground" />
                         </div>
                     </div>
-                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
                         {{ $t('dashboard.hero_title') }}
                     </h1>
-                    <p class="text-muted-foreground text-lg">
+                    <p class="text-lg text-muted-foreground">
                         {{ $t('dashboard.hero_subtitle') }}
                     </p>
 
                     <!-- Search -->
-                    <div class="relative max-w-xl mx-auto mt-6">
+                    <div class="relative mx-auto mt-6 max-w-xl">
                         <div class="relative">
-                            <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                            <Search
+                                class="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                            />
                             <Input
                                 v-model="searchQuery"
                                 type="text"
-                                :placeholder="$t('dashboard.search_placeholder')"
-                                class="bg-white pl-12 pr-4 py-6 text-lg rounded-xl border-2 focus:border-primary"
+                                :placeholder="
+                                    $t('dashboard.search_placeholder')
+                                "
+                                class="rounded-xl border-2 bg-white py-6 pr-4 pl-12 text-lg focus:border-primary"
                                 @focus="handleSearchFocus"
                                 @blur="handleSearchBlur"
                             />
@@ -137,31 +147,41 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
                         <!-- Search Dropdown -->
                         <div
                             v-if="showSearchDropdown"
-                            class="absolute top-full left-0 right-0 mt-2 bg-background border rounded-xl shadow-lg z-50 overflow-hidden"
+                            class="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border bg-background shadow-lg"
                         >
                             <div class="space-y-0">
                                 <div
                                     v-for="artist in displayedResults"
                                     :key="artist.id + '-' + artist.spotify_id"
-                                    class="group px-4 py-3 hover:bg-muted cursor-pointer transition-colors flex items-center gap-4"
+                                    class="group flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-muted"
                                     @click="handleArtistClick(artist)"
                                 >
                                     <!-- Image -->
-                                    <img 
-                                        :src="artist.image_url || '/placeholder.png'" 
-                                        :alt="artist.name" 
-                                        class="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted" 
+                                    <img
+                                        :src="
+                                            artist.image_url ||
+                                            '/placeholder.png'
+                                        "
+                                        :alt="artist.name"
+                                        class="h-12 w-12 flex-shrink-0 rounded-lg bg-muted object-cover"
                                     />
-                                    
+
                                     <!-- Content -->
-                                    <div class="flex-1 min-w-0 text-left">
-                                        <p class="font-semibold text-foreground truncate">{{ artist.name }}</p>
-                                        <div class="flex flex-wrap gap-1 mt-1">
-                                            <Badge 
-                                                v-for="genre in artist.genres.slice(0, 3)" 
+                                    <div class="min-w-0 flex-1 text-left">
+                                        <p
+                                            class="truncate font-semibold text-foreground"
+                                        >
+                                            {{ artist.name }}
+                                        </p>
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            <Badge
+                                                v-for="genre in artist.genres.slice(
+                                                    0,
+                                                    3,
+                                                )"
                                                 :key="genre"
                                                 variant="secondary"
-                                                class="text-[10px] px-1.5 py-0 h-5"
+                                                class="h-5 px-1.5 py-0 text-[10px]"
                                             >
                                                 {{ genre }}
                                             </Badge>
@@ -170,20 +190,24 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
 
                                     <!-- Score & Action -->
                                     <div class="flex items-center gap-3">
-                                        <ScoreBadge :score="artist.spotify_popularity" />
-                                        <ChevronRight class="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <ScoreBadge
+                                            :score="artist.spotify_popularity"
+                                        />
+                                        <ChevronRight
+                                            class="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Footer -->
                             <div class="border-t bg-muted/30 p-2 text-center">
-                                <button 
-                                    class="text-sm text-primary hover:underline font-medium flex items-center justify-center gap-1 w-full py-2 cursor-pointer"
+                                <button
+                                    class="flex w-full cursor-pointer items-center justify-center gap-1 py-2 text-sm font-medium text-primary hover:underline"
                                     @click="handleViewAllResults"
                                 >
                                     {{ $t('common.view_all_results') }}
-                                    <ChevronRight class="w-4 h-4" />
+                                    <ChevronRight class="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
@@ -193,17 +217,23 @@ const breadcrumbs = [{ title: trans('common.breadcrumb_dashboard'), href: '/dash
 
             <!-- Your Lineups Section -->
             <div>
-                <div class="flex items-center justify-between mb-6">
+                <div class="mb-6 flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold">{{ $t('dashboard.lineups_section_title') }}</h2>
-                        <p class="text-muted-foreground">{{ $t('dashboard.lineups_section_subtitle') }}</p>
+                        <h2 class="text-2xl font-bold">
+                            {{ $t('dashboard.lineups_section_title') }}
+                        </h2>
+                        <p class="text-muted-foreground">
+                            {{ $t('dashboard.lineups_section_subtitle') }}
+                        </p>
                     </div>
                     <Button @click="router.visit('/lineups')">
                         {{ $t('dashboard.lineups_view_all_button') }}
                     </Button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                >
                     <LineupCard
                         v-for="lineup in lineups"
                         :key="lineup.id"

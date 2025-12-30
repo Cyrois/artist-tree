@@ -10,8 +10,8 @@ import {
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { store } from '@/routes/two-factor/login';
 import { Form, Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 import { trans } from 'laravel-vue-i18n';
+import { computed, ref } from 'vue';
 
 interface AuthConfigContent {
     title: string;
@@ -85,7 +85,10 @@ const code = ref<string>('');
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" class="w-full" :disabled="processing"
+                    <Button
+                        type="submit"
+                        class="w-full"
+                        :disabled="processing"
                         >{{ $t('auth.two_factor_submit_button') }}</Button
                     >
                     <div class="text-center text-sm text-muted-foreground">
@@ -111,12 +114,17 @@ const code = ref<string>('');
                     <Input
                         name="recovery_code"
                         type="text"
-                        :placeholder="$t('auth.two_factor_recovery_placeholder')"
+                        :placeholder="
+                            $t('auth.two_factor_recovery_placeholder')
+                        "
                         :autofocus="showRecoveryInput"
                         required
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" class="w-full" :disabled="processing"
+                    <Button
+                        type="submit"
+                        class="w-full"
+                        :disabled="processing"
                         >{{ $t('auth.two_factor_submit_button') }}</Button
                     >
 

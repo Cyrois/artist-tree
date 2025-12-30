@@ -32,10 +32,12 @@ function handleInput(event: Event) {
     <div class="space-y-3" data-slot="weight-slider">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <component :is="icon" class="w-4 h-4 text-muted-foreground" />
-                <span class="font-medium text-sm">{{ label }}</span>
+                <component :is="icon" class="h-4 w-4 text-muted-foreground" />
+                <span class="text-sm font-medium">{{ label }}</span>
             </div>
-            <span class="text-sm font-bold tabular-nums">{{ percentage }}%</span>
+            <span class="text-sm font-bold tabular-nums"
+                >{{ percentage }}%</span
+            >
         </div>
 
         <div class="relative">
@@ -45,26 +47,11 @@ function handleInput(event: Event) {
                 :min="min"
                 :max="max"
                 :step="step"
-                class="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer
-                       [&::-webkit-slider-thumb]:appearance-none
-                       [&::-webkit-slider-thumb]:w-5
-                       [&::-webkit-slider-thumb]:h-5
-                       [&::-webkit-slider-thumb]:rounded-full
-                       [&::-webkit-slider-thumb]:bg-primary
-                       [&::-webkit-slider-thumb]:shadow-md
-                       [&::-webkit-slider-thumb]:cursor-pointer
-                       [&::-webkit-slider-thumb]:border-2
-                       [&::-webkit-slider-thumb]:border-background
-                       [&::-moz-range-thumb]:w-5
-                       [&::-moz-range-thumb]:h-5
-                       [&::-moz-range-thumb]:rounded-full
-                       [&::-moz-range-thumb]:bg-primary
-                       [&::-moz-range-thumb]:border-0
-                       [&::-moz-range-thumb]:cursor-pointer"
+                class="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
                 @input="handleInput"
             />
             <div
-                class="absolute top-0 left-0 h-2 bg-primary rounded-full pointer-events-none"
+                class="pointer-events-none absolute top-0 left-0 h-2 rounded-full bg-primary"
                 :style="{ width: `${percentage}%` }"
             />
         </div>

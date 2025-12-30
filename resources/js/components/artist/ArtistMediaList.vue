@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -10,10 +9,19 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, Music, Disc, AlertCircle, ExternalLink, Play, Square } from 'lucide-vue-next';
 import { useAsyncSpotifyData } from '@/composables/useAsyncSpotifyData';
 import { useSpotifyPlayback } from '@/composables/useSpotifyPlayback';
 import { trans } from 'laravel-vue-i18n';
+import {
+    AlertCircle,
+    Disc,
+    ExternalLink,
+    Loader2,
+    Music,
+    Play,
+    Square,
+} from 'lucide-vue-next';
+import { computed, onMounted, ref } from 'vue';
 
 interface MediaItem {
     spotify_id: string;
@@ -64,9 +72,12 @@ const config = computed(() => {
     }
 });
 
-const { data: items, loading, error, load } = useAsyncSpotifyData<MediaItem[]>(
-    config.value.apiUrl
-);
+const {
+    data: items,
+    loading,
+    error,
+    load,
+} = useAsyncSpotifyData<MediaItem[]>(config.value.apiUrl);
 
 const {
     isLoading: isPlaybackLoading,
@@ -79,7 +90,7 @@ const {
     formattedPosition,
     formattedDuration,
     isPlaying,
-    initializePlayer
+    initializePlayer,
 } = useSpotifyPlayback();
 
 const isAuthDialogOpen = ref(false);
@@ -107,7 +118,10 @@ const formatReleaseDate = (date: string): string => {
     const parts = date.split('-');
     if (parts.length === 1) return parts[0]; // Year only
     if (parts.length === 2) return `${parts[1]}/${parts[0]}`; // Month/Year
-    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+    });
 };
 
 const isItemActive = (item: MediaItem) => {
@@ -120,14 +134,14 @@ const isItemActive = (item: MediaItem) => {
 
 const handlePlayClick = async (item: MediaItem) => {
     if (isPlaybackLoading.value) return;
-    
+
     const isActive = isItemActive(item);
-    
+
     if (isActive) {
         await stop();
     } else {
         const { authenticated, authUrl } = await checkAuthentication();
-        
+
         if (!authenticated && authUrl) {
             pendingItem.value = item;
             spotifyAuthUrl.value = authUrl;
@@ -155,10 +169,10 @@ const showProgress = (item: MediaItem) => {
 </script>
 
 <template>
-    <Card class="overflow-hidden w-full">
+    <Card class="w-full overflow-hidden">
         <CardHeader>
             <CardTitle class="flex items-center gap-2">
-                <component :is="config.icon" class="w-5 h-5" />
+                <component :is="config.icon" class="h-5 w-5" />
                 {{ config.title }}
             </CardTitle>
         </CardHeader>
@@ -166,28 +180,45 @@ const showProgress = (item: MediaItem) => {
             <!-- Loading State -->
             <div v-if="loading" class="flex items-center justify-center py-12">
                 <div class="flex flex-col items-center gap-3">
-                    <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ config.loadingMessage }}</p>
+                    <Loader2
+                        class="h-6 w-6 animate-spin text-muted-foreground"
+                    />
+                    <p class="text-sm text-muted-foreground">
+                        {{ config.loadingMessage }}
+                    </p>
                 </div>
             </div>
 
             <!-- Error State -->
-            <div v-else-if="error" class="flex items-center justify-center py-12">
+            <div
+                v-else-if="error"
+                class="flex items-center justify-center py-12"
+            >
                 <div class="flex flex-col items-center gap-3 text-center">
                     <AlertCircle class="h-8 w-8 text-muted-foreground" />
-                    <p class="text-sm text-muted-foreground">{{ config.errorMessage }}</p>
+                    <p class="text-sm text-muted-foreground">
+                        {{ config.errorMessage }}
+                    </p>
                 </div>
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="!items || items.length === 0" class="flex items-center justify-center py-12">
-                <p class="text-sm text-muted-foreground">{{ config.emptyMessage }}</p>
+            <div
+                v-else-if="!items || items.length === 0"
+                class="flex items-center justify-center py-12"
+            >
+                <p class="text-sm text-muted-foreground">
+                    {{ config.emptyMessage }}
+                </p>
             </div>
 
             <!-- Playback Error State -->
-            <div v-if="playbackError && items && items.length > 0" class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+            <div
+                v-if="playbackError && items && items.length > 0"
+                class="mb-4 rounded-md border border-destructive/20 bg-destructive/10 p-3"
+            >
                 <div class="flex items-center gap-2 text-sm text-destructive">
-                    <AlertCircle class="w-4 h-4" />
+                    <AlertCircle class="h-4 w-4" />
                     <p>{{ playbackError }}</p>
                 </div>
             </div>
@@ -198,152 +229,206 @@ const showProgress = (item: MediaItem) => {
                     v-for="(item, index) in items"
                     :key="item.spotify_id"
                     class="group -mx-6 transition-all duration-200"
-                    :class="{ 
-                        'bg-muted/40 z-10 relative shadow-sm': expandedMobileId === item.spotify_id,
+                    :class="{
+                        'relative z-10 bg-muted/40 shadow-sm':
+                            expandedMobileId === item.spotify_id,
                     }"
                 >
                     <!-- Top Divider for Expanded/Active items -->
-                    <div 
-                        v-if="expandedMobileId === item.spotify_id || (index > 0 && items[index-1].spotify_id === expandedMobileId)"
-                        class="h-px bg-border/60 mx-6"
+                    <div
+                        v-if="
+                            expandedMobileId === item.spotify_id ||
+                            (index > 0 &&
+                                items[index - 1].spotify_id ===
+                                    expandedMobileId)
+                        "
+                        class="mx-6 h-px bg-border/60"
                     />
-                    <div v-else-if="index > 0" class="h-px bg-border/5 mx-6" />
+                    <div v-else-if="index > 0" class="mx-6 h-px bg-border/5" />
 
                     <!-- Main Row -->
-                    <div 
-                        class="flex items-center gap-3 px-6 py-3 hover:bg-muted/50 transition-colors cursor-pointer lg:cursor-default"
+                    <div
+                        class="flex cursor-pointer items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/50 lg:cursor-default"
                         @click="toggleMobileItem(item.spotify_id)"
                     >
                         <!-- Number -->
-                        <div class="flex-shrink-0 w-6 text-center text-sm font-medium text-muted-foreground">
+                        <div
+                            class="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground"
+                        >
                             {{ index + 1 }}
                         </div>
 
                         <!-- Image -->
                         <img
-                            v-if="variant === 'top-tracks' ? item.album_image_url : item.image_url"
-                            :src="variant === 'top-tracks' ? item.album_image_url : item.image_url"
+                            v-if="
+                                variant === 'top-tracks'
+                                    ? item.album_image_url
+                                    : item.image_url
+                            "
+                            :src="
+                                variant === 'top-tracks'
+                                    ? item.album_image_url
+                                    : item.image_url
+                            "
                             :alt="item.name"
-                            class="hidden lg:block w-12 h-12 rounded object-cover"
+                            class="hidden h-12 w-12 rounded object-cover lg:block"
                         />
-                        <div v-else class="hidden lg:flex w-12 h-12 rounded bg-muted items-center justify-center">
-                            <component :is="config.icon" class="w-6 h-6 text-muted-foreground" />
+                        <div
+                            v-else
+                            class="hidden h-12 w-12 items-center justify-center rounded bg-muted lg:flex"
+                        >
+                            <component
+                                :is="config.icon"
+                                class="h-6 w-6 text-muted-foreground"
+                            />
                         </div>
 
                         <!-- Info -->
-                        <div class="flex-1 min-w-0">
-                            <p class="font-medium truncate text-sm lg:text-base">{{ item.name }}</p>
-                            
+                        <div class="min-w-0 flex-1">
+                            <p
+                                class="truncate text-sm font-medium lg:text-base"
+                            >
+                                {{ item.name }}
+                            </p>
+
                             <!-- Top Tracks Info -->
-                            <p v-if="variant === 'top-tracks'" class="text-xs lg:text-sm text-muted-foreground truncate">
+                            <p
+                                v-if="variant === 'top-tracks'"
+                                class="truncate text-xs text-muted-foreground lg:text-sm"
+                            >
                                 {{ item.album_name }}
                             </p>
                             <!-- Recent Releases Info -->
-                            <p v-else-if="item.album_type && item.release_date" class="text-xs lg:text-sm text-muted-foreground truncate">
-                                {{ item.album_type.charAt(0).toUpperCase() + item.album_type.slice(1) }} • {{ formatReleaseDate(item.release_date) }}
+                            <p
+                                v-else-if="item.album_type && item.release_date"
+                                class="truncate text-xs text-muted-foreground lg:text-sm"
+                            >
+                                {{
+                                    item.album_type.charAt(0).toUpperCase() +
+                                    item.album_type.slice(1)
+                                }}
+                                • {{ formatReleaseDate(item.release_date) }}
                             </p>
                         </div>
 
                         <!-- Desktop Duration & Actions Panel (Fixed Width only when visible) -->
-                        <div 
-                            class="hidden lg:flex items-center gap-4 flex-shrink-0 ml-4"
+                        <div
+                            class="ml-4 hidden flex-shrink-0 items-center gap-4 lg:flex"
                             v-if="isItemActive(item)"
                         >
-                            <div class="text-sm text-muted-foreground tabular-nums">
-                                {{ formattedPosition }} / {{ formattedDuration }}
+                            <div
+                                class="text-sm text-muted-foreground tabular-nums"
+                            >
+                                {{ formattedPosition }} /
+                                {{ formattedDuration }}
                             </div>
                             <div class="flex items-center gap-2">
                                 <button
                                     @click.stop="handlePlayClick(item)"
                                     :disabled="isPlaybackLoading"
-                                    class="p-2 rounded-md hover:bg-muted transition-colors text-primary"
+                                    class="rounded-md p-2 text-primary transition-colors hover:bg-muted"
                                 >
-                                    <Loader2 v-if="isPlaybackLoading" class="w-4 h-4 animate-spin" />
-                                    <Square v-else class="w-4 h-4 fill-current" />
+                                    <Loader2
+                                        v-if="isPlaybackLoading"
+                                        class="h-4 w-4 animate-spin"
+                                    />
+                                    <Square
+                                        v-else
+                                        class="h-4 w-4 fill-current"
+                                    />
                                 </button>
                                 <a
                                     :href="item.external_url"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                    class="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     @click.stop
                                 >
-                                    <ExternalLink class="w-4 h-4" />
+                                    <ExternalLink class="h-4 w-4" />
                                 </a>
                             </div>
                         </div>
 
                         <!-- Hover-only Desktop Actions -->
-                        <div 
-                            class="hidden lg:group-hover:flex items-center gap-4 flex-shrink-0 ml-4"
+                        <div
+                            class="ml-4 hidden flex-shrink-0 items-center gap-4 lg:group-hover:flex"
                             v-else
                         >
-                            <div class="text-sm text-muted-foreground tabular-nums">
+                            <div
+                                class="text-sm text-muted-foreground tabular-nums"
+                            >
                                 {{ formatDuration(item.duration_ms) }}
                             </div>
                             <div class="flex items-center gap-2">
                                 <button
                                     @click.stop="handlePlayClick(item)"
                                     :disabled="isPlaybackLoading"
-                                    class="p-2 rounded-md hover:bg-muted transition-colors"
+                                    class="rounded-md p-2 transition-colors hover:bg-muted"
                                 >
-                                    <Play class="w-4 h-4" />
+                                    <Play class="h-4 w-4" />
                                 </button>
                                 <a
                                     :href="item.external_url"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="p-2 rounded-md hover:bg-muted transition-colors"
+                                    class="rounded-md p-2 transition-colors hover:bg-muted"
                                     @click.stop
                                 >
-                                    <ExternalLink class="w-4 h-4" />
+                                    <ExternalLink class="h-4 w-4" />
                                 </a>
                             </div>
                         </div>
                     </div>
 
                     <!-- Mobile/Tablet Actions Row -->
-                    <div 
-                        v-if="expandedMobileId === item.spotify_id" 
-                        class="lg:hidden px-6 pb-4 flex items-center justify-between border-b border-border/50"
+                    <div
+                        v-if="expandedMobileId === item.spotify_id"
+                        class="flex items-center justify-between border-b border-border/50 px-6 pb-4 lg:hidden"
                     >
-                         <div class="text-xs text-muted-foreground tabular-nums">
-                            <span v-if="showProgress(item)">{{ formattedPosition }} / {{ formattedDuration }}</span>
-                            <span v-else>{{ formatDuration(item.duration_ms) }}</span>
+                        <div class="text-xs text-muted-foreground tabular-nums">
+                            <span v-if="showProgress(item)"
+                                >{{ formattedPosition }} /
+                                {{ formattedDuration }}</span
+                            >
+                            <span v-else>{{
+                                formatDuration(item.duration_ms)
+                            }}</span>
                         </div>
 
                         <div class="flex items-center gap-4">
-                             <!-- Play/Stop Button -->
+                            <!-- Play/Stop Button -->
                             <button
                                 @click.stop="handlePlayClick(item)"
                                 :disabled="isPlaybackLoading"
-                                class="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors disabled:opacity-50"
+                                class="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary disabled:opacity-50"
                             >
-                                <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                                <div
+                                    class="relative flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary"
+                                >
                                     <Loader2
-                                        v-if="isItemActive(item) && isPlaybackLoading"
-                                        class="w-4 h-4 animate-spin"
+                                        v-if="
+                                            isItemActive(item) &&
+                                            isPlaybackLoading
+                                        "
+                                        class="h-4 w-4 animate-spin"
                                     />
                                     <Square
                                         v-else-if="isItemActive(item)"
-                                        class="w-3.5 h-3.5 fill-current"
+                                        class="h-3.5 w-3.5 fill-current"
                                     />
-                                    <Play
-                                        v-else
-                                        class="w-3.5 h-3.5 ml-0.5"
-                                    />
+                                    <Play v-else class="ml-0.5 h-3.5 w-3.5" />
                                 </div>
                             </button>
 
-                             <!-- External Link -->
+                            <!-- External Link -->
                             <a
                                 :href="item.external_url"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                class="p-2 text-muted-foreground transition-colors hover:text-foreground"
                                 @click.stop
                             >
-                                <ExternalLink class="w-4 h-4" />
+                                <ExternalLink class="h-4 w-4" />
                             </a>
                         </div>
                     </div>
@@ -356,7 +441,9 @@ const showProgress = (item: MediaItem) => {
     <Dialog v-model:open="isAuthDialogOpen">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>{{ trans('artists.spotify_auth_required_title') }}</DialogTitle>
+                <DialogTitle>{{
+                    trans('artists.spotify_auth_required_title')
+                }}</DialogTitle>
                 <DialogDescription>
                     {{ trans('artists.spotify_auth_required_description') }}
                 </DialogDescription>

@@ -2,9 +2,15 @@
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -34,16 +40,27 @@ const hasBreadcrumbs = computed(() => props.breadcrumbs.length > 0);
             >
                 <div class="flex items-center gap-2">
                     <SidebarTrigger class="-ml-1" />
-                    <Separator v-if="hasBreadcrumbs" orientation="vertical" class="mr-2 h-4" />
+                    <Separator
+                        v-if="hasBreadcrumbs"
+                        orientation="vertical"
+                        class="mr-2 h-4"
+                    />
                     <Breadcrumb v-if="hasBreadcrumbs">
                         <BreadcrumbList>
-                            <template v-for="(item, index) in breadcrumbs" :key="index">
+                            <template
+                                v-for="(item, index) in breadcrumbs"
+                                :key="index"
+                            >
                                 <BreadcrumbItem>
                                     <BreadcrumbLink as-child>
-                                        <Link :href="item.href">{{ item.title }}</Link>
+                                        <Link :href="item.href">{{
+                                            item.title
+                                        }}</Link>
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
-                                <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
+                                <BreadcrumbSeparator
+                                    v-if="index < breadcrumbs.length - 1"
+                                />
                             </template>
                         </BreadcrumbList>
                     </Breadcrumb>

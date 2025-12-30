@@ -90,7 +90,7 @@ function closeSearch() {
 }
 
 function handleViewAllResults() {
-    router.visit(`/api/artists/search?q=${encodeURIComponent(searchQuery.value)}`);
+    router.visit(`/search?q=${encodeURIComponent(searchQuery.value)}`);
 }
 </script>
 

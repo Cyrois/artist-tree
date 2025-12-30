@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
+import { Button } from '@/components/ui/button';
 import { scheduleDays, scheduleStages } from '@/data/constants';
 import type { Artist, ScheduleSlot } from '@/data/types';
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Props {
     artists: Artist[];
@@ -20,8 +20,19 @@ const selectedDay = ref('Saturday');
 
 // Time slots from 12:00 to 24:00
 const timeSlots = [
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '00:00'
+    '12:00',
+    '13:00',
+    '14:00',
+    '15:00',
+    '16:00',
+    '17:00',
+    '18:00',
+    '19:00',
+    '20:00',
+    '21:00',
+    '22:00',
+    '23:00',
+    '00:00',
 ];
 
 // Get scheduled artists for selected day
@@ -39,9 +50,12 @@ const scheduledArtists = computed(() => {
 
 // Group by stage
 const artistsByStage = computed(() => {
-    const grouped: Record<string, { artist: Artist; slot: ScheduleSlot }[]> = {};
+    const grouped: Record<string, { artist: Artist; slot: ScheduleSlot }[]> =
+        {};
     scheduleStages.forEach((stage) => {
-        grouped[stage] = scheduledArtists.value.filter((a) => a.slot.stage === stage);
+        grouped[stage] = scheduledArtists.value.filter(
+            (a) => a.slot.stage === stage,
+        );
     });
     return grouped;
 });
@@ -53,7 +67,7 @@ function getTimePosition(startTime: string): number {
     const totalMinutes = (hours - startHour) * 60 + minutes;
     if (hours < startHour) {
         // After midnight
-        return ((24 - startHour + hours) * 60 + minutes) / (13 * 60) * 100;
+        return (((24 - startHour + hours) * 60 + minutes) / (13 * 60)) * 100;
     }
     return (totalMinutes / (13 * 60)) * 100;
 }
@@ -79,15 +93,17 @@ function getDurationWidth(duration: number): number {
         </div>
 
         <!-- Schedule Grid -->
-        <div class="border rounded-xl overflow-hidden">
+        <div class="overflow-hidden rounded-xl border">
             <!-- Time Header -->
             <div class="flex border-b bg-muted/50">
-                <div class="w-32 flex-shrink-0 p-3 font-medium border-r">Stage</div>
-                <div class="flex-1 flex">
+                <div class="w-32 flex-shrink-0 border-r p-3 font-medium">
+                    Stage
+                </div>
+                <div class="flex flex-1">
                     <div
                         v-for="time in timeSlots"
                         :key="time"
-                        class="flex-1 p-2 text-center text-xs text-muted-foreground border-r last:border-r-0"
+                        class="flex-1 border-r p-2 text-center text-xs text-muted-foreground last:border-r-0"
                     >
                         {{ time }}
                     </div>
@@ -98,21 +114,23 @@ function getDurationWidth(duration: number): number {
             <div
                 v-for="stage in scheduleStages"
                 :key="stage"
-                class="flex border-b last:border-b-0 min-h-[80px]"
+                class="flex min-h-[80px] border-b last:border-b-0"
             >
                 <!-- Stage Name -->
-                <div class="w-32 flex-shrink-0 p-3 font-medium border-r bg-muted/30 flex items-center">
+                <div
+                    class="flex w-32 flex-shrink-0 items-center border-r bg-muted/30 p-3 font-medium"
+                >
                     {{ stage }}
                 </div>
 
                 <!-- Timeline -->
-                <div class="flex-1 relative">
+                <div class="relative flex-1">
                     <!-- Grid lines -->
                     <div class="absolute inset-0 flex">
                         <div
                             v-for="time in timeSlots"
                             :key="time"
-                            class="flex-1 border-r last:border-r-0 border-dashed border-muted"
+                            class="flex-1 border-r border-dashed border-muted last:border-r-0"
                         />
                     </div>
 
@@ -120,25 +138,33 @@ function getDurationWidth(duration: number): number {
                     <div
                         v-for="{ artist, slot } in artistsByStage[stage]"
                         :key="artist.id"
-                        class="absolute top-2 bottom-2 rounded-lg p-2 cursor-pointer hover:shadow-md transition-shadow bg-primary text-primary-foreground flex items-center gap-2 overflow-hidden"
+                        class="absolute top-2 bottom-2 flex cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-primary p-2 text-primary-foreground transition-shadow hover:shadow-md"
                         :style="{
                             left: `${getTimePosition(slot.startTime)}%`,
                             width: `${getDurationWidth(slot.duration)}%`,
-                            minWidth: '100px'
+                            minWidth: '100px',
                         }"
                         @click="emit('artist-click', artist)"
                     >
-                        <ArtistAvatar :artist="artist" size="sm" class="flex-shrink-0" />
+                        <ArtistAvatar
+                            :artist="artist"
+                            size="sm"
+                            class="flex-shrink-0"
+                        />
                         <div class="min-w-0">
-                            <p class="font-medium text-sm truncate">{{ artist.name }}</p>
-                            <p class="text-xs opacity-80">{{ slot.startTime }} ({{ slot.duration }}min)</p>
+                            <p class="truncate text-sm font-medium">
+                                {{ artist.name }}
+                            </p>
+                            <p class="text-xs opacity-80">
+                                {{ slot.startTime }} ({{ slot.duration }}min)
+                            </p>
                         </div>
                     </div>
 
                     <!-- Empty state if no artists -->
                     <div
                         v-if="artistsByStage[stage].length === 0"
-                        class="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm"
+                        class="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground"
                     >
                         No artists scheduled
                     </div>
