@@ -13,6 +13,10 @@ import { useForm } from '@inertiajs/vue3';
 interface Props {
 }
 
+interface Props {
+    open: boolean;
+}
+
 defineProps<Props>();
 
 const emit = defineEmits<{
@@ -44,23 +48,16 @@ function close() {
             class="overflow-hidden border-none p-0 shadow-2xl sm:max-w-[480px]"
         >
             <DialogHeader class="p-8 pb-0">
-                <DialogTitle class="text-2xl font-bold text-foreground"
-                    >Create New Lineup</DialogTitle
-                >
+                <DialogTitle class="text-2xl font-bold text-foreground">{{ $t('lineups.create_title') }}</DialogTitle>
             </DialogHeader>
 
             <form @submit.prevent="submit" class="space-y-6 p-8 pt-6">
                 <div class="space-y-2">
-                    <Label
-                        for="name"
-                        required
-                        class="text-sm font-semibold text-foreground"
-                        >Lineup Name</Label
-                    >
+                    <Label for="name" required class="text-sm font-semibold text-foreground">{{ $t('lineups.create_name_label') }}</Label>
                     <Input
                         id="name"
                         v-model="form.name"
-                        placeholder="e.g., Summer Festival 2025"
+                        :placeholder="$t('lineups.create_name_placeholder')"
                         required
                         class="h-12 border-2 text-base transition-colors focus-visible:border-foreground focus-visible:ring-0"
                     />
@@ -73,16 +70,12 @@ function close() {
                 </div>
 
                 <div class="space-y-2">
-                    <Label
-                        for="description"
-                        class="text-sm font-semibold text-foreground"
-                        >Description (optional)</Label
-                    >
+                    <Label for="description" class="text-sm font-semibold text-foreground">{{ $t('lineups.create_description_label_optional') }}</Label>
                     <textarea
                         id="description"
                         v-model="form.description"
-                        placeholder="Brief description of this lineup..."
-                        class="flex min-h-[120px] w-full resize-none rounded-md border-2 border-input bg-transparent px-3 py-3 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:border-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        :placeholder="$t('lineups.create_description_placeholder')"
+                        class="flex min-h-[120px] w-full rounded-md border-2 border-input bg-transparent px-3 py-3 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                     ></textarea>
                     <div
                         v-if="form.errors.description"
@@ -92,48 +85,24 @@ function close() {
                     </div>
                 </div>
 
-                <div
-                    class="space-y-4 rounded-xl bg-[#F8F9FA] p-6 dark:bg-muted/30"
-                >
-                    <p class="text-sm font-semibold text-foreground">
-                        Your lineup will have these tiers:
-                    </p>
+                <div class="bg-[#F8F9FA] dark:bg-muted/30 rounded-xl p-6 space-y-4">
+                    <p class="text-sm font-semibold text-foreground">{{ $t('lineups.create_tiers_intro') }}</p>
                     <div class="grid grid-cols-2 gap-y-3">
                         <div class="flex items-center gap-3">
-                            <div
-                                class="h-2 w-2 rounded-full bg-black dark:bg-foreground"
-                            ></div>
-                            <span
-                                class="text-[10px] font-black tracking-[0.1em] text-muted-foreground uppercase"
-                                >HEADLINER</span
-                            >
+                            <div class="w-2 h-2 rounded-full bg-black dark:bg-foreground"></div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_headliner') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div
-                                class="h-2 w-2 rounded-full bg-gray-700 dark:bg-gray-400"
-                            ></div>
-                            <span
-                                class="text-[10px] font-black tracking-[0.1em] text-muted-foreground uppercase"
-                                >SUB-HEADLINER</span
-                            >
+                            <div class="w-2 h-2 rounded-full bg-gray-700 dark:bg-gray-400"></div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_sub_headliner') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div
-                                class="h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-600"
-                            ></div>
-                            <span
-                                class="text-[10px] font-black tracking-[0.1em] text-muted-foreground uppercase"
-                                >MID-TIER</span
-                            >
+                            <div class="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_mid_tier') }}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div
-                                class="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-800"
-                            ></div>
-                            <span
-                                class="text-[10px] font-black tracking-[0.1em] text-muted-foreground uppercase"
-                                >UNDERCARD</span
-                            >
+                            <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-800"></div>
+                            <span class="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">{{ $t('lineups.tier_undercard') }}</span>
                         </div>
                     </div>
                 </div>
@@ -145,14 +114,14 @@ function close() {
                         class="h-14 flex-1 border-none bg-[#F1F3F5] text-base font-bold text-[#495057] transition-all hover:bg-[#E9ECEF] dark:bg-muted dark:text-foreground dark:hover:bg-muted/80"
                         @click="close"
                     >
-                        Cancel
+                        {{ $t('common.action_cancel') }}
                     </Button>
                     <Button
                         type="submit"
                         class="h-14 flex-1 border-none bg-[#EE6055] text-base font-bold text-white shadow-lg shadow-[#EE6055]/20 transition-all hover:bg-[#D54B41] active:scale-[0.98]"
                         :disabled="form.processing || form.name.length < 5"
                     >
-                        Create Lineup
+                        {{ $t('lineups.create_submit_button') }}
                     </Button>
                 </div>
             </form>

@@ -6,6 +6,7 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { Plus } from 'lucide-vue-next';
 import { ref } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 interface Artist {
     id: number;
@@ -28,7 +29,9 @@ defineProps<{
     lineups: { data: Lineup[] };
 }>();
 
-const breadcrumbs = [{ title: 'My Lineups', href: '/lineups' }];
+const breadcrumbs = [
+    { title: trans('lineups.index_title'), href: '/lineups' }
+];
 
 const showCreateModal = ref(false);
 
@@ -38,7 +41,7 @@ function createLineup() {
 </script>
 
 <template>
-    <Head title="My Lineups" />
+    <Head :title="$t('lineups.index_title')" />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-8">
             <!-- Header -->
@@ -46,20 +49,16 @@ function createLineup() {
                 class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
             >
                 <div class="space-y-1">
-                    <h1 class="text-3xl font-bold tracking-tight">
-                        My Lineups
-                    </h1>
-                    <p class="text-lg text-muted-foreground">
-                        Manage your festival lineups and artist placements
-                    </p>
+                    <h1 class="text-3xl font-bold tracking-tight">{{ $t('lineups.index_title') }}</h1>
+                    <p class="text-lg text-muted-foreground">{{ $t('lineups.index_subtitle') }}</p>
                 </div>
                 <Button
                     size="lg"
                     class="gap-2 bg-[#EE6055] text-white hover:bg-[#EE6055]/90"
                     @click="createLineup"
                 >
-                    <Plus class="h-5 w-5" />
-                    Create Lineup
+                    <Plus class="w-5 h-5" />
+                    {{ $t('lineups.index_create_button') }}
                 </Button>
             </div>
 

@@ -23,7 +23,7 @@ class AddArtistToLineupRequest extends FormRequest
     {
         return [
             'artist_id' => 'required|exists:artists,id',
-            'tier' => 'nullable|in:headliner,sub_headliner,mid_tier,undercard',
+            'tier' => 'required|in:headliner,sub_headliner,mid_tier,undercard',
         ];
     }
 }

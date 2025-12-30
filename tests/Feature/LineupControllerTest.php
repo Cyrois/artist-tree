@@ -169,34 +169,17 @@ test('authenticated users can add artist to lineup', function () {
     ]);
 });
 
-test('adding artist calculates tier if missing', function () {
+test('adding artist requires a tier', function () {
     $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $lineup = Lineup::factory()->create();
     $artist = Artist::factory()->create();
-
-    // Mock the service to return a specific tier (e.g., 'mid_tier')
-    $this->mock(\App\Services\TierCalculationService::class, function ($mock) use ($artist, $lineup) {
-        $mock->shouldReceive('determineTier')
-            ->once()
-            ->with(
-                Mockery::on(fn($a) => $a->id === $artist->id),
-                Mockery::on(fn($l) => $l->id === $lineup->id)
-            )
-            ->andReturn('mid_tier');
-    });
 
     $this->actingAs($this->user)
         ->post(route('lineups.artists.store', $lineup->id), [
             'artist_id' => $artist->id,
             // 'tier' is missing
         ])
-        ->assertRedirect();
-
-    $this->assertDatabaseHas('lineup_artists', [
-        'lineup_id' => $lineup->id,
-        'artist_id' => $artist->id,
-        'tier' => 'mid_tier',
-    ]);
+        ->assertSessionHasErrors('tier');
 });
 
 test('cannot add duplicate artist to lineup', function () {
@@ -229,6 +212,7 @@ test('cannot add non-existent artist', function () {
     $this->actingAs($this->user)
         ->post(route('lineups.artists.store', $lineup->id), [
             'artist_id' => 99999,
+            'tier' => 'headliner',
         ])
         ->assertSessionHasErrors('artist_id');
 });

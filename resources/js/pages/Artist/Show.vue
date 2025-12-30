@@ -61,7 +61,7 @@ const activeTab = ref<'overview' | 'data'>('overview');
 // Fetch artist details on mount
 onMounted(async () => {
     try {
-        const response = await fetch(artistShowRoute.url(props.id), {
+        const response = await fetch(`/api/artists/${props.id}`, {
             credentials: 'include',
             headers: {
                 Accept: 'application/json',
@@ -108,7 +108,6 @@ const pageTitle = computed(() =>
         : `${trans('artists.show_page_title')} - Artist-Tree`,
 );
 </script>
-
 <template>
     <Head :title="pageTitle" />
     <MainLayout :breadcrumbs="breadcrumbs">
