@@ -76,14 +76,11 @@ class LineupController extends Controller
         return redirect()->back();
     }
 
-    public function removeArtist(Lineup $lineup, Artist $artist)
-    {
-        Gate::authorize('update', $lineup);
+        if ($lineup->artists()->detach($artist->id)) {
+            return redirect()->back()->with('success', 'Artist removed successfully.');
+        }
 
-        $lineup->artists()->detach($artist->id);
-
-        return redirect()->back()->with('success', 'Artist removed successfully.');
-    }
+        return redirect()->back();
 
     public function show($id)
     {
