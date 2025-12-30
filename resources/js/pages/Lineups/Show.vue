@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import TierSection from '@/components/lineup/TierSection.vue';
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
@@ -215,11 +214,10 @@ async function confirmAddArtist(payload: { artist: SearchResultArtist, tier: Tie
             artistId = selectResponse.data.data.id;
         }
 
-        await axios.post(route('lineups.artists.store', props.id), {
-            artist_id: artistId,
-            tier: tier
-        });
-        
+                    await axios.post(`/lineups/${props.id}/artists`, {
+                        artist_id: artistId,
+                        tier: tier
+                    });        
         isAddModalOpen.value = false;
         router.reload({ only: ['lineup'] });
     } catch (e) {
