@@ -16,7 +16,6 @@ import { Search, SlidersHorizontal, ChevronDown, Loader2, AlertCircle } from 'lu
 import { ref, computed, watch, onMounted } from 'vue';
 import { trans } from 'laravel-vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
-import { search as artistSearchRoute } from '@/routes/api/artists';
 import { useRecentSearches } from '@/composables/useRecentSearches';
 import axios from 'axios';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
@@ -71,7 +70,7 @@ const performSearch = useDebounceFn(async (query: string) => {
     hasSearched.value = true;
 
     try {
-        const response = await fetch(artistSearchRoute.url({ query: { q: query } }), {
+        const response = await fetch(`/api/artists/search?q=${encodeURIComponent(query)}`, {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',

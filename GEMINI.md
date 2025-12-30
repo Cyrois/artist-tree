@@ -195,39 +195,32 @@ private function normalizeLogarithmic(float $value, string $metricName): float
 - Artist with all NULL values returns score of 0
 
 ### Tier Classification
-**Business Rule:** Suggest tier placement based on artist scores, with manual override capability
+**Business Rule:** Suggest tier placement based on artist scores relative to lineup averages
 
 **Technical Requirements:**
 - Tiers: `headliner`, `sub_headliner`, `mid_tier`, `undercard`
-- Algorithm **suggests** tier based on relative score within lineup
-- Users can **manually override** tier assignment via drag-and-drop
-- Store both suggested tier and actual tier in `lineup_artists` table
-- Service class: `App\Services\TierCalculationService`
+- **Frontend-only Logic:** Tier suggestion happens in the UI when adding an artist
+- **No Backend Recalculation:** We do not store or recalculate suggested tiers in the database
+- **Storage:** Only the selected `tier` is stored in `lineup_artists`
 
 **Database Schema (lineup_artists):**
 ```sql
-- tier (enum) -- current tier (may be manually set)
-- suggested_tier (enum) -- what algorithm calculated
+- tier (enum) -- current tier
 ```
 
-**Suggested Tier Calculation Logic:**
-- Sort artists in lineup by score (descending)
-- Top 10% = headliner (minimum 1)
-- Next 20% = sub_headliner
-- Next 40% = mid_tier
-- Bottom 30% = undercard
+**Suggested Tier Calculation Logic (Frontend):**
+1. Calculate the **Average Score** for each existing tier in the lineup.
+   - Example: Headliners Avg = 85, Sub-Headliners Avg = 70, etc.
+2. Compare the new artist's score to these averages.
+3. Suggest the tier whose average is closest to the new artist's score.
+   - *Empty Lineup Case:* If lineup is empty, fallback to static thresholds (e.g., >80 Headliner).
 
-**Manual Override Flow:**
-1. Add artist → Algorithm calculates `suggested_tier`
-2. Set `tier = suggested_tier`
-3. User drags artist to different tier → Update `tier` to new value
-4. Visual indicator shows manually placed artists (implementation detail)
-5. "Reset to Suggested" button → Copy `suggested_tier` to `tier`
-
-**Recalculation Behavior:**
-- When artist added/removed: Recalculate ALL `suggested_tier` values
-- Artists with manual placements might need UI indication if their tier differs from suggested
-- This preserves manual placements while updating auto-assigned artists
+**Add Artist Flow:**
+1. User opens "Add to Lineup" modal.
+2. Frontend calculates the suggestion on the fly.
+3. The suggested tier is **pre-selected** in the radio button list.
+4. User can accept it or select a different tier manually.
+5. The final selection is sent to the API and stored as `tier`.
 
 ### External API Integration
 
@@ -399,7 +392,6 @@ app/
 │   ├── YouTubeService.php           # YouTube API integration
 │   ├── ArtistSearchService.php      # Artist discovery/creation
 │   ├── ArtistScoringService.php     # Score calculation algorithm (org-aware)
-│   ├── TierCalculationService.php   # Lineup tier assignments
 │   └── OrganizationService.php      # Org creation, member management
 │
 ├── Models/
@@ -449,7 +441,6 @@ app/
 **API Response Times:**
 - Cached artist data: <500ms
 - Artist search: <500ms
-- Lineup tier recalculation: <1 second
 - External API calls: <2 seconds (with caching)
 
 **Caching Strategy:**
@@ -495,7 +486,6 @@ app/
 ### Unit Tests (PHPUnit/Pest)
 **REQUIRED for:**
 - `ArtistScoringService` - test score calculation with various inputs
-- `TierCalculationService` - test tier assignments with different lineup sizes
 - Spotify/YouTube API response parsing
 
 ### Feature Tests
@@ -503,7 +493,6 @@ app/
 - All API endpoints (CRUD operations)
 - Artist search functionality
 - Lineup creation and artist addition
-- Tier recalculation
 
 ### Mock External APIs
 **NEVER hit real Spotify/YouTube APIs in tests** - always use `Http::fake()`.

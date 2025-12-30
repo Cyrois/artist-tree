@@ -1,30 +1,57 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import MainLayout from '@/layouts/MainLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import TierSection from '@/components/lineup/TierSection.vue';
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
+import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
+import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
+import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { tierOrder } from '@/data/constants';
 import type { TierType } from '@/data/types';
-import { Search, Layers, Scale, Download, Users } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import MainLayout from '@/layouts/MainLayout.vue';
+import { Head, router } from '@inertiajs/vue3';
+import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
-import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import {
+    Download,
+    MoreHorizontal,
+    Pencil,
+    Trash2,
+    Users,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface ApiArtist {
     id: number;
+    spotify_id: string;
     name: string;
     genres: string[];
     image_url: string | null;
     score: number;
     lineup_tier: TierType;
     // Map properties for compatibility with TierSection if needed
-    genre?: string[]; 
+    genre?: string[];
+}
+
+interface SearchResultArtist {
+    id: number | null;
+    spotify_id: string;
+    name: string;
+    image_url: string | null;
+    genres: string[];
+    score: number;
+    exists_in_database: boolean;
+    source: 'local' | 'spotify';
+    spotify_popularity: number;
 }
 
 interface Props {
@@ -56,15 +83,21 @@ const stackMode = ref(false);
 const compareMode = ref(false);
 const selectedArtistIds = ref<number[]>([]);
 
-// Search
-const searchQuery = ref('');
+// Search State
+const addingArtistId = ref<string | number | null>(null);
+
+// Add to Lineup Modal State
+const isAddModalOpen = ref(false);
+const artistToAdd = ref<SearchResultArtist | null>(null);
+const suggestedTier = ref<TierType | null>(null);
+const isAddingToLineup = ref(false);
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
     if (!props.lineup) return [];
-    
+
     // Map API structure to component expectations
-    return props.lineup.artists[tier].map(artist => ({
+    return props.lineup.artists[tier].map((artist) => ({
         ...artist,
         image: artist.image_url, // Map image_url for ArtistAvatar
         genre: artist.genres || [], // Map genres for TierSection
@@ -97,53 +130,166 @@ function exitCompareMode() {
     selectedArtistIds.value = [];
 }
 
-const breadcrumbs = computed(() => 
+function calculateSuggestedTier(artistScore: number): TierType | null {
+    if (!props.lineup || props.lineup.stats.artistCount === 0) return null;
+
+    let bestTier: TierType | null = null;
+    let minDiff = Infinity;
+
+    for (const tier of tierOrder) {
+        const artists = props.lineup.artists[tier];
+        // If a tier has no artists, we can skip it for average calculation purposes
+        // OR we might consider "empty tiers" as valid targets if we had a baseline average for them.
+        // For now, based on "relative to lineup's tier averages", we only compare against existing averages.
+        // If all tiers are empty, we return null (handled by artistCount check above).
+        if (!artists || artists.length === 0) continue;
+
+        const totalScore = artists.reduce((sum, a) => sum + a.score, 0);
+        const avg = totalScore / artists.length;
+        const diff = Math.abs(artistScore - avg);
+
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestTier = tier;
+        }
+    }
+
+    // If we couldn't find a best tier (e.g. all tiers empty somehow despite artistCount > 0), return null.
+    return bestTier;
+}
+
+function openAddModal(artist: SearchResultArtist) {
+    if (addingArtistId.value) return;
+
+    artistToAdd.value = artist;
+    const score = artist.score || artist.spotify_popularity || 0;
+    suggestedTier.value = calculateSuggestedTier(score);
+    isAddModalOpen.value = true;
+}
+
+async function confirmAddArtist(payload: {
+    artist: SearchResultArtist;
+    tier: TierType;
+}) {
+    const { artist, tier } = payload;
+
+    isAddingToLineup.value = true;
+    addingArtistId.value = artist.id || artist.spotify_id; // To show spinner in search list if visible
+
+    try {
+        let artistId = artist.id;
+
+        if (!artistId) {
+            const selectResponse = await axios.post('/api/artists/select', {
+                spotify_id: artist.spotify_id,
+            });
+            artistId = selectResponse.data.data.id;
+        }
+
+        await axios.post(`/lineups/${props.id}/artists`, {
+            artist_id: artistId,
+            tier: tier,
+        });
+        isAddModalOpen.value = false;
+        router.reload({ only: ['lineup'] });
+    } catch (e) {
+        console.error('Failed to add artist', e);
+    } finally {
+        isAddingToLineup.value = false;
+        addingArtistId.value = null;
+    }
+}
+
+function isArtistInLineup(artist: SearchResultArtist) {
+    return allArtists.value.some((a) => {
+        if (artist.id && a.id === artist.id) return true;
+        if (artist.spotify_id && a.spotify_id === artist.spotify_id)
+            return true;
+        return false;
+    });
+}
+
+const breadcrumbs = computed(() =>
     lineupBreadcrumbs(
-        props.lineup?.name ?? trans('lineups.show_page_title'), 
-        props.id
-    )
+        props.lineup?.name ?? trans('lineups.show_page_title'),
+        props.id,
+    ),
 );
 </script>
 
 <template>
-    <Head :title="`${props.lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`" />
+    <Head
+        :title="`${props.lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
+    />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="props.lineup" class="space-y-6">
             <!-- Lineup Header Card -->
             <Card class="py-0">
                 <CardContent class="p-6">
-                    <div class="flex flex-col md:flex-row justify-between gap-6">
+                    <div
+                        class="flex flex-col justify-between gap-6 md:flex-row"
+                    >
                         <!-- Info -->
                         <div class="flex-1">
-                            <h1 class="text-3xl font-bold">{{ props.lineup.name }}</h1>
-                            <p class="text-sm text-muted-foreground mt-1">
-                                {{ $t('lineups.show_updated_prefix') }} {{ props.lineup.updatedAt }}
+                            <h1 class="text-3xl font-bold">
+                                {{ props.lineup.name }}
+                            </h1>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                {{ $t('lineups.show_updated_prefix') }}
+                                {{ props.lineup.updatedAt }}
                             </p>
-                            
-                            <div class="flex flex-wrap items-center gap-8 mt-6">
+
+                            <div class="mt-6 flex flex-wrap items-center gap-8">
                                 <!-- Artist Count -->
                                 <div class="flex items-center gap-3">
-                                    <div class="p-2.5 rounded-full bg-muted">
-                                        <Users class="w-5 h-5 text-muted-foreground" />
+                                    <div class="rounded-full bg-muted p-2.5">
+                                        <Users
+                                            class="h-5 w-5 text-muted-foreground"
+                                        />
                                     </div>
                                     <div>
-                                        <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{{ $t('lineups.show_stats_artists') }}</p>
-                                        <p class="text-xl font-bold leading-none">{{ props.lineup.stats.artistCount }}</p>
+                                        <p
+                                            class="mb-0.5 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                                        >
+                                            {{
+                                                $t('lineups.show_stats_artists')
+                                            }}
+                                        </p>
+                                        <p
+                                            class="text-xl leading-none font-bold"
+                                        >
+                                            {{ props.lineup.stats.artistCount }}
+                                        </p>
                                     </div>
                                 </div>
 
                                 <!-- Avg Score -->
                                 <div class="flex items-center gap-3">
-                                    <ScoreBadge 
-                                        v-if="props.lineup.stats.avgScore" 
-                                        :score="Math.round(props.lineup.stats.avgScore)" 
+                                    <ScoreBadge
+                                        v-if="props.lineup.stats.avgScore"
+                                        :score="
+                                            Math.round(
+                                                props.lineup.stats.avgScore,
+                                            )
+                                        "
                                         size="lg"
                                     />
-                                    <div v-else class="h-10 w-10 flex items-center justify-center rounded-full bg-muted">
+                                    <div
+                                        v-else
+                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-muted"
+                                    >
                                         <span class="font-bold">-</span>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider">{{ $t('lineups.show_stats_avg_score') }}</p>
+                                        <p
+                                            class="text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                                        >
+                                            {{
+                                                $t(
+                                                    'lineups.show_stats_avg_score',
+                                                )
+                                            }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -151,10 +297,31 @@ const breadcrumbs = computed(() =>
 
                         <!-- Actions -->
                         <div class="flex items-start gap-3">
-                            <Button variant="outline">
-                                <Download class="w-4 h-4 mr-2" />
-                                {{ $t('lineups.show_export_button') }}
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger as-child>
+                                    <Button variant="outline" size="icon">
+                                        <MoreHorizontal class="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem disabled>
+                                        <Pencil class="mr-2 h-4 w-4" />
+                                        {{ $t('common.action_edit') }}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem disabled>
+                                        <Download class="mr-2 h-4 w-4" />
+                                        {{ $t('lineups.show_export_button') }}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        disabled
+                                        class="text-destructive"
+                                    >
+                                        <Trash2 class="mr-2 h-4 w-4" />
+                                        {{ $t('common.action_delete') }}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </CardContent>
@@ -162,54 +329,33 @@ const breadcrumbs = computed(() =>
 
             <!-- Lineup Content -->
             <div class="space-y-6">
-                <!-- Toolbar -->
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="relative flex-1">
-                        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            v-model="searchQuery"
-                            type="text"
-                            :placeholder="$t('lineups.show_search_placeholder')"
-                            class="pl-9"
-                        />
-                    </div>
-                    <Separator orientation="vertical" class="hidden sm:block h-10" />
-                    <div class="flex gap-2">
-                        <Button
-                            :variant="stackMode ? 'default' : 'outline'"
-                            @click="stackMode = !stackMode; compareMode = false"
-                            :class="{ 'bg-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/90': stackMode }"
-                        >
-                            <Layers class="w-4 h-4 mr-2" />
-                            {{ $t('lineups.show_stack_button') }}
-                        </Button>
-                        <Button
-                            :variant="compareMode ? 'default' : 'outline'"
-                            @click="compareMode = !compareMode; stackMode = false"
-                            :class="{ 'bg-[hsl(var(--compare-coral))] hover:bg-[hsl(var(--compare-coral))]/90': compareMode }"
-                        >
-                            <Scale class="w-4 h-4 mr-2" />
-                            {{ $t('lineups.show_compare_button') }}
-                        </Button>
-                    </div>
-                </div>
+                <!-- Artist Search Component -->
+                <ArtistSearch
+                    :adding-artist-id="addingArtistId"
+                    :is-artist-in-lineup="isArtistInLineup"
+                    @add-artist="openAddModal"
+                />
 
                 <!-- Mode Banners -->
                 <div
                     v-if="stackMode"
-                    class="flex items-center justify-between p-4 rounded-lg bg-[hsl(var(--stack-purple-bg))] border border-[hsl(var(--stack-purple))]/30"
+                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--stack-purple))]/30 bg-[hsl(var(--stack-purple-bg))] p-4"
                 >
                     <p class="text-sm">
                         {{ $t('lineups.show_stack_mode_description') }}
                     </p>
-                    <Button variant="outline" size="sm" @click="stackMode = false">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        @click="stackMode = false"
+                    >
                         {{ $t('lineups.show_stack_mode_done') }}
                     </Button>
                 </div>
 
                 <div
                     v-if="compareMode"
-                    class="flex items-center justify-between p-4 rounded-lg bg-[hsl(var(--compare-coral-bg))] border border-[hsl(var(--compare-coral))]/30"
+                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral-bg))] p-4"
                 >
                     <div class="flex items-center gap-4">
                         <p class="text-sm">
@@ -219,16 +365,27 @@ const breadcrumbs = computed(() =>
                             <ArtistAvatar
                                 v-for="id in selectedArtistIds"
                                 :key="id"
-                                :artist="allArtists.find(a => a.id === id)!"
+                                :artist="allArtists.find((a) => a.id === id)!"
                                 size="sm"
                                 class="border-2 border-background"
                             />
                         </div>
-                        <Badge v-if="selectedArtistIds.length > 0">{{ selectedArtistIds.length }}/4</Badge>
+                        <Badge v-if="selectedArtistIds.length > 0"
+                            >{{ selectedArtistIds.length }}/4</Badge
+                        >
                     </div>
                     <div class="flex gap-2">
-                        <Button variant="ghost" size="sm" @click="clearSelection">{{ $t('lineups.show_compare_clear') }}</Button>
-                        <Button size="sm" :disabled="selectedArtistIds.length < 2" @click="exitCompareMode">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            @click="clearSelection"
+                            >{{ $t('lineups.show_compare_clear') }}</Button
+                        >
+                        <Button
+                            size="sm"
+                            :disabled="selectedArtistIds.length < 2"
+                            @click="exitCompareMode"
+                        >
                             {{ $t('lineups.show_compare_submit') }}
                         </Button>
                     </div>
@@ -252,12 +409,23 @@ const breadcrumbs = computed(() =>
         </div>
 
         <!-- Not Found -->
-        <div v-else class="text-center py-12">
-            <p class="text-muted-foreground">{{ $t('lineups.show_not_found') }}</p>
+        <div v-else class="py-12 text-center">
+            <p class="text-muted-foreground">
+                {{ $t('lineups.show_not_found') }}
+            </p>
             <Button class="mt-4" @click="router.visit('/lineups')">
                 {{ $t('lineups.show_back_button') }}
             </Button>
         </div>
+
+        <AddToLineupModal
+            v-if="props.lineup"
+            v-model:open="isAddModalOpen"
+            :artist="artistToAdd"
+            :lineup-name="props.lineup.name"
+            :suggested-tier="suggestedTier"
+            :is-adding="isAddingToLineup"
+            @add="confirmAddArtist"
+        />
     </MainLayout>
 </template>
-

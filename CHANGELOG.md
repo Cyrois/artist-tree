@@ -19,6 +19,52 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Lineup Search UI Improvements (2025-12-29)
+**Summary:** Refined the Lineup Artist Search UI to create a seamless visual connection between the search input and results dropdown.
+- **Frontend:**
+  - Modified `Lineups/Show.vue` Card component to dynamically remove bottom rounded corners when results are shown.
+  - Updated Dropdown styling to remove top margin and border, creating a unified component look.
+  - Made search input transparent when expanded to maintain visual consistency.
+
+### Lineup List Resource Conversion (2025-12-29)
+**Summary:** Converted the Lineup list response to use a standard API Resource class, optimized database queries, and aligned frontend implementation.
+- **Backend:**
+  - Created `LineupResource` to standardize the API response structure.
+  - Updated `LineupController::index` to use `LineupResource::collection` and added `withCount('artists')` to fix N+1 query performance issues.
+- **Frontend:**
+  - Updated `Lineups/Index.vue` to handle the `data` wrapper in the API response.
+- **Testing:**
+  - Updated `LineupControllerTest` to generate real database records instead of relying on non-existent mocks, and verified the correct response structure.
+
+### Add Artist to Lineup (2025-12-29)
+**Summary:** Implemented the inline artist search and add interface on the Lineup Detail page with a floating full-width dropdown.
+- **Frontend:**
+  - Refactored the lineup toolbar into an "Artist Actions Panel".
+  - Implemented an expandable search input that transitions to a full-width search interface.
+  - Implemented search results as a **floating full-width dropdown** (absolute positioned), matching the dashboard's search behavior but spanning the entire panel width.
+  - Added real-time artist search with debouncing, displaying artist scores and genre chips.
+  - Limited dropdown results to 3 artists with a "View all results" link leading to the main search page.
+  - Implemented "Add to Lineup" functionality directly from search results with visual feedback.
+  - UI Polish: Added a vertical divider, removed borders on focus, and matched existing design patterns.
+- **Backend:**
+  - (Existing) `LineupController::addArtist` endpoint handles the attachment.
+- **Testing:**
+  - Verified `LineupControllerTest` passes.
+
+### Create Lineup Flow (2025-12-29)
+**Summary:** Implemented the "Create New Lineup" flow, including backend API, validation, and frontend modal UI.
+- **Backend:**
+  - Added `StoreLineupRequest` for validation.
+  - Implemented `LineupController::store` to create lineups and associate the user as 'owner'.
+  - Updated `LineupController::index` to fetch real lineups from the database with a mock fallback.
+  - Added `POST /lineups` route.
+- **Frontend:**
+  - Created `CreateLineupModal.vue` component matching the design requirements.
+  - Integrated modal into `Lineups/Index.vue` page.
+  - Enabled the "Create Lineup" button.
+- **Testing:**
+  - Added feature tests for lineup creation and validation in `LineupControllerTest.php`.
+
 ### Lineup Schema Refactor (Many-to-Many) (2025-12-28)
 **Summary:** Refactored the relationship between Users and Lineups from One-to-Many to Many-to-Many to support shared lineup access.
 - **Database:**
