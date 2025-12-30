@@ -2,6 +2,8 @@
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
+import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
+import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +61,7 @@ interface Props {
     lineup: {
         id: number;
         name: string;
+        description?: string | null;
         updatedAt: string;
         artists: Record<TierType, ApiArtist[]>;
         artistStatuses: any;
@@ -91,6 +94,12 @@ const isAddModalOpen = ref(false);
 const artistToAdd = ref<SearchResultArtist | null>(null);
 const suggestedTier = ref<TierType | null>(null);
 const isAddingToLineup = ref(false);
+
+// Edit Lineup Modal State
+const isEditModalOpen = ref(false);
+
+// Delete Lineup Modal State
+const isDeleteModalOpen = ref(false);
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
@@ -234,9 +243,10 @@ const breadcrumbs = computed(() =>
                             <h1 class="text-3xl font-bold">
                                 {{ props.lineup.name }}
                             </h1>
-                            <p class="mt-1 text-sm text-muted-foreground">
-                                {{ $t('lineups.show_updated_prefix') }}
-                                {{ props.lineup.updatedAt }}
+                            <p
+                                class="mt-1 min-h-[1.25rem] text-sm text-muted-foreground"
+                            >
+                                {{ lineup.description }}
                             </p>
 
                             <div class="mt-6 flex flex-wrap items-center gap-8">
@@ -292,6 +302,13 @@ const breadcrumbs = computed(() =>
                                         </p>
                                     </div>
                                 </div>
+
+                                <div
+                                    class="mt-1 self-end text-xs text-muted-foreground"
+                                >
+                                    {{ $t('lineups.card_updated') }}
+                                    {{ lineup.updatedAt }}
+                                </div>
                             </div>
                         </div>
 
@@ -299,12 +316,18 @@ const breadcrumbs = computed(() =>
                         <div class="flex items-start gap-3">
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
-                                    <Button variant="outline" size="icon">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-8 w-8"
+                                    >
                                         <MoreHorizontal class="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem disabled>
+                                    <DropdownMenuItem
+                                        @click="isEditModalOpen = true"
+                                    >
                                         <Pencil class="mr-2 h-4 w-4" />
                                         {{ $t('common.action_edit') }}
                                     </DropdownMenuItem>
@@ -314,8 +337,8 @@ const breadcrumbs = computed(() =>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        disabled
                                         class="text-destructive"
+                                        @click="isDeleteModalOpen = true"
                                     >
                                         <Trash2 class="mr-2 h-4 w-4" />
                                         {{ $t('common.action_delete') }}
@@ -426,6 +449,18 @@ const breadcrumbs = computed(() =>
             :suggested-tier="suggestedTier"
             :is-adding="isAddingToLineup"
             @add="confirmAddArtist"
+        />
+
+        <EditLineupModal
+            v-if="props.lineup"
+            v-model:open="isEditModalOpen"
+            :lineup="props.lineup"
+        />
+
+        <DeleteLineupModal
+            v-if="props.lineup"
+            v-model:open="isDeleteModalOpen"
+            :lineup="props.lineup"
         />
     </MainLayout>
 </template>

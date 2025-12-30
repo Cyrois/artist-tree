@@ -76,11 +76,15 @@ const displayScore = computed(() => {
             :show-close-button="false"
         >
             <div class="p-6 pb-2">
-                <div class="flex items-center justify-between mb-4">
-                     <DialogTitle class="text-xl font-bold">{{ $t('lineups.add_modal_title') }}</DialogTitle>
-                     <DialogClose class="rounded-md p-2 hover:bg-muted transition-colors opacity-70 hover:opacity-100">
-                        <X class="w-4 h-4" />
-                     </DialogClose>
+                <div class="mb-4 flex items-center justify-between">
+                    <DialogTitle class="text-xl font-bold">{{
+                        $t('lineups.add_modal_title')
+                    }}</DialogTitle>
+                    <DialogClose
+                        class="rounded-md p-2 opacity-70 transition-colors hover:bg-muted hover:opacity-100"
+                    >
+                        <X class="h-4 w-4" />
+                    </DialogClose>
                 </div>
 
                 <!-- Artist Card -->
@@ -109,9 +113,15 @@ const displayScore = computed(() => {
                         </h3>
                         <ScoreBadge :score="displayScore" size="sm" />
                     </div>
-                    <div class="text-right shrink-0">
-                        <p class="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{{ $t('lineups.add_modal_adding_to') }}</p>
-                        <p class="text-sm font-medium truncate max-w-[120px]">{{ lineupName }}</p>
+                    <div class="shrink-0 text-right">
+                        <p
+                            class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
+                        >
+                            {{ $t('lineups.add_modal_adding_to') }}
+                        </p>
+                        <p class="max-w-[120px] truncate text-sm font-medium">
+                            {{ lineupName }}
+                        </p>
                     </div>
                 </div>
 
@@ -149,7 +159,8 @@ const displayScore = computed(() => {
                                     variant="secondary"
                                     class="flex h-5 items-center gap-1 border-0 bg-orange-100 px-1.5 text-[10px] text-orange-700 hover:bg-orange-100"
                                 >
-                                    <span class="text-[8px]">✨</span> {{ $t('lineups.add_modal_suggested') }}
+                                    <span class="text-[8px]">✨</span>
+                                    {{ $t('lineups.add_modal_suggested') }}
                                 </Badge>
                             </div>
 
@@ -176,8 +187,15 @@ const displayScore = computed(() => {
                     :disabled="!selectedTier || isAdding"
                     @click="handleAdd"
                 >
-                    <Loader2 v-if="isAdding" class="w-5 h-5 animate-spin mr-2" />
-                    {{ isAdding ? $t('lineups.add_modal_adding') : $t('lineups.add_modal_submit') }}
+                    <Loader2
+                        v-if="isAdding"
+                        class="mr-2 h-5 w-5 animate-spin"
+                    />
+                    {{
+                        isAdding
+                            ? $t('lineups.add_modal_adding')
+                            : $t('lineups.add_modal_submit')
+                    }}
                 </Button>
             </div>
         </DialogContent>

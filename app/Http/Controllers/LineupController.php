@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLineupRequest;
+use App\Http\Requests\UpdateLineupRequest;
 use App\Http\Requests\AddArtistToLineupRequest;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Http\Resources\ArtistResource;
 use App\Services\ArtistScoringService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class LineupController extends Controller
@@ -35,6 +37,24 @@ class LineupController extends Controller
         $lineup->users()->attach(auth()->id(), ['role' => 'owner']);
 
         return redirect()->route('lineups.show', $lineup->id);
+    }
+
+    public function update(UpdateLineupRequest $request, Lineup $lineup)
+    {
+        Gate::authorize('update', $lineup);
+
+        $lineup->update($request->validated());
+
+        return redirect()->back();
+    }
+
+    public function destroy(Lineup $lineup)
+    {
+        Gate::authorize('delete', $lineup);
+
+        $lineup->delete();
+
+        return redirect()->route('lineups.index')->with('success', 'Lineup deleted successfully.');
     }
 
     public function addArtist(Lineup $lineup, AddArtistToLineupRequest $request)
@@ -92,6 +112,7 @@ class LineupController extends Controller
             'lineup' => [
                 'id' => $lineup->id,
                 'name' => $lineup->name,
+                'description' => $lineup->description,
                 'updatedAt' => $lineup->updated_at->diffForHumans(),
                 'artists' => $artistsByTier,
                 'artistStatuses' => [], // Empty as requested
