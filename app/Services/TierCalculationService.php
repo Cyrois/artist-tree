@@ -22,6 +22,9 @@ class TierCalculationService
     {
         // Get all existing artists with their metrics
         $artists = $lineup->artists()->with('metrics')->get();
+
+        // Eager load metrics for the new artist to prevent N+1 queries
+        $newArtist->loadMissing('metrics');
         
         // Add the new artist to the collection for calculation
         $artists->push($newArtist);
