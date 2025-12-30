@@ -4,6 +4,7 @@ import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
 import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
 import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
+import RemoveArtistFromLineupModal from '@/components/lineup/RemoveArtistFromLineupModal.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +102,10 @@ const isEditModalOpen = ref(false);
 // Delete Lineup Modal State
 const isDeleteModalOpen = ref(false);
 
+// Remove Artist Modal State
+const isRemoveArtistModalOpen = ref(false);
+const artistToRemove = ref<ApiArtist | null>(null);
+
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
     if (!props.lineup) return [];
@@ -128,6 +133,11 @@ function handleArtistView(artist: ApiArtist) {
     if (!compareMode.value && !stackMode.value) {
         router.visit(`/artist/${artist.id}`);
     }
+}
+
+function handleArtistRemove(artist: ApiArtist) {
+    artistToRemove.value = artist;
+    isRemoveArtistModalOpen.value = true;
 }
 
 function clearSelection() {
@@ -425,7 +435,7 @@ const breadcrumbs = computed(() =>
                         :selected-artist-ids="selectedArtistIds"
                         @select-artist="handleArtistSelect"
                         @view-artist="handleArtistView"
-                        @remove-artist="() => {}"
+                        @remove-artist="handleArtistRemove"
                     />
                 </div>
             </div>
@@ -449,6 +459,13 @@ const breadcrumbs = computed(() =>
             :suggested-tier="suggestedTier"
             :is-adding="isAddingToLineup"
             @add="confirmAddArtist"
+        />
+
+        <RemoveArtistFromLineupModal
+            v-if="props.lineup"
+            v-model:open="isRemoveArtistModalOpen"
+            :lineup-id="props.lineup.id"
+            :artist="artistToRemove"
         />
 
         <EditLineupModal
