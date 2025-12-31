@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Models\LineupArtist;
@@ -45,21 +46,21 @@ class TierCalculationServiceTest extends TestCase
 
         // Mock Artists
         $headliner1 = new Artist();
-        $headliner1->setRelation('pivot', new LineupArtist(['tier' => 'headliner']));
+        $headliner1->setRelation('pivot', new LineupArtist(['tier' => ArtistTier::Headliner->value]));
         $this->scoringServiceMock->shouldReceive('calculateScore')->with($headliner1)->andReturn(90);
 
         $sub1 = new Artist();
-        $sub1->setRelation('pivot', new LineupArtist(['tier' => 'sub_headliner']));
+        $sub1->setRelation('pivot', new LineupArtist(['tier' => ArtistTier::SubHeadliner->value]));
         $this->scoringServiceMock->shouldReceive('calculateScore')->with($sub1)->andReturn(70);
 
         $lineup->setRelation('artists', new Collection([$headliner1, $sub1]));
 
         // Test case 1: 85 is closer to 90 (diff 5) than 70 (diff 15)
         $result = $this->tierService->suggestTier($lineup, 85);
-        $this->assertEquals('headliner', $result);
+        $this->assertEquals(ArtistTier::Headliner, $result);
 
         // Test case 2: 75 is closer to 70 (diff 5) than 90 (diff 15)
         $result2 = $this->tierService->suggestTier($lineup, 75);
-        $this->assertEquals('sub_headliner', $result2);
+        $this->assertEquals(ArtistTier::SubHeadliner, $result2);
     }
 }

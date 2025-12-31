@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Models\User;
@@ -24,7 +25,7 @@ class DashboardControllerTest extends TestCase
         $artists = Artist::factory()->count(10)->create();
         $targetLineup = $lineups->first();
         foreach ($artists as $artist) {
-            $targetLineup->artists()->attach($artist->id, ['tier' => 'undercard']);
+            $targetLineup->artists()->attach($artist->id, ['tier' => ArtistTier::Undercard->value]);
         }
 
         $response = $this->actingAs($user)->get(route('dashboard'));
@@ -34,13 +35,13 @@ class DashboardControllerTest extends TestCase
         // Check lineups limit (3)
         $this->assertCount(3, $response->viewData('page')['props']['lineups']['data']);
 
-        // Check previewArtists limit (5)
-        $this->assertCount(5, $response->viewData('page')['props']['lineups']['data'][0]['previewArtists']);
+        // Check previewArtists limit (4 as per Resource)
+        $this->assertCount(4, $response->viewData('page')['props']['lineups']['data'][0]['preview_artists']);
 
         // Check total artist count (should be 10, not 5)
-        $this->assertEquals(10, $response->viewData('page')['props']['lineups']['data'][0]['stats']['artistCount']);
+        $this->assertEquals(10, $response->viewData('page')['props']['lineups']['data'][0]['artist_count']);
 
-        // Check avgScore exists (value depends on factory data, but check key existence)
-        $this->assertArrayHasKey('avgScore', $response->viewData('page')['props']['lineups']['data'][0]['stats']);
+        // Check avgScore exists
+        $this->assertArrayHasKey('avg_score', $response->viewData('page')['props']['lineups']['data'][0]);
     }
 }

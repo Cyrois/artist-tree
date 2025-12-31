@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ArtistTier;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,27 +19,19 @@ class LineupResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'createdAt' => $this->created_at->format('M j, Y'),
-            'updatedAt' => $this->updated_at->diffForHumans(),
-            'stats' => [
-                'artistCount' => $this->artists_count ?? $this->artists->count(),
-                'avgScore' => $this->avg_score ?? 0,
-                'confirmedCount' => 0,
-                'pendingCount' => 0,
-                'totalBudget' => 0,
-            ],
-            'previewArtists' => $this->artists->take(5)->map(fn ($artist) => [
-                'id' => $artist->id,
-                'name' => $artist->name,
-                'image' => $artist->image_url,
-            ]),
-            'artists' => $this->whenLoaded('artists', function () {
-                return $this->artists->map(function ($artist) {
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
+            'updated_at_human' => $this->updated_at->diffForHumans(),
+            'artist_count' => $this->whenCounted('artists'),
+            'avg_score' => $this->avg_score,
+            // Include first few artists for preview if loaded
+            'preview_artists' => $this->whenLoaded('artists', function() {
+                return $this->artists->take(4)->map(function($artist) {
                     return [
                         'id' => $artist->id,
                         'name' => $artist->name,
                         'image_url' => $artist->image_url,
-                        'tier' => $artist->pivot->tier ?? 'undercard',
+                        'tier' => $artist->pivot->tier ?? ArtistTier::Undercard->value,
                     ];
                 });
             }),

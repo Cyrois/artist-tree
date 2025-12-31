@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ArtistTier;
 use App\Http\Requests\StoreLineupRequest;
 use App\Http\Requests\UpdateLineupRequest;
 use App\Http\Requests\AddArtistToLineupRequest;
@@ -48,7 +49,7 @@ class LineupController extends Controller
         $suggestedTier = $tierService->suggestTier($lineup, $score);
 
         return response()->json([
-            'suggested_tier' => $suggestedTier,
+            'suggested_tier' => $suggestedTier?->value,
         ]);
     }
 
@@ -116,10 +117,10 @@ class LineupController extends Controller
         
         // Group artists by tier
         $artistsByTier = [
-            'headliner' => [],
-            'sub_headliner' => [],
-            'mid_tier' => [],
-            'undercard' => [],
+            ArtistTier::Headliner->value => [],
+            ArtistTier::SubHeadliner->value => [],
+            ArtistTier::MidTier->value => [],
+            ArtistTier::Undercard->value => [],
         ];
 
         foreach ($lineup->artists as $artist) {
@@ -168,9 +169,8 @@ class LineupController extends Controller
             return [];
         }
 
-        $tiers = ['headliner', 'sub_headliner', 'mid_tier', 'undercard'];
-        
-        return $artists->map(function ($artist) use ($tiers) {
+        return $artists->map(function ($artist) {
+            $tiers = ArtistTier::values();
             return [
                 'id' => $artist->id,
                 'name' => $artist->name,

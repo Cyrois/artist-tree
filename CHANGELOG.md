@@ -19,6 +19,16 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Artist Tier Enum Refactor (2025-12-30)
+**Summary:** Refactored hardcoded tier strings into a PHP Enum for better type safety and consistency across the backend.
+- **Backend:**
+  - Created `App\Enums\ArtistTier` backed enum.
+  - Updated `TierCalculationService`, `LineupController`, `LineupResource`, `LineupSeeder`, and `AddArtistToLineupRequest` to use the Enum.
+  - Updated `2025_12_28_232159_create_lineup_artists_table.php` migration to use `ArtistTier::values()`.
+- **Testing:**
+  - Updated `LineupControllerTest`, `SuggestTierTest`, `TierCalculationServiceTest`, and `DashboardControllerTest` to use the Enum.
+  - Fixed `DashboardControllerTest` to match `LineupResource` structure (snake_case keys, limit of 4).
+
 ### Lineup Search UI Improvements (2025-12-29)
 **Summary:** Refined the Lineup Artist Search UI to create a seamless visual connection between the search input and results dropdown.
 - **Frontend:**

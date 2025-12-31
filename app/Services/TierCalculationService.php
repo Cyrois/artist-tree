@@ -2,25 +2,24 @@
 
 namespace App\Services;
 
+use App\Enums\ArtistTier;
 use App\Models\Lineup;
 
 class TierCalculationService
 {
-    private array $tiers = ['headliner', 'sub_headliner', 'mid_tier', 'undercard'];
-
     public function __construct(
         private ArtistScoringService $scoringService
     ) {}
 
-    public function suggestTier(Lineup $lineup, int $artistScore): ?string
+    public function suggestTier(Lineup $lineup, int $artistScore): ?ArtistTier
     {
         $lineup->loadMissing(['artists.metrics']);
 
         $tierScores = [];
 
-        foreach ($this->tiers as $tier) {
+        foreach (ArtistTier::cases() as $tier) {
             $artistsInTier = $lineup->artists->filter(function ($artist) use ($tier) {
-                return $artist->pivot->tier === $tier;
+                return $artist->pivot->tier === $tier->value;
             });
 
             if ($artistsInTier->isEmpty()) {
@@ -32,7 +31,7 @@ class TierCalculationService
             });
 
             $avgScore = $totalScore / $artistsInTier->count();
-            $tierScores[$tier] = $avgScore;
+            $tierScores[$tier->value] = $avgScore;
         }
 
         if (empty($tierScores)) {
@@ -42,12 +41,12 @@ class TierCalculationService
         $bestTier = null;
         $minDiff = INF;
 
-        foreach ($tierScores as $tier => $avgScore) {
+        foreach ($tierScores as $tierValue => $avgScore) {
             $diff = abs($artistScore - $avgScore);
 
             if ($diff < $minDiff) {
                 $minDiff = $diff;
-                $bestTier = $tier;
+                $bestTier = ArtistTier::from($tierValue);
             }
         }
 
