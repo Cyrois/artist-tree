@@ -14,7 +14,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { useRecentSearches } from '@/composables/useRecentSearches';
-import { getSimilarArtists } from '@/data/artists';
 import { allGenres } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
@@ -178,13 +177,6 @@ const filteredArtists = computed(() => {
     });
 
     return results;
-});
-
-// Similar artists (based on first result's genres)
-const similarArtists = computed(() => {
-    if (filteredArtists.value.length === 0) return [];
-    const firstArtist = filteredArtists.value[0];
-    return getSimilarArtists(firstArtist.id).slice(0, 5);
 });
 
 const activeFilterCount = computed(() => {
@@ -455,26 +447,6 @@ const breadcrumbs = searchBreadcrumbs();
                 :columns="4"
                 @select-artist="handleArtistClick"
             />
-
-            <!-- Similar Artists (if searching) -->
-            <div
-                v-if="similarArtists.length > 0 && searchQuery.length >= 2"
-                class="border-t pt-6"
-            >
-                <h3 class="mb-4 text-lg font-semibold">
-                    {{ $t('artists.search_similar_artists_title') }}
-                </h3>
-                <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
-                    <ArtistCard
-                        v-for="artist in similarArtists"
-                        :key="artist.id"
-                        :artist="artist"
-                        compact
-                        :show-metrics="false"
-                        @click="handleArtistClick"
-                    />
-                </div>
-            </div>
         </div>
     </MainLayout>
 </template>

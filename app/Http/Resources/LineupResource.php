@@ -18,9 +18,20 @@ class LineupResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'created_at' => $this->created_at->format('M j, Y'),
-            'updated_at' => $this->updated_at->diffForHumans(),
-            'total_artists' => $this->artists_count ?? $this->artists()->count(),
+            'createdAt' => $this->created_at->format('M j, Y'),
+            'updatedAt' => $this->updated_at->diffForHumans(),
+            'stats' => [
+                'artistCount' => $this->artists_count ?? $this->artists->count(),
+                'avgScore' => $this->avg_score ?? 0,
+                'confirmedCount' => 0,
+                'pendingCount' => 0,
+                'totalBudget' => 0,
+            ],
+            'previewArtists' => $this->artists->take(5)->map(fn ($artist) => [
+                'id' => $artist->id,
+                'name' => $artist->name,
+                'image' => $artist->image_url,
+            ]),
             'artists' => $this->whenLoaded('artists', function () {
                 return $this->artists->map(function ($artist) {
                     return [

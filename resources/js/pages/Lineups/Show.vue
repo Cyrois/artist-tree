@@ -149,41 +149,26 @@ function exitCompareMode() {
     selectedArtistIds.value = [];
 }
 
-function calculateSuggestedTier(artistScore: number): TierType | null {
-    if (!props.lineup || props.lineup.stats.artistCount === 0) return null;
-
-    let bestTier: TierType | null = null;
-    let minDiff = Infinity;
-
-    for (const tier of tierOrder) {
-        const artists = props.lineup.artists[tier];
-        // If a tier has no artists, we can skip it for average calculation purposes
-        // OR we might consider "empty tiers" as valid targets if we had a baseline average for them.
-        // For now, based on "relative to lineup's tier averages", we only compare against existing averages.
-        // If all tiers are empty, we return null (handled by artistCount check above).
-        if (!artists || artists.length === 0) continue;
-
-        const totalScore = artists.reduce((sum, a) => sum + a.score, 0);
-        const avg = totalScore / artists.length;
-        const diff = Math.abs(artistScore - avg);
-
-        if (diff < minDiff) {
-            minDiff = diff;
-            bestTier = tier;
-        }
-    }
-
-    // If we couldn't find a best tier (e.g. all tiers empty somehow despite artistCount > 0), return null.
-    return bestTier;
-}
-
-function openAddModal(artist: SearchResultArtist) {
+async function openAddModal(artist: SearchResultArtist) {
     if (addingArtistId.value) return;
 
     artistToAdd.value = artist;
-    const score = artist.score || artist.spotify_popularity || 0;
-    suggestedTier.value = calculateSuggestedTier(score);
     isAddModalOpen.value = true;
+    suggestedTier.value = null; // Reset while loading
+
+    // Fetch suggested tier from backend
+    try {
+        const score = artist.score || artist.spotify_popularity || 0;
+        const response = await axios.get(`/lineups/${props.id}/suggest-tier`, {
+            params: { 
+                artist_id: artist.id,
+                score: score 
+            }
+        });
+        suggestedTier.value = response.data.suggested_tier;
+    } catch (e) {
+        console.error('Failed to get tier suggestion', e);
+    }
 }
 
 async function confirmAddArtist(payload: {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ArtistAddToLineupModal from '@/components/artist/ArtistAddToLineupModal.vue';
 import ArtistMediaList from '@/components/artist/ArtistMediaList.vue';
 import ArtistSimilarArtists from '@/components/artist/ArtistSimilarArtists.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
@@ -43,8 +44,15 @@ interface ApiArtist {
     updated_at: string;
 }
 
+interface Lineup {
+    id: number;
+    name: string;
+    artists_count: number;
+}
+
 interface Props {
     id: number;
+    userLineups: Lineup[];
 }
 
 const props = defineProps<Props>();
@@ -56,6 +64,7 @@ const artist = ref<ApiArtist | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const activeTab = ref<'overview' | 'data'>('overview');
+const showAddToLineupModal = ref(false);
 
 // Fetch artist details on mount
 onMounted(async () => {
@@ -93,6 +102,21 @@ const formatNumber = (num: number | null | undefined): string => {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
 };
+
+function handleAddToLineupSubmit(data: any) {
+    router.post(
+        `/lineups/${data.lineupId}/artists`,
+        {
+            artist_id: data.artistId,
+            tier: data.tier,
+        },
+        {
+            onSuccess: () => {
+                showAddToLineupModal.value = false;
+            },
+        },
+    );
+}
 
 const breadcrumbs = computed(() =>
     artistBreadcrumbs(
@@ -224,7 +248,10 @@ const pageTitle = computed(() =>
                             </div>
 
                             <div class="mt-6 flex gap-3">
-                                <Button disabled class="gap-2">
+                                <Button
+                                    class="gap-2"
+                                    @click="showAddToLineupModal = true"
+                                >
                                     <Plus class="h-4 w-4" />
                                     {{
                                         $t('artists.show_add_to_lineup_button')
@@ -613,5 +640,13 @@ const pageTitle = computed(() =>
                 {{ $t('artists.show_back_button') }}
             </Button>
         </div>
+
+        <ArtistAddToLineupModal
+            v-if="artist"
+            v-model:open="showAddToLineupModal"
+            :artist="artist"
+            :lineups="props.userLineups"
+            @submit="handleAddToLineupSubmit"
+        />
     </MainLayout>
 </template>

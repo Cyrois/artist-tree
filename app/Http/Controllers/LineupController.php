@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
+use App\Services\TierCalculationService;
+
 class LineupController extends Controller
 {
     public function index()
@@ -26,6 +28,27 @@ class LineupController extends Controller
 
         return Inertia::render('Lineups/Index', [
             'lineups' => \App\Http\Resources\LineupResource::collection($lineups)
+        ]);
+    }
+
+    public function suggestTier(Request $request, Lineup $lineup, TierCalculationService $tierService, ArtistScoringService $scoringService)
+    {
+        $request->validate([
+            'artist_id' => 'required_without:score|nullable|exists:artists,id',
+            'score' => 'required_without:artist_id|numeric|min:0|max:100',
+        ]);
+
+        if ($request->has('score')) {
+            $score = (int) $request->score;
+        } else {
+            $artist = Artist::findOrFail($request->artist_id);
+            $score = $scoringService->calculateScore($artist);
+        }
+        
+        $suggestedTier = $tierService->suggestTier($lineup, $score);
+
+        return response()->json([
+            'suggested_tier' => $suggestedTier,
         ]);
     }
 
@@ -73,7 +96,7 @@ class LineupController extends Controller
             ]);
         }
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Artist added to lineup successfully.');
     }
 
     public function removeArtist(Lineup $lineup, Artist $artist)
