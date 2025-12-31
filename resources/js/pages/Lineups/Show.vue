@@ -158,44 +158,7 @@ async function openAddModal(artist: SearchResultArtist) {
 
     // Fetch suggested tier from backend
     try {
-        // If the artist is from Spotify search and not yet in DB, we might not have an ID.
-        // But the requirements say "Artist Auto-Creation from Spotify... search returns Spotify results not in local database...".
-        // The SearchResultArtist interface has 'id' (nullable) and 'spotify_id'.
-        // If 'id' is null, we can't call the endpoint which expects 'artist_id' (exists:artists,id).
-        // However, the backend endpoint requires an existing artist ID.
-        // Wait, the `select` endpoint creates the artist if it doesn't exist.
-        // But here we just want a *suggestion*.
-        
-        // If the artist is NOT in the DB yet, we can't calculate a score for them on the backend easily using `ArtistScoringService` 
-        // unless we create them first OR pass the score directly to the suggestion endpoint.
-        
-        // My implementation of `suggestTier` in LineupController expects `artist_id`.
-        // `Artist::findOrFail($request->artist_id);`
-        
-        // If the artist comes from "Spotify Search" and hasn't been "Selected" yet, they might not be in the DB.
-        // In `ArtistSearch.vue`, we display results. 
-        // If `artist.exists_in_database` is false, `id` is null.
-        
-        // If I want to use the backend logic, I must ensure the artist exists or pass the score.
-        // Passing the score seems safer/cleaner for a "suggestion" without side effects (creating artist).
-        // But `ArtistScoringService` calculates score based on Metrics model.
-        
-        // Current frontend logic uses: `const score = artist.score || artist.spotify_popularity || 0;`
-        
-        // Let's modify the Controller to optionally accept `score` directly OR `artist_id`.
-        // This is a robust solution.
-        
         const score = artist.score || artist.spotify_popularity || 0;
-        
-        // If we have an ID, let's prefer using the backend's definitive score calculation if possible, 
-        // but if not, use the provided score.
-        
-        // Actually, let's stick to the simplest path: pass the score to the endpoint.
-        // But the previous implementation of `suggestTier` in Controller uses `ArtistScoringService::calculateScore($artist)`.
-        
-        // To support non-DB artists, I should update the Controller to accept `score` OR `artist_id`.
-        // Then I can pass the score from the frontend if the artist is not in DB.
-        
         const response = await axios.get(`/lineups/${props.id}/suggest-tier`, {
             params: { 
                 artist_id: artist.id,
