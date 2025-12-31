@@ -185,7 +185,7 @@ async function openAddModal(artist: SearchResultArtist) {
         // Let's modify the Controller to optionally accept `score` directly OR `artist_id`.
         // This is a robust solution.
         
-        let score = artist.score || artist.spotify_popularity || 0;
+        const score = artist.score || artist.spotify_popularity || 0;
         
         // If we have an ID, let's prefer using the backend's definitive score calculation if possible, 
         // but if not, use the provided score.
