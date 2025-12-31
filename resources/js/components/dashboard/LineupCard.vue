@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Divider from '@/components/ui/divider/Divider.vue';
 import type { Lineup } from '@/data/types';
 import { trans } from 'laravel-vue-i18n';
-import { Calendar, Users } from 'lucide-vue-next';
+import { Calendar, ChevronRight, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -28,11 +28,11 @@ const previewArtists = computed(() => props.lineup.previewArtists || []);
 
 <template>
     <Card
-        class="cursor-pointer transition-all duration-200 hover:border-border/80 hover:shadow-md gap-2"
+        class="group cursor-pointer transition-all duration-200 hover:border-border/80 hover:shadow-md gap-0 pb-0"
         data-slot="lineup-card"
         @click="emit('click', lineup)"
     >
-        <CardHeader>
+        <CardHeader class="pb-4">
             <div class="flex items-start justify-between">
                 <div>
                     <CardTitle class="text-lg">{{ lineup.name }}</CardTitle>
@@ -43,7 +43,7 @@ const previewArtists = computed(() => props.lineup.previewArtists || []);
             </div>
         </CardHeader>
 
-        <CardContent class="space-y-4">
+        <CardContent class="space-y-4 pb-6">
             <!-- Artist Avatars Preview -->
             <div v-if="previewArtists.length > 0" class="flex -space-x-2 overflow-hidden">
                 <ArtistAvatar
@@ -77,18 +77,22 @@ const previewArtists = computed(() => props.lineup.previewArtists || []);
             </div>
 
             <!-- Last updated -->
-            <div>
-                <Divider class="my-2" />
-                <div
-                    class="flex items-center gap-2 text-xs text-muted-foreground"
-                >
-                    <Calendar class="h-3 w-3" />
-                    <span
-                        >{{ trans('lineups.card_updated') }}
-                        {{ lineup.updatedAt }}</span
-                    >
-                </div>
+            <div class="flex justify-end">
+                <span class="text-xs text-muted-foreground">
+                    {{ trans('lineups.card_updated') }} {{ lineup.updatedAt }}
+                </span>
             </div>
         </CardContent>
+
+        <CardFooter class="flex items-center justify-between border-t p-6 transition-all duration-200 group-hover:bg-muted/50">
+            <span
+                class="font-medium text-primary decoration-2 underline-offset-4 transition-all duration-200 group-hover:text-foreground group-hover:underline"
+            >
+                {{ trans('lineups.card_view_and_edit') }}
+            </span>
+            <ChevronRight
+                class="h-4 w-4 text-primary transition-all duration-200 group-hover:translate-x-1 group-hover:text-foreground"
+            />
+        </CardFooter>
     </Card>
 </template>
