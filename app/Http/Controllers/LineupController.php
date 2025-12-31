@@ -159,25 +159,4 @@ class LineupController extends Controller
             ],
         ]);
     }
-
-    private function getMockArtists($count)
-    {
-        // Get random artists from DB
-        $artists = Artist::inRandomOrder()->limit($count)->get();
-        
-        // If we don't have enough artists in DB, we'll just loop what we have
-        if ($artists->isEmpty()) {
-            return [];
-        }
-
-        return $artists->map(function ($artist) {
-            $tiers = ArtistTier::values();
-            return [
-                'id' => $artist->id,
-                'name' => $artist->name,
-                'image_url' => $artist->image_url,
-                'tier' => $tiers[array_rand($tiers)], // Randomly assign tier
-            ];
-        })->values();
-    }
 }
