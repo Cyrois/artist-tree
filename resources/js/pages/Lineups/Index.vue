@@ -21,8 +21,9 @@ interface Lineup {
     description: string;
     created_at: string;
     updated_at: string;
-    total_artists: number;
-    artists: Artist[];
+    updated_at_human: string;
+    artist_count: number;
+    preview_artists: Artist[];
 }
 
 defineProps<{

@@ -16,9 +16,9 @@ interface Lineup {
     name: string;
     description: string;
     created_at: string;
-    updated_at: string; // human readable
-    total_artists: number;
-    artists: Artist[];
+    updated_at_human: string;
+    artist_count: number;
+    preview_artists: Artist[];
 }
 
 const props = defineProps<{
@@ -42,7 +42,7 @@ const artistsByTier = computed(() => {
         undercard: [],
     };
 
-    props.lineup.artists.forEach((artist) => {
+    (props.lineup.preview_artists || []).forEach((artist) => {
         if (grouped[artist.tier]) {
             grouped[artist.tier].push(artist);
         }
@@ -98,7 +98,7 @@ function getRandomColor(name: string) {
                 </div>
                 <div class="ml-4 text-right">
                     <div class="text-3xl font-bold">
-                        {{ lineup.total_artists }}
+                        {{ lineup.artist_count }}
                     </div>
                     <div
                         class="text-xs leading-none tracking-wide text-muted-foreground uppercase"
@@ -166,7 +166,7 @@ function getRandomColor(name: string) {
                 </div>
 
                 <div class="mt-4 text-right text-xs text-muted-foreground">
-                    {{ $t('lineups.card_updated') }} {{ lineup.updated_at }}
+                    {{ $t('lineups.card_updated') }} {{ lineup.updated_at_human }}
                 </div>
             </div>
         </div>

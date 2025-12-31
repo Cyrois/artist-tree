@@ -18,12 +18,18 @@ const emit = defineEmits<{
     click: [lineup: Lineup];
 }>();
 
-const stats = computed(() => props.lineup.stats || {
-    artistCount: 0,
-    avgScore: 0,
+const stats = computed(() => {
+    // Handle both legacy nested stats and flattened API structure
+    if (props.lineup.stats) {
+        return props.lineup.stats;
+    }
+    return {
+        artistCount: props.lineup.artist_count || 0,
+        avgScore: props.lineup.avg_score || 0,
+    };
 });
 
-const previewArtists = computed(() => props.lineup.previewArtists || []);
+const previewArtists = computed(() => props.lineup.preview_artists || props.lineup.previewArtists || []);
 </script>
 
 <template>
@@ -49,7 +55,7 @@ const previewArtists = computed(() => props.lineup.previewArtists || []);
                 <ArtistAvatar
                     v-for="artist in previewArtists"
                     :key="artist.id"
-                    :artist="{ id: artist.id, name: artist.name, image: artist.image } as any"
+                    :artist="{ id: artist.id, name: artist.name, image: artist.image_url || (artist as any).image } as any"
                     size="sm"
                     class="ring-2 ring-background"
                 />
@@ -79,7 +85,7 @@ const previewArtists = computed(() => props.lineup.previewArtists || []);
             <!-- Last updated -->
             <div class="flex justify-end">
                 <span class="text-xs text-muted-foreground">
-                    {{ trans('lineups.card_updated') }} {{ lineup.updatedAt }}
+                    {{ trans('lineups.card_updated') }} {{ lineup.updated_at_human || lineup.updatedAt }}
                 </span>
             </div>
         </CardContent>

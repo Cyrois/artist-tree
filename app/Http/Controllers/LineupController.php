@@ -148,12 +148,13 @@ class LineupController extends Controller
                 'id' => $lineup->id,
                 'name' => $lineup->name,
                 'description' => $lineup->description,
-                'updatedAt' => $lineup->updated_at->diffForHumans(),
+                'updated_at' => $lineup->updated_at,
+                'updated_at_human' => $lineup->updated_at->diffForHumans(),
                 'artists' => $artistsByTier,
                 'artistStatuses' => [], // Empty as requested
                 'stats' => [
-                    'artistCount' => $artistCount,
-                    'avgScore' => $avgScore,
+                    'artist_count' => $artistCount,
+                    'avg_score' => $avgScore,
                 ]
             ],
         ]);

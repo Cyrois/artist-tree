@@ -57,8 +57,8 @@ test('authenticated users can access lineup show', function () {
                 ->where('name', $lineup->name)
                 ->has('artists.headliner', 1)
                 ->has('stats', fn (Assert $page) => $page
-                    ->where('artistCount', 1)
-                    ->has('avgScore')
+                    ->where('artist_count', 1)
+                    ->has('avg_score')
                 )
                 ->etc()
             )
@@ -90,7 +90,7 @@ test('lineup show calculates average score correctly', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Lineups/Show')
-            ->where('lineup.stats.avgScore', 70) // (80 + 60) / 2
+            ->where('lineup.stats.avg_score', 70) // (80 + 60) / 2
         );
 });
 
@@ -102,8 +102,8 @@ test('lineup show handles empty lineups', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Lineups/Show')
-            ->where('lineup.stats.artistCount', 0)
-            ->where('lineup.stats.avgScore', 0)
+            ->where('lineup.stats.artist_count', 0)
+            ->where('lineup.stats.avg_score', 0)
         );
 });
 

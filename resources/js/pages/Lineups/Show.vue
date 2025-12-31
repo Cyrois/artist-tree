@@ -63,12 +63,13 @@ interface Props {
         id: number;
         name: string;
         description?: string | null;
-        updatedAt: string;
+        updated_at: string;
+        updated_at_human: string;
         artists: Record<TierType, ApiArtist[]>;
         artistStatuses: any;
         stats: {
-            artistCount: number;
-            avgScore: number;
+            artist_count: number;
+            avg_score: number;
         };
     };
 }
@@ -263,7 +264,7 @@ const breadcrumbs = computed(() =>
                                         <p
                                             class="text-xl leading-none font-bold"
                                         >
-                                            {{ props.lineup.stats.artistCount }}
+                                            {{ props.lineup.stats.artist_count }}
                                         </p>
                                     </div>
                                 </div>
@@ -271,10 +272,10 @@ const breadcrumbs = computed(() =>
                                 <!-- Avg Score -->
                                 <div class="flex items-center gap-3">
                                     <ScoreBadge
-                                        v-if="props.lineup.stats.avgScore"
+                                        v-if="props.lineup.stats.avg_score"
                                         :score="
                                             Math.round(
-                                                props.lineup.stats.avgScore,
+                                                props.lineup.stats.avg_score,
                                             )
                                         "
                                         size="lg"
@@ -302,7 +303,7 @@ const breadcrumbs = computed(() =>
                                     class="mt-1 self-end text-xs text-muted-foreground"
                                 >
                                     {{ $t('lineups.card_updated') }}
-                                    {{ lineup.updatedAt }}
+                                    {{ lineup.updated_at_human }}
                                 </div>
                             </div>
                         </div>
