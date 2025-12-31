@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Divider from '@/components/ui/divider/Divider.vue';
@@ -21,15 +22,17 @@ const stats = computed(() => props.lineup.stats || {
     artistCount: 0,
     avgScore: 0,
 });
+
+const previewArtists = computed(() => props.lineup.previewArtists || []);
 </script>
 
 <template>
     <Card
-        class="cursor-pointer transition-all duration-200 hover:border-border/80 hover:shadow-md"
+        class="cursor-pointer transition-all duration-200 hover:border-border/80 hover:shadow-md gap-2"
         data-slot="lineup-card"
         @click="emit('click', lineup)"
     >
-        <CardHeader class="pb-3">
+        <CardHeader>
             <div class="flex items-start justify-between">
                 <div>
                     <CardTitle class="text-lg">{{ lineup.name }}</CardTitle>
@@ -41,6 +44,23 @@ const stats = computed(() => props.lineup.stats || {
         </CardHeader>
 
         <CardContent class="space-y-4">
+            <!-- Artist Avatars Preview -->
+            <div v-if="previewArtists.length > 0" class="flex -space-x-2 overflow-hidden">
+                <ArtistAvatar
+                    v-for="artist in previewArtists"
+                    :key="artist.id"
+                    :artist="{ id: artist.id, name: artist.name, image: artist.image } as any"
+                    size="sm"
+                    class="ring-2 ring-background"
+                />
+                <div
+                    v-if="stats.artistCount > previewArtists.length"
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-xs font-bold text-muted-foreground ring-2 ring-background"
+                >
+                    +{{ stats.artistCount - previewArtists.length }}
+                </div>
+            </div>
+
             <!-- Stats -->
             <div class="flex flex-col gap-3 text-sm">
                 <div class="flex items-center gap-2 text-muted-foreground">
