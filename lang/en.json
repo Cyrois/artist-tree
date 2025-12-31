@@ -83,6 +83,7 @@
     "lineups.add_modal_suggested": "Suggested",
     "lineups.add_modal_submit": "Add to Lineup",
     "lineups.add_modal_adding": "Adding...",
+    "lineups.calculating_suggestion": "Calculating tier suggestion...",
     "lineups.select_lineup_title": "Select Lineup",
     "lineups.no_lineups_found": "No lineups found.",
     "lineups.show_search_no_results": "No artists found matching \":query\"",

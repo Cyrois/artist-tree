@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -225,6 +224,13 @@ function handleSubmit() {
 
                 <!-- Step 2: Tier Selection -->
                 <div v-else class="space-y-4">
+                    <div
+                        v-if="isLoadingSuggestion"
+                        class="flex items-center justify-center py-2 text-sm text-muted-foreground"
+                    >
+                        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                        {{ $t('lineups.calculating_suggestion') }}
+                    </div>
                     <div class="space-y-3">
                         <label
                             v-for="tier in tierOrder"
@@ -265,7 +271,6 @@ function handleSubmit() {
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <Loader2 v-if="isLoadingSuggestion && tier === 'headliner'" class="h-4 w-4 animate-spin text-muted-foreground" />
                                 <Check
                                     v-if="selectedTier === tier"
                                     class="h-5 w-5 text-[#EE6055]"
