@@ -32,6 +32,7 @@ import {
     ExternalLink,
     Layers,
     MoreHorizontal,
+    Plus,
     Scale,
     Trash2,
     X,
@@ -262,7 +263,15 @@ function isSelected(artistId: number) {
                                 <Tooltip>
                                     <TooltipTrigger as-child>
                                         <Button variant="ghost" size="icon" class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]" @click.stop="isAddingAlternativesTo ? emit('select-artist', group.artist) : emit('start-stack', group.artist)">
-                                            <Layers class="h-4 w-4" />
+                                            <div v-if="isAddingAlternativesTo" class="relative flex items-center justify-center">
+                                                <Layers class="h-4 w-4" />
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <div class="rounded-full bg-background p-[0.5px]">
+                                                        <Plus class="h-2 w-2 stroke-[4]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Layers v-else class="h-4 w-4" />
                                             <span class="sr-only">{{ isAddingAlternativesTo ? $t('lineups.show_stack_add_to') : $t('lineups.show_stack_choose') }}</span>
                                         </Button>
                                     </TooltipTrigger>
@@ -302,10 +311,21 @@ function isSelected(artistId: number) {
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger as-child>
-                                            <Button variant="ghost" size="icon" class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]" 
-                                                :disabled="isAddingAlternativesTo === group.stack.id"
-                                                @click.stop="emit('start-stack', group.stack.primary)">
+                                            <Button 
+                                                variant="ghost" 
+                                                :size="isAddingAlternativesTo === group.stack.id ? 'sm' : 'icon'" 
+                                                class="h-8 transition-all"
+                                                :class="[
+                                                    isAddingAlternativesTo === group.stack.id 
+                                                        ? 'bg-[hsl(var(--stack-purple))] text-white opacity-100 px-3 gap-2 cursor-default hover:bg-[hsl(var(--stack-purple))] hover:text-white' 
+                                                        : 'w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]'
+                                                ]"
+                                                @click.stop="emit('start-stack', group.stack.primary)"
+                                            >
                                                 <Layers class="h-4 w-4" />
+                                                <span v-if="isAddingAlternativesTo === group.stack.id" class="text-xs font-bold whitespace-nowrap">
+                                                    {{ $t('lineups.show_stack_current') }}
+                                                </span>
                                                 <span class="sr-only">{{ isAddingAlternativesTo === group.stack.id ? $t('lineups.show_stack_primary') : $t('lineups.show_stack_choose') }}</span>
                                             </Button>
                                         </TooltipTrigger>
