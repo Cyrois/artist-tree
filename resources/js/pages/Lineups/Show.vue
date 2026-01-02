@@ -293,15 +293,15 @@ const breadcrumbs = computed(() =>
             <!-- Mode Banners -->
             <Transition
                 enter-active-class="transition-all duration-300 ease-out"
-                enter-from-class="-translate-y-full opacity-0"
-                enter-to-class="translate-y-0 opacity-100"
+                enter-from-class="-translate-y-full"
+                enter-to-class="translate-y-0"
                 leave-active-class="transition-all duration-200 ease-in"
-                leave-from-class="translate-y-0 opacity-100"
-                leave-to-class="-translate-y-full opacity-0"
+                leave-from-class="translate-y-0"
+                leave-to-class="-translate-y-full"
             >
                 <div
                     v-if="stackMode"
-                    class="sticky top-[-24px] z-50 -mx-6 -mt-6 mb-6 flex items-center justify-between border-b-2 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))] p-4 px-6 shadow-md backdrop-blur-md"
+                    class="fixed top-0 right-0 left-0 z-[100] flex h-16 items-center justify-between border-b-2 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))/90] px-6 shadow-xl backdrop-blur-md transition-all duration-300"
                 >
                     <div class="flex items-center gap-3">
                         <div class="rounded-full bg-[hsl(var(--stack-purple))]/10 p-2 text-[hsl(var(--stack-purple))]">

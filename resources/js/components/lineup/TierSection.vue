@@ -246,7 +246,7 @@ function isSelected(artistId: number) {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem @click="emit('start-stack', group.artist)">
                                     <Layers class="mr-2 h-4 w-4" />
-                                    {{ trans('lineups.tier_add_to_stack') }}
+                                    {{ trans('lineups.tier_create_stack') }}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', group.artist)">
@@ -290,9 +290,6 @@ function isSelected(artistId: number) {
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2">
                                     <span class="truncate font-bold">{{ group.stack.primary.name }}</span>
-                                    <Badge variant="outline" class="h-4 border-[hsl(var(--stack-purple))] text-[10px] text-[hsl(var(--stack-purple))] uppercase bg-[hsl(var(--stack-purple))]/5">
-                                        {{ $t('lineups.show_stack_primary') }}
-                                    </Badge>
                                 </div>
                                 <p class="text-xs text-muted-foreground">
                                     {{ $t('lineups.show_stack_alternatives_count', { count: group.stack.alternatives.length }) }}
