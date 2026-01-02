@@ -49,6 +49,7 @@ interface Props {
     stackMode?: boolean;
     selectedArtistIds?: number[];
     isAddingAlternativesTo?: string | null; // stack_id we are currently adding to
+    stackingTier?: TierType | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -56,6 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
     stackMode: false,
     selectedArtistIds: () => [],
     isAddingAlternativesTo: null,
+    stackingTier: null,
 });
 
 const emit = defineEmits<{
@@ -123,7 +125,10 @@ function isSelected(artistId: number) {
 <template>
     <Collapsible
         v-model:open="isOpen"
-        class="overflow-hidden rounded-xl border"
+        class="overflow-hidden rounded-xl border transition-all"
+        :class="{
+            'opacity-40 pointer-events-none grayscale-[0.5]': stackingTier && stackingTier !== tier,
+        }"
     >
         <CollapsibleTrigger class="w-full">
             <div
@@ -246,7 +251,7 @@ function isSelected(artistId: number) {
                         </DropdownMenu>
                         
                         <!-- Inline Stack Action for Stack Mode -->
-                        <div v-if="stackMode && !isAddingAlternativesTo" class="opacity-0 transition-opacity group-hover:opacity-100">
+                        <div v-if="stackMode">
                              <Button variant="ghost" size="sm" class="h-8 gap-2 text-primary" @click.stop="emit('start-stack', group.artist)">
                                 <Layers class="h-4 w-4" />
                                 {{ $t('lineups.show_stack_button') }}
@@ -280,6 +285,14 @@ function isSelected(artistId: number) {
                             </div>
                             <ScoreBadge :score="group.stack.primary.score" size="md" />
                             
+                            <!-- Inline Stack Action for Stack Mode -->
+                            <div v-if="stackMode">
+                                 <Button variant="ghost" size="sm" class="h-8 gap-2 text-primary" @click.stop="emit('start-stack', group.stack.primary)">
+                                    <Layers class="h-4 w-4" />
+                                    {{ $t('lineups.show_stack_button') }}
+                                 </Button>
+                            </div>
+
                             <DropdownMenu v-if="!compareMode && !stackMode">
                                 <DropdownMenuTrigger as-child>
                                     <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>

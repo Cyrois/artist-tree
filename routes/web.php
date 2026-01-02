@@ -32,9 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Lineup Stacking
     Route::post('lineups/{lineup}/stacks', [\App\Http\Controllers\LineupStackController::class, 'store'])->name('lineups.stacks.store');
-    Route::post('lineups/{lineup}/stacks/{stackId}/promote', [\App\Http\Controllers\LineupStackController::class, 'promote'])->name('lineups.stacks.promote');
+    Route::post('lineups/{lineup}/stacks/{stack_id}/promote', [\App\Http\Controllers\LineupStackController::class, 'promote'])->name('lineups.stacks.promote');
     Route::post('lineups/{lineup}/stacks/artists/{artist}/remove', [\App\Http\Controllers\LineupStackController::class, 'removeArtist'])->name('lineups.stacks.remove-artist');
-    Route::delete('lineups/{lineup}/stacks/{stackId}', [\App\Http\Controllers\LineupStackController::class, 'dissolve'])->name('lineups.stacks.dissolve');
+    Route::post('lineups/{lineup}/stacks/{stack_id}/dissolve', [\App\Http\Controllers\LineupStackController::class, 'dissolve'])->name('lineups.stacks.dissolve');
 
     // Settings routes are in routes/settings.php
 });

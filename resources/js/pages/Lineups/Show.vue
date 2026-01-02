@@ -81,6 +81,7 @@ const stackMode = ref(false);
 const compareMode = ref(false);
 const selectedArtistIds = ref<number[]>([]);
 const isAddingAlternativesTo = ref<string | null>(null); // stack_id
+const stackingTier = ref<TierType | null>(null);
 
 const stackingPrimaryArtist = computed(() => {
     if (!isAddingAlternativesTo.value) return null;
@@ -130,11 +131,14 @@ function handleArtistSelect(artist: Artist) {
         // Adding alternative to stack
         if (artist.stack_id === isAddingAlternativesTo.value) return;
         
-        axios.post(`/lineups/${props.id}/stacks`, {
+        // Only allow selecting artists in the same tier
+        if (stackingTier.value && artist.lineup_tier !== stackingTier.value) return;
+        
+        router.post(`/lineups/${props.id}/stacks`, {
             artist_id: artist.id,
             stack_id: isAddingAlternativesTo.value
-        }).then(() => {
-            router.reload({ only: ['lineup'] });
+        }, {
+            preserveScroll: true
         });
     }
 }
@@ -151,52 +155,52 @@ function handleArtistRemove(artist: Artist) {
 }
 
 function handleStartStack(artist: Artist) {
+    stackingTier.value = artist.lineup_tier || null;
+
     if (artist.stack_id) {
         isAddingAlternativesTo.value = artist.stack_id;
         stackMode.value = true;
         return;
     }
 
-    axios.post(`/lineups/${props.id}/stacks`, {
+    router.post(`/lineups/${props.id}/stacks`, {
         artist_id: artist.id
-    }).then(() => {
-        router.reload({ 
-            only: ['lineup'],
-            onSuccess: (page) => {
-                // Find the new stack_id for this artist
-                const updatedArtist = (Object.values(page.props.lineup.artists).flat() as Artist[])
-                    .find(a => a.id === artist.id);
-                if (updatedArtist?.stack_id) {
-                    isAddingAlternativesTo.value = updatedArtist.stack_id;
-                    stackMode.value = true;
-                }
+    }, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            // Find the new stack_id for this artist
+            // @ts-ignore
+            const lineup = page.props.lineup;
+            const updatedArtist = (Object.values(lineup.artists).flat() as Artist[])
+                .find(a => a.id === artist.id);
+            if (updatedArtist?.stack_id) {
+                isAddingAlternativesTo.value = updatedArtist.stack_id;
+                stackMode.value = true;
             }
-        });
+        }
     });
 }
 
 function handlePromoteArtist(artist: Artist) {
     if (!artist.stack_id) return;
     
-    axios.post(`/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
+    router.post(`/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
         artist_id: artist.id
-    }).then(() => {
-        router.reload({ only: ['lineup'] });
+    }, {
+        preserveScroll: true
     });
 }
 
 function handleRemoveFromStack(artist: Artist) {
-    axios.post(`/lineups/${props.id}/stacks/artists/${artist.id}/remove`)
-        .then(() => {
-            router.reload({ only: ['lineup'] });
-        });
+    router.post(`/lineups/${props.id}/stacks/artists/${artist.id}/remove`, {}, {
+        preserveScroll: true
+    });
 }
 
 function handleDissolveStack(stackId: string) {
-    axios.delete(`/lineups/${props.id}/stacks/${stackId}`)
-        .then(() => {
-            router.reload({ only: ['lineup'] });
-        });
+    router.post(`/lineups/${props.id}/stacks/${stackId}/dissolve`, {}, {
+        preserveScroll: true,
+    });
 }
 
 function clearSelection() {
@@ -413,7 +417,7 @@ const breadcrumbs = computed(() =>
                     :stack-mode="stackMode"
                     :compare-mode="compareMode"
                     @add-artist="openAddModal"
-                    @toggle-stack="stackMode = !stackMode; if (!stackMode) isAddingAlternativesTo = null"
+                    @toggle-stack="stackMode = !stackMode; if (!stackMode) { isAddingAlternativesTo = null; stackingTier = null; }"
                     @toggle-compare="compareMode = !compareMode; if (!compareMode) selectedArtistIds = []"
                 />
 
@@ -444,7 +448,7 @@ const breadcrumbs = computed(() =>
                         variant="outline"
                         size="sm"
                         class="border-primary/30 hover:bg-primary/10"
-                        @click="stackMode = false; isAddingAlternativesTo = null"
+                        @click="stackMode = false; isAddingAlternativesTo = null; stackingTier = null"
                     >
                         {{ $t('lineups.show_stack_mode_done') }}
                     </Button>
@@ -499,6 +503,7 @@ const breadcrumbs = computed(() =>
                         :stack-mode="stackMode"
                         :selected-artist-ids="selectedArtistIds"
                         :is-adding-alternatives-to="isAddingAlternativesTo"
+                        :stacking-tier="stackingTier"
                         @select-artist="handleArtistSelect"
                         @view-artist="handleArtistView"
                         @remove-artist="handleArtistRemove"

@@ -33,6 +33,7 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
   - Implemented stack management actions: "Make Primary", "Remove from Stack", and "Dissolve Stack".
   - Updated `ArtistAvatar.vue` to support `xs` size for alternative artists.
   - Added all necessary translations for the stacking interface.
+  - Refactored stack management actions to use `router.delete` and `router.post` instead of `axios` to fix 415 errors and ensure proper state handling.
 - **Data:**
   - Updated `Artist` and `TierType` interfaces in `resources/js/data/types.ts` to include stacking and additional tiers.
 

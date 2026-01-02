@@ -2,121 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PromoteStackArtistRequest;
+use App\Http\Requests\StoreLineupStackRequest;
 use App\Models\Artist;
 use App\Models\Lineup;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
+use App\Services\LineupStackService;
+use Illuminate\Http\RedirectResponse;
 
 class LineupStackController extends Controller
 {
-    public function store(Lineup $lineup, Request $request)
+    public function __construct(
+        protected LineupStackService $stackService
+    ) {}
+
+    /**
+     * Create a stack or add an artist to an existing stack.
+     */
+    public function store(int $lineup, StoreLineupStackRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'artist_id' => 'required|exists:artists,id',
-            'stack_id' => 'nullable|string', // If present, adding to existing stack
-        ]);
+        $artistId = $request->validated('artist_id');
 
-        $artistId = $validated['artist_id'];
-        $stackId = $validated['stack_id'] ?? (string) Str::uuid();
-
-        // Ensure artist is in the lineup
-        $exists = DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('artist_id', $artistId)
-            ->exists();
-        
-        if (!$exists) {
+        if (!$this->stackService->isArtistInLineup($lineup, $artistId)) {
             return redirect()->back()->with('error', 'Artist not in lineup.');
         }
 
-        // If it's a new stack, make this artist primary
-        $isPrimary = !isset($validated['stack_id']);
-
-        DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('artist_id', $artistId)
-            ->update([
-                'stack_id' => $stackId,
-                'is_stack_primary' => $isPrimary,
-            ]);
+        $this->stackService->addToStack(
+            $lineup,
+            $artistId,
+            $request->validated('stack_id')
+        );
 
         return redirect()->back()->with('success', 'Stack updated.');
     }
 
-    public function promote(Lineup $lineup, string $stackId, Request $request)
+    /**
+     * Promote an artist to primary within a stack.
+     */
+    public function promote(int $lineup, string $stack_id, PromoteStackArtistRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'artist_id' => 'required|exists:artists,id',
-        ]);
-
-        $newPrimaryId = $validated['artist_id'];
-
-        // 1. Reset current primary in this stack
-        DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('stack_id', $stackId)
-            ->update(['is_stack_primary' => false]);
-
-        // 2. Set new primary
-        DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('artist_id', $newPrimaryId)
-            ->update(['is_stack_primary' => true]);
+        $this->stackService->promoteArtist(
+            $lineup,
+            $stack_id,
+            $request->validated('artist_id')
+        );
 
         return redirect()->back()->with('success', 'Artist promoted to primary.');
     }
 
-    public function removeArtist(Lineup $lineup, Artist $artist)
+    /**
+     * Remove an artist from a stack.
+     */
+    public function removeArtist(int $lineup, int $artist, LineupStackService $stackService): RedirectResponse
     {
-        $pivot = DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('artist_id', $artist->id)
-            ->first();
-
-        if (!$pivot || !$pivot->stack_id) {
-            return redirect()->back();
-        }
-
-        $stackId = $pivot->stack_id;
-        $wasPrimary = $pivot->is_stack_primary;
-
-        // Remove stack association
-        DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('artist_id', $artist->id)
-            ->update([
-                'stack_id' => null,
-                'is_stack_primary' => false,
-            ]);
-
-        // If it was primary, we need to pick a new primary if there are others left
-        if ($wasPrimary) {
-            $next = DB::table('lineup_artists')
-                ->where('lineup_id', $lineup->id)
-                ->where('stack_id', $stackId)
-                ->first();
-                
-            if ($next) {
-                DB::table('lineup_artists')
-                    ->where('lineup_id', $lineup->id)
-                    ->where('artist_id', $next->artist_id)
-                    ->update(['is_stack_primary' => true]);
-            }
-        }
+        $stackService->removeArtistFromStack($lineup, $artist);
 
         return redirect()->back()->with('success', 'Artist removed from stack.');
     }
 
-    public function dissolve(Lineup $lineup, string $stackId)
+    /**
+     * Dissolve a stack entirely.
+     */
+    public function dissolve(int $lineup, string $stack_id): RedirectResponse
     {
-        DB::table('lineup_artists')
-            ->where('lineup_id', $lineup->id)
-            ->where('stack_id', $stackId)
-            ->update([
-                'stack_id' => null,
-                'is_stack_primary' => false,
-            ]);
+        $this->stackService->dissolveStack($lineup, $stack_id);
 
         return redirect()->back()->with('success', 'Stack dissolved.');
     }
