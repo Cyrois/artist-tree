@@ -116,12 +116,7 @@ class LineupController extends Controller
         $lineup = Lineup::with(['artists.metrics'])->findOrFail($id);
         
         // Group artists by tier
-        $artistsByTier = [
-            ArtistTier::Headliner->value => [],
-            ArtistTier::SubHeadliner->value => [],
-            ArtistTier::MidTier->value => [],
-            ArtistTier::Undercard->value => [],
-        ];
+        $artistsByTier = array_fill_keys(ArtistTier::values(), []);
 
         foreach ($lineup->artists as $artist) {
             $tier = $artist->pivot->tier;

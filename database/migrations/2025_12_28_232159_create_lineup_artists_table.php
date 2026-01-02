@@ -19,7 +19,6 @@ return new class extends Migration
             
             // Tier assignment
             $table->enum('tier', ArtistTier::values())->default(ArtistTier::Undercard->value);
-            $table->string('suggested_tier')->nullable(); // Can be null if not yet calculated
             
             $table->timestamps();
             
