@@ -170,9 +170,8 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 - Tier options as radio buttons:
   - Headliner
   - Sub-Headliner
-  - Supporting
-  - Emerging
-  - Local/Regional
+  - Mid-Tier
+  - Undercard
 - **Suggested tier is pre-selected** on entry
 - Suggested tier shows "✨ Suggested" badge
 - "Add to Lineup" button
@@ -258,7 +257,7 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 
 **Tier Sections:**
 - Collapsible tier headers with count
-- Tiers: Headliner, Sub-Headliner, Supporting, Emerging, Local/Regional
+- Tiers: Headliner, Sub-Headliner, Mid-Tier, Undercard
 
 **Artist Cards:**
 - Image, name (with status icon to the right of name)
@@ -424,7 +423,7 @@ artistStacks: {
 - id (primary key)
 - lineup_id (foreign key)
 - artist_id (foreign key)
-- tier (enum: headliner, sub_headliner, supporting, emerging, local)
+- tier (enum: headliner, sub_headliner, mid_tier, undercard)
 - booking_status (enum: idea, outreach, negotiating, contract_sent, contract_signed, confirmed, declined)
 - booking_fee (decimal, nullable)
 - stack_id (uuid, nullable) - Groups stacked artists

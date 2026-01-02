@@ -32,7 +32,7 @@ export interface Artist {
 }
 
 // Tier Types
-export type TierType = 'headliner' | 'sub_headliner' | 'mid_tier' | 'undercard' | 'supporting' | 'emerging' | 'local';
+export type TierType = 'headliner' | 'sub_headliner' | 'mid_tier' | 'undercard';
 
 export interface TierConfig {
     label: string;
