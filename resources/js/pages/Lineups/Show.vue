@@ -329,11 +329,46 @@ const breadcrumbs = computed(() =>
             <!-- Lineup Header Card -->
             <Card class="relative py-0">
                 <CardContent class="p-6">
+                    <!-- Actions -->
+                    <div class="absolute top-6 right-6 z-10">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8"
+                                >
+                                    <Settings class="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    @click="isEditModalOpen = true"
+                                >
+                                    <Pencil class="mr-2 h-4 w-4" />
+                                    {{ $t('common.action_edit') }}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem disabled>
+                                    <Download class="mr-2 h-4 w-4" />
+                                    {{ $t('lineups.show_export_button') }}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    class="text-destructive"
+                                    @click="isDeleteModalOpen = true"
+                                >
+                                    <Trash2 class="mr-2 h-4 w-4" />
+                                    {{ $t('common.action_delete') }}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
                     <div
                         class="flex flex-col justify-between gap-6 md:flex-row"
                     >
                         <!-- Info -->
-                        <div class="flex-1">
+                        <div class="flex-1 pr-10 md:pr-0">
                             <h1 class="text-3xl font-bold">
                                 {{ lineupData.name }}
                             </h1>
@@ -398,46 +433,11 @@ const breadcrumbs = computed(() =>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Actions -->
-                        <div class="flex items-start gap-3">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-8 w-8"
-                                    >
-                                        <Settings class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        @click="isEditModalOpen = true"
-                                    >
-                                        <Pencil class="mr-2 h-4 w-4" />
-                                        {{ $t('common.action_edit') }}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem disabled>
-                                        <Download class="mr-2 h-4 w-4" />
-                                        {{ $t('lineups.show_export_button') }}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        class="text-destructive"
-                                        @click="isDeleteModalOpen = true"
-                                    >
-                                        <Trash2 class="mr-2 h-4 w-4" />
-                                        {{ $t('common.action_delete') }}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
                     </div>
 
-                    <!-- Updated Timestamp at bottom right -->
+                    <!-- Updated Timestamp -->
                     <div
-                        class="absolute right-6 bottom-6 text-xs text-muted-foreground"
+                        class="mt-8 text-xs text-muted-foreground md:absolute md:right-6 md:bottom-6 md:mt-0"
                     >
                         {{ $t('lineups.card_updated') }}
                         {{ lineupData.updated_at_human }}
