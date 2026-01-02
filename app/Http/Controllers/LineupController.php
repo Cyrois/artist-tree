@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ArtistTier;
 use App\Http\Requests\StoreLineupRequest;
 use App\Http\Requests\UpdateLineupRequest;
 use App\Http\Requests\AddArtistToLineupRequest;
@@ -48,7 +49,7 @@ class LineupController extends Controller
         $suggestedTier = $tierService->suggestTier($lineup, $score);
 
         return response()->json([
-            'suggested_tier' => $suggestedTier,
+            'suggested_tier' => $suggestedTier?->value,
         ]);
     }
 
@@ -115,12 +116,7 @@ class LineupController extends Controller
         $lineup = Lineup::with(['artists.metrics'])->findOrFail($id);
         
         // Group artists by tier
-        $artistsByTier = [
-            'headliner' => [],
-            'sub_headliner' => [],
-            'mid_tier' => [],
-            'undercard' => [],
-        ];
+        $artistsByTier = array_fill_keys(ArtistTier::values(), []);
 
         foreach ($lineup->artists as $artist) {
             $tier = $artist->pivot->tier;
@@ -147,36 +143,15 @@ class LineupController extends Controller
                 'id' => $lineup->id,
                 'name' => $lineup->name,
                 'description' => $lineup->description,
-                'updatedAt' => $lineup->updated_at->diffForHumans(),
+                'updated_at' => $lineup->updated_at,
+                'updated_at_human' => $lineup->updated_at->diffForHumans(),
                 'artists' => $artistsByTier,
                 'artistStatuses' => [], // Empty as requested
                 'stats' => [
-                    'artistCount' => $artistCount,
-                    'avgScore' => $avgScore,
+                    'artist_count' => $artistCount,
+                    'avg_score' => $avgScore,
                 ]
             ],
         ]);
-    }
-
-    private function getMockArtists($count)
-    {
-        // Get random artists from DB
-        $artists = Artist::inRandomOrder()->limit($count)->get();
-        
-        // If we don't have enough artists in DB, we'll just loop what we have
-        if ($artists->isEmpty()) {
-            return [];
-        }
-
-        $tiers = ['headliner', 'sub_headliner', 'mid_tier', 'undercard'];
-        
-        return $artists->map(function ($artist) use ($tiers) {
-            return [
-                'id' => $artist->id,
-                'name' => $artist->name,
-                'image_url' => $artist->image_url,
-                'tier' => $tiers[array_rand($tiers)], // Randomly assign tier
-            ];
-        })->values();
     }
 }

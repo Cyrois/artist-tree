@@ -19,6 +19,28 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Frontend Fixes for API Consistency (2025-12-30)
+**Summary:** Updated frontend components and types to match the snake_case keys from the updated `LineupResource` and `LineupController`.
+- **Frontend:**
+  - Updated `resources/js/data/types.ts`: `Lineup` interface now includes snake_case keys (`artist_count`, `avg_score`, `preview_artists`).
+  - Updated `LineupCard.vue`: Fixed property access and `image_url` usage.
+  - Updated `LineupListCard.vue`: Updated interface and template to use snake_case keys.
+  - Updated `Lineups/Index.vue`: Updated `Lineup` interface.
+  - Updated `Lineups/Show.vue`: Updated interface and template to use snake_case keys.
+- **Backend:**
+  - Standardized `LineupController::show` to return snake_case keys (`artist_count`, `avg_score`, `updated_at`) matching `LineupResource`.
+  - Updated `LineupControllerTest.php` to match the new response structure.
+
+### Artist Tier Enum Refactor (2025-12-30)
+**Summary:** Refactored hardcoded tier strings into a PHP Enum for better type safety and consistency across the backend.
+- **Backend:**
+  - Created `App\Enums\ArtistTier` backed enum.
+  - Updated `TierCalculationService`, `LineupController`, `LineupResource`, `LineupSeeder`, and `AddArtistToLineupRequest` to use the Enum.
+  - Updated `2025_12_28_232159_create_lineup_artists_table.php` migration to use `ArtistTier::values()`.
+- **Testing:**
+  - Updated `LineupControllerTest`, `SuggestTierTest`, `TierCalculationServiceTest`, and `DashboardControllerTest` to use the Enum.
+  - Fixed `DashboardControllerTest` to match `LineupResource` structure (snake_case keys, limit of 4).
+
 ### Lineup Search UI Improvements (2025-12-29)
 **Summary:** Refined the Lineup Artist Search UI to create a seamless visual connection between the search input and results dropdown.
 - **Frontend:**

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\Lineup;
@@ -43,7 +44,7 @@ test('authenticated users can access lineup show', function () {
     $lineup = Lineup::factory()->create();
     $artist = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
     
-    $lineup->artists()->attach($artist->id, ['tier' => 'headliner']);
+    $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);
 
     $this->actingAs($this->user)
         ->get(route('lineups.show', $lineup->id))
@@ -56,8 +57,8 @@ test('authenticated users can access lineup show', function () {
                 ->where('name', $lineup->name)
                 ->has('artists.headliner', 1)
                 ->has('stats', fn (Assert $page) => $page
-                    ->where('artistCount', 1)
-                    ->has('avgScore')
+                    ->where('artist_count', 1)
+                    ->has('avg_score')
                 )
                 ->etc()
             )
@@ -72,8 +73,8 @@ test('lineup show calculates average score correctly', function () {
     $artist1 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
     $artist2 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
     
-    $lineup->artists()->attach($artist1->id, ['tier' => 'headliner']);
-    $lineup->artists()->attach($artist2->id, ['tier' => 'sub_headliner']);
+    $lineup->artists()->attach($artist1->id, ['tier' => ArtistTier::Headliner->value]);
+    $lineup->artists()->attach($artist2->id, ['tier' => ArtistTier::SubHeadliner->value]);
     
     $this->mock(ArtistScoringService::class, function ($mock) use ($artist1, $artist2) {
         $mock->shouldReceive('calculateScore')
@@ -89,7 +90,7 @@ test('lineup show calculates average score correctly', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Lineups/Show')
-            ->where('lineup.stats.avgScore', 70) // (80 + 60) / 2
+            ->where('lineup.stats.avg_score', 70) // (80 + 60) / 2
         );
 });
 
@@ -101,8 +102,8 @@ test('lineup show handles empty lineups', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Lineups/Show')
-            ->where('lineup.stats.artistCount', 0)
-            ->where('lineup.stats.avgScore', 0)
+            ->where('lineup.stats.artist_count', 0)
+            ->where('lineup.stats.avg_score', 0)
         );
 });
 
@@ -158,14 +159,14 @@ test('authenticated users can add artist to lineup', function () {
     $this->actingAs($this->user)
         ->post(route('lineups.artists.store', $lineup->id), [
             'artist_id' => $artist->id,
-            'tier' => 'headliner',
+            'tier' => ArtistTier::Headliner->value,
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('lineup_artists', [
         'lineup_id' => $lineup->id,
         'artist_id' => $artist->id,
-        'tier' => 'headliner',
+        'tier' => ArtistTier::Headliner->value,
     ]);
 });
 
@@ -187,12 +188,12 @@ test('cannot add duplicate artist to lineup', function () {
     $lineup = Lineup::factory()->create();
     $artist = Artist::factory()->create();
 
-    $lineup->artists()->attach($artist->id, ['tier' => 'headliner']);
+    $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);
 
     $this->actingAs($this->user)
         ->post(route('lineups.artists.store', $lineup->id), [
             'artist_id' => $artist->id,
-            'tier' => 'undercard',
+            'tier' => ArtistTier::Undercard->value,
         ])
         ->assertRedirect();
 
@@ -201,7 +202,7 @@ test('cannot add duplicate artist to lineup', function () {
     $this->assertDatabaseHas('lineup_artists', [
         'lineup_id' => $lineup->id,
         'artist_id' => $artist->id,
-        'tier' => 'headliner',
+        'tier' => ArtistTier::Headliner->value,
     ]);
 });
 
@@ -212,7 +213,7 @@ test('cannot add non-existent artist', function () {
     $this->actingAs($this->user)
         ->post(route('lineups.artists.store', $lineup->id), [
             'artist_id' => 99999,
-            'tier' => 'headliner',
+            'tier' => ArtistTier::Headliner->value,
         ])
         ->assertSessionHasErrors('artist_id');
 });

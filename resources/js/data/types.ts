@@ -65,22 +65,30 @@ export interface Lineup {
     id: number;
     name: string;
     description: string;
-    updatedAt: string;
-    createdAt: string;
-    artists: Record<TierType, number[]> | any[]; // Allow array from API
-    artistStatuses?: Record<number, ArtistStatus>; // Optional now
+    updated_at: string; // API uses snake_case
+    updated_at_human?: string; // From Resource
+    created_at: string; // API uses snake_case
+    
+    // API flattened structure
+    artist_count?: number;
+    avg_score?: number;
+    preview_artists?: {
+        id: number;
+        name: string;
+        image_url: string | null;
+        tier?: TierType;
+    }[];
+    
+    // Legacy/Manual structure (keep for now if needed, but mark optional)
+    artists?: Record<TierType, number[]> | any[]; 
+    artistStatuses?: Record<number, ArtistStatus>;
     stats?: {
-        artistCount: number;
-        avgScore: number;
+        artistCount: number; // Deprecated
+        avgScore: number; // Deprecated
         confirmedCount: number;
         pendingCount: number;
         totalBudget: number;
     };
-    previewArtists?: {
-        id: number;
-        name: string;
-        image: string | null;
-    }[];
 }
 
 // Schedule Types

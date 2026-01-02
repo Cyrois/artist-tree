@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ArtistTier;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,9 +16,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lineup_id')->constrained()->cascadeOnDelete();
             $table->foreignId('artist_id')->constrained()->cascadeOnDelete();
-            $table->enum('tier', ['headliner', 'sub_headliner', 'mid_tier', 'undercard'])->default('undercard');
+            
+            // Tier assignment
+            $table->enum('tier', ArtistTier::values())->default(ArtistTier::Undercard->value);
+            
             $table->timestamps();
-
+            
+            // Prevent same artist in same lineup multiple times
             $table->unique(['lineup_id', 'artist_id']);
         });
     }
@@ -30,3 +35,4 @@ return new class extends Migration
         Schema::dropIfExists('lineup_artists');
     }
 };
+

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Lineup;
 
+use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Models\User;
@@ -25,7 +26,7 @@ class SuggestTierTest extends TestCase
             'spotify_popularity' => 90, 
             'spotify_followers' => 1000000
         ]);
-        $lineup->artists()->attach($headliner->id, ['tier' => 'headliner']);
+        $lineup->artists()->attach($headliner->id, ['tier' => ArtistTier::Headliner->value]);
 
         // Tier 2 (undercard): Low score
         $undercard = Artist::factory()->create();
@@ -33,7 +34,7 @@ class SuggestTierTest extends TestCase
             'spotify_popularity' => 10,
             'spotify_followers' => 1000
         ]);
-        $lineup->artists()->attach($undercard->id, ['tier' => 'undercard']);
+        $lineup->artists()->attach($undercard->id, ['tier' => ArtistTier::Undercard->value]);
 
         // Target artist: High score (should match headliner)
         $targetArtist = Artist::factory()->create();
@@ -50,7 +51,7 @@ class SuggestTierTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'suggested_tier' => 'headliner'
+                'suggested_tier' => ArtistTier::Headliner->value
             ]);
             
         // Target artist: Low score (should match undercard)
@@ -68,7 +69,7 @@ class SuggestTierTest extends TestCase
 
         $responseLow->assertOk()
             ->assertJson([
-                'suggested_tier' => 'undercard'
+                'suggested_tier' => ArtistTier::Undercard->value
             ]);
     }
 
@@ -81,7 +82,7 @@ class SuggestTierTest extends TestCase
         // Setup lineup with a headliner (Avg 90)
         $headliner = Artist::factory()->create();
         $headliner->metrics()->create(['spotify_popularity' => 90, 'spotify_followers' => 1000000]);
-        $lineup->artists()->attach($headliner->id, ['tier' => 'headliner']);
+        $lineup->artists()->attach($headliner->id, ['tier' => ArtistTier::Headliner->value]);
 
         // Request with score=88 (should be headliner)
         $response = $this->actingAs($user)
@@ -92,7 +93,7 @@ class SuggestTierTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'suggested_tier' => 'headliner'
+                'suggested_tier' => ArtistTier::Headliner->value
             ]);
     }
     

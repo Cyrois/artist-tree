@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\Lineup;
@@ -36,10 +37,10 @@ class LineupSeeder extends Seeder
         // Attach artists with tiers
         foreach ($artists as $index => $artist) {
             // Distribution: 10% headliner, 20% sub, 40% mid, 30% under
-            if ($index < 2) $tier = 'headliner';
-            elseif ($index < 6) $tier = 'sub_headliner';
-            elseif ($index < 14) $tier = 'mid_tier';
-            else $tier = 'undercard';
+            if ($index < 2) $tier = ArtistTier::Headliner->value;
+            elseif ($index < 6) $tier = ArtistTier::SubHeadliner->value;
+            elseif ($index < 14) $tier = ArtistTier::MidTier->value;
+            else $tier = ArtistTier::Undercard->value;
             
             $lineup->artists()->attach($artist->id, [
                 'tier' => $tier,

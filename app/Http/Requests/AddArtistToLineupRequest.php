@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ArtistTier;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AddArtistToLineupRequest extends FormRequest
 {
@@ -23,7 +25,7 @@ class AddArtistToLineupRequest extends FormRequest
     {
         return [
             'artist_id' => 'required|exists:artists,id',
-            'tier' => 'required|in:headliner,sub_headliner,mid_tier,undercard',
+            'tier' => ['required', Rule::enum(ArtistTier::class)],
         ];
     }
 }
