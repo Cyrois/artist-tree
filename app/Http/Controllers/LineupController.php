@@ -17,11 +17,13 @@ use Inertia\Inertia;
 use App\Services\TierCalculationService;
 
 use App\Services\LineupService;
+use App\Services\LineupStackService;
 
 class LineupController extends Controller
 {
     public function __construct(
-        protected LineupService $lineupService
+        protected LineupService $lineupService,
+        protected LineupStackService $stackService
     ) {}
 
     public function index()
@@ -116,6 +118,9 @@ class LineupController extends Controller
     public function removeArtist(Lineup $lineup, Artist $artist, Request $request)
     {
         Gate::authorize('update', $lineup);
+
+        // Clean up stacking before removing from lineup
+        $this->stackService->removeArtistFromStack($lineup->id, $artist->id);
 
         if ($lineup->artists()->detach($artist->id)) {
             if ($request->expectsJson()) {

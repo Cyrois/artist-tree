@@ -66,7 +66,7 @@ class LineupStackService
         $wasPrimary = $pivot->is_stack_primary;
 
         DB::transaction(function () use ($lineupId, $artistId, $stackId, $wasPrimary) {
-            // Remove stack association
+            // 1. Remove stack association for THIS artist
             DB::table('lineup_artists')
                 ->where('lineup_id', $lineupId)
                 ->where('artist_id', $artistId)
@@ -75,13 +75,27 @@ class LineupStackService
                     'is_stack_primary' => false,
                 ]);
 
-            // If it was primary, we need to pick a new primary if there are others left
-            if ($wasPrimary) {
-                $next = DB::table('lineup_artists')
+            // 2. Count how many artists are STILL in this stack
+            $remaining = DB::table('lineup_artists')
+                ->where('lineup_id', $lineupId)
+                ->where('stack_id', $stackId)
+                ->get();
+
+            if ($remaining->count() <= 1) {
+                // If 0 or 1 artists remain, they shouldn't be in a stack anymore
+                DB::table('lineup_artists')
                     ->where('lineup_id', $lineupId)
                     ->where('stack_id', $stackId)
-                    ->first();
-                    
+                    ->update([
+                        'stack_id' => null,
+                        'is_stack_primary' => false,
+                    ]);
+                return;
+            }
+
+            // 3. If it was primary and we have multiple left, pick a new primary
+            if ($wasPrimary) {
+                $next = $remaining->first();
                 if ($next) {
                     DB::table('lineup_artists')
                         ->where('lineup_id', $lineupId)
