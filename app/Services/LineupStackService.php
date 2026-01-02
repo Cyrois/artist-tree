@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Artist;
 use App\Models\Lineup;
+use App\Jobs\UpdateLineupTimestamp;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,8 @@ class LineupStackService
                 'stack_id' => $stackId,
                 'is_stack_primary' => $isPrimary,
             ]);
+
+        $this->touchLineup($lineupId);
 
         return $stackId;
     }
@@ -46,6 +49,8 @@ class LineupStackService
                 ->where('artist_id', $artistId)
                 ->update(['is_stack_primary' => true]);
         });
+
+        $this->touchLineup($lineupId);
     }
 
     /**
@@ -104,6 +109,8 @@ class LineupStackService
                 }
             }
         });
+
+        $this->touchLineup($lineupId);
     }
 
     /**
@@ -118,6 +125,16 @@ class LineupStackService
                 'stack_id' => null,
                 'is_stack_primary' => false,
             ]);
+
+        $this->touchLineup($lineupId);
+    }
+
+    /**
+     * Touch the lineup timestamp asynchronously, grouped by 15-minute intervals.
+     */
+    protected function touchLineup(int $lineupId): void
+    {
+        UpdateLineupTimestamp::dispatchGrouped($lineupId);
     }
 
     /**

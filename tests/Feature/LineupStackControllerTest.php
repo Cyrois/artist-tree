@@ -23,14 +23,10 @@ test('authenticated users can create a new stack', function () {
 
 
     $this->actingAs($this->user)
-
-        ->post(route('lineups.stacks.store', $lineup->id), [
-
+        ->post(route('api.lineups.stacks.store', $lineup->id), [
             'artist_id' => $artist->id,
-
         ])
-
-        ->assertRedirect();
+        ->assertSuccessful();
 
 
 
@@ -89,16 +85,11 @@ test('authenticated users can add to existing stack', function () {
 
 
     $this->actingAs($this->user)
-
-        ->post(route('lineups.stacks.store', $lineup->id), [
-
+        ->post(route('api.lineups.stacks.store', $lineup->id), [
             'artist_id' => $artist2->id,
-
             'stack_id' => $stackId,
-
         ])
-
-        ->assertRedirect();
+        ->assertSuccessful();
 
 
 
@@ -165,24 +156,10 @@ test('authenticated users can promote artist in stack', function () {
 
 
         $this->actingAs($this->user)
-
-
-
-            ->post(route('lineups.stacks.promote', ['lineup' => $lineup->id, 'stack_id' => $stackId]), [
-
-
-
+            ->post(route('api.lineups.stacks.promote', ['lineup' => $lineup->id, 'stack_id' => $stackId]), [
                 'artist_id' => $artist2->id,
-
-
-
             ])
-
-
-
-    
-
-        ->assertRedirect();
+        ->assertSuccessful();
 
 
 
@@ -247,10 +224,8 @@ test('authenticated users can remove artist from stack', function () {
 
 
     $this->actingAs($this->user)
-
-        ->post(route('lineups.stacks.remove-artist', ['lineup' => $lineup->id, 'artist' => $artist->id]))
-
-        ->assertRedirect();
+        ->post(route('api.lineups.stacks.remove-artist', ['lineup' => $lineup->id, 'artist' => $artist->id]))
+        ->assertSuccessful();
 
 
 
@@ -295,14 +270,8 @@ test('authenticated users can dissolve stack', function () {
 
 
         $this->actingAs($this->user)
-
-
-
-            ->post(route('lineups.stacks.dissolve', ['lineup' => $lineup->id, 'stack_id' => $stackId]))
-
-
-
-            ->assertRedirect();
+            ->post(route('api.lineups.stacks.dissolve', ['lineup' => $lineup->id, 'stack_id' => $stackId]))
+            ->assertSuccessful();
 
 
 
