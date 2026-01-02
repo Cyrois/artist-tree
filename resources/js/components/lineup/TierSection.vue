@@ -15,6 +15,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { tierConfig } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
@@ -252,10 +258,19 @@ function isSelected(artistId: number) {
                         
                         <!-- Inline Stack Action for Stack Mode -->
                         <div v-if="stackMode">
-                             <Button variant="ghost" size="sm" class="h-8 gap-2 text-primary" @click.stop="emit('start-stack', group.artist)">
-                                <Layers class="h-4 w-4" />
-                                {{ $t('lineups.show_stack_button') }}
-                             </Button>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <Button variant="ghost" size="icon" class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]" @click.stop="isAddingAlternativesTo ? emit('select-artist', group.artist) : emit('start-stack', group.artist)">
+                                            <Layers class="h-4 w-4" />
+                                            <span class="sr-only">{{ isAddingAlternativesTo ? $t('lineups.show_stack_add_to') : $t('lineups.show_stack_choose') }}</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{{ isAddingAlternativesTo ? $t('lineups.show_stack_add_to') : $t('lineups.show_stack_choose') }}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </div>
 
@@ -265,8 +280,8 @@ function isSelected(artistId: number) {
                         <div
                             :class="
                                 cn(
-                                    'flex items-center gap-4 p-4 border-l-4 border-primary bg-primary/5',
-                                    compareMode || stackMode ? 'cursor-pointer hover:bg-primary/10' : ''
+                                    'flex items-center gap-4 p-4 border-l-4 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))]',
+                                    compareMode || stackMode ? 'cursor-pointer hover:bg-[hsl(var(--stack-purple))]/10' : ''
                                 )
                             "
                             @click="(compareMode || stackMode) && emit('select-artist', group.stack.primary)"
@@ -275,7 +290,7 @@ function isSelected(artistId: number) {
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2">
                                     <span class="truncate font-bold">{{ group.stack.primary.name }}</span>
-                                    <Badge variant="outline" class="h-4 border-primary text-[10px] text-primary uppercase">
+                                    <Badge variant="outline" class="h-4 border-[hsl(var(--stack-purple))] text-[10px] text-[hsl(var(--stack-purple))] uppercase bg-[hsl(var(--stack-purple))]/5">
                                         {{ $t('lineups.show_stack_primary') }}
                                     </Badge>
                                 </div>
@@ -287,10 +302,21 @@ function isSelected(artistId: number) {
                             
                             <!-- Inline Stack Action for Stack Mode -->
                             <div v-if="stackMode">
-                                 <Button variant="ghost" size="sm" class="h-8 gap-2 text-primary" @click.stop="emit('start-stack', group.stack.primary)">
-                                    <Layers class="h-4 w-4" />
-                                    {{ $t('lineups.show_stack_button') }}
-                                 </Button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <Button variant="ghost" size="icon" class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]" 
+                                                :disabled="isAddingAlternativesTo === group.stack.id"
+                                                @click.stop="emit('start-stack', group.stack.primary)">
+                                                <Layers class="h-4 w-4" />
+                                                <span class="sr-only">{{ isAddingAlternativesTo === group.stack.id ? $t('lineups.show_stack_primary') : $t('lineups.show_stack_choose') }}</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{{ isAddingAlternativesTo === group.stack.id ? $t('lineups.show_stack_primary') : $t('lineups.show_stack_choose') }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </div>
 
                             <DropdownMenu v-if="!compareMode && !stackMode">
@@ -314,13 +340,44 @@ function isSelected(artistId: number) {
                         </div>
 
                         <!-- Alternatives -->
-                        <div v-for="alt in group.stack.alternatives" :key="alt.id" class="flex items-center gap-4 border-l-4 border-primary/30 py-3 pr-4 pl-12 transition-colors hover:bg-primary/5">
+                        <div v-for="alt in group.stack.alternatives" :key="alt.id" class="flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5">
                             <ArtistAvatar :artist="alt" size="xs" />
                             <div class="min-w-0 flex-1">
                                 <span class="text-sm font-medium">{{ alt.name }}</span>
                             </div>
                             <ScoreBadge :score="alt.score" size="sm" />
                             
+                            <!-- Inline Actions for Stack Mode -->
+                            <div v-if="stackMode" class="flex gap-1">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <Button variant="ghost" size="icon" class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10" @click.stop="emit('promote-artist', alt)">
+                                                <ArrowUpCircle class="h-4 w-4" />
+                                                <span class="sr-only">{{ $t('lineups.show_stack_promote') }}</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{{ $t('lineups.show_stack_promote') }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground" @click.stop="emit('remove-from-stack', alt)">
+                                                <X class="h-4 w-4" />
+                                                <span class="sr-only">{{ $t('lineups.show_stack_remove_alt') }}</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{{ $t('lineups.show_stack_remove_alt') }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+
                             <DropdownMenu v-if="!compareMode && !stackMode">
                                 <DropdownMenuTrigger as-child>
                                     <Button variant="ghost" size="icon" class="h-7 w-7" @click.stop>

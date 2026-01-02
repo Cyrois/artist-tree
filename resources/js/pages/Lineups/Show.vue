@@ -290,6 +290,48 @@ const breadcrumbs = computed(() =>
     />
     <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="props.lineup" class="space-y-6">
+            <!-- Mode Banners -->
+            <Transition
+                enter-active-class="transition-all duration-300 ease-out"
+                enter-from-class="-translate-y-full opacity-0"
+                enter-to-class="translate-y-0 opacity-100"
+                leave-active-class="transition-all duration-200 ease-in"
+                leave-from-class="translate-y-0 opacity-100"
+                leave-to-class="-translate-y-full opacity-0"
+            >
+                <div
+                    v-if="stackMode"
+                    class="sticky top-[-24px] z-50 -mx-6 -mt-6 mb-6 flex items-center justify-between border-b-2 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))] p-4 px-6 shadow-md backdrop-blur-md"
+                >
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full bg-[hsl(var(--stack-purple))]/10 p-2 text-[hsl(var(--stack-purple))]">
+                            <Layers class="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-foreground">
+                                <template v-if="stackingPrimaryArtist">
+                                    {{ $t('lineups.show_stack_mode_adding_to', { name: stackingPrimaryArtist.name }) }}
+                                </template>
+                                <template v-else>
+                                    {{ $t('lineups.show_stack_mode_description') }}
+                                </template>
+                            </p>
+                            <p class="text-xs text-muted-foreground font-medium">
+                                {{ $t('lineups.show_stack_mode_instruction') }}
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="border-[hsl(var(--stack-purple))]/30 hover:bg-[hsl(var(--stack-purple))]/10 text-[hsl(var(--stack-purple))] font-semibold"
+                        @click="stackMode = false; isAddingAlternativesTo = null; stackingTier = null"
+                    >
+                        {{ $t('lineups.show_stack_mode_done') }}
+                    </Button>
+                </div>
+            </Transition>
+
             <!-- Lineup Header Card -->
             <Card class="py-0">
                 <CardContent class="p-6">
@@ -422,38 +464,6 @@ const breadcrumbs = computed(() =>
                 />
 
                 <!-- Mode Banners -->
-                <div
-                    v-if="stackMode"
-                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--stack-purple))]/30 bg-[hsl(var(--stack-purple-bg))] p-4 transition-all"
-                >
-                    <div class="flex items-center gap-3">
-                        <div class="rounded-full bg-primary/20 p-2 text-primary">
-                            <Layers class="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium">
-                                <template v-if="stackingPrimaryArtist">
-                                    {{ $t('lineups.show_stack_mode_adding_to', { name: stackingPrimaryArtist.name }) }}
-                                </template>
-                                <template v-else>
-                                    {{ $t('lineups.show_stack_mode_description') }}
-                                </template>
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                {{ $t('lineups.show_stack_mode_instruction') }}
-                            </p>
-                        </div>
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        class="border-primary/30 hover:bg-primary/10"
-                        @click="stackMode = false; isAddingAlternativesTo = null; stackingTier = null"
-                    >
-                        {{ $t('lineups.show_stack_mode_done') }}
-                    </Button>
-                </div>
-
                 <div
                     v-if="compareMode"
                     class="flex items-center justify-between rounded-lg border border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral-bg))] p-4"

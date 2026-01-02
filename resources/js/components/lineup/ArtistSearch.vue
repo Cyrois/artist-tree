@@ -155,12 +155,14 @@ function navigateToArtist(artist: SearchResultArtist) {
                         <div class="mr-2 flex hidden gap-2 sm:flex">
                             <Button
                                 variant="outline"
-                                :class="{ 'border-primary bg-primary/10': stackMode }"
-                                class="h-9 gap-2"
+                                :class="stackMode 
+                                    ? 'bg-[hsl(var(--stack-purple))] text-white border-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/90 hover:text-white' 
+                                    : 'hover:bg-muted'"
+                                class="h-9 gap-2 transition-all"
                                 @click="emit('toggle-stack')"
                             >
                                 <Layers class="h-4 w-4" />
-                                {{ $t('lineups.show_stack_button') }}
+                                {{ stackMode ? $t('lineups.show_stack_exit') : $t('lineups.show_stack_button') }}
                             </Button>
                             <Button
                                 variant="outline"
