@@ -516,6 +516,7 @@ const breadcrumbs = computed(() =>
                         @promote-artist="handlePromoteArtist"
                         @remove-from-stack="handleRemoveFromStack"
                         @dissolve-stack="handleDissolveStack"
+                        @deselect-stack="isAddingAlternativesTo = null; stackingTier = null"
                     />
                 </div>
             </div>

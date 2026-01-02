@@ -78,6 +78,7 @@ const emit = defineEmits<{
     'remove-from-stack': [artist: Artist];
     'dissolve-stack': [stackId: string];
     'start-stack': [artist: Artist];
+    'deselect-stack': [];
 }>();
 
 const isOpen = ref(true);
@@ -294,6 +295,7 @@ function isSelected(artistId: number) {
                                 <StackPrimaryActionButton 
                                     :is-current-stack="isAddingAlternativesTo === group.stack.id"
                                     @click="emit('start-stack', group.stack.primary)"
+                                    @deselect="emit('deselect-stack')"
                                 />
                             </div>
 

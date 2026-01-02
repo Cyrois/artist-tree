@@ -111,6 +111,7 @@
     "lineups.show_stack_button": "Stack",
     "lineups.show_stack_exit": "Exit stack mode",
     "lineups.show_stack_choose": "Choose Stack",
+    "lineups.show_stack_deselect": "Exit Stack",
     "lineups.show_stack_add_to": "Add to Stack",
     "lineups.show_stack_current": "Current Stack",
     "lineups.show_compare_button": "Compare",
