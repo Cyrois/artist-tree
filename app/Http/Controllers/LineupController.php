@@ -16,8 +16,14 @@ use Inertia\Inertia;
 
 use App\Services\TierCalculationService;
 
+use App\Services\LineupService;
+
 class LineupController extends Controller
 {
+    public function __construct(
+        protected LineupService $lineupService
+    ) {}
+
     public function index()
     {
         $lineups = Lineup::with(['artists' => function($query) {
@@ -97,14 +103,27 @@ class LineupController extends Controller
             ]);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'lineup' => $this->lineupService->getLineupPayload($lineup),
+                'message' => 'Artist added to lineup successfully.'
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Artist added to lineup successfully.');
     }
 
-    public function removeArtist(Lineup $lineup, Artist $artist)
+    public function removeArtist(Lineup $lineup, Artist $artist, Request $request)
     {
         Gate::authorize('update', $lineup);
 
         if ($lineup->artists()->detach($artist->id)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'lineup' => $this->lineupService->getLineupPayload($lineup),
+                    'message' => 'Artist removed successfully.'
+                ]);
+            }
             return redirect()->back()->with('success', 'Artist removed successfully.');
         }
 
@@ -113,47 +132,11 @@ class LineupController extends Controller
 
     public function show($id)
     {
-        $lineup = Lineup::with(['artists.metrics'])->findOrFail($id);
+        $lineup = Lineup::findOrFail($id);
         
-        // Group artists by tier
-        $artistsByTier = array_fill_keys(ArtistTier::values(), []);
-
-        foreach ($lineup->artists as $artist) {
-            $tier = $artist->pivot->tier;
-            if (array_key_exists($tier, $artistsByTier)) {
-                // Use ArtistResource to format
-                $artistData = (new ArtistResource($artist))->resolve();
-                // Add pivot data
-                $artistData['lineup_tier'] = $tier;
-                $artistData['stack_id'] = $artist->pivot->stack_id;
-                $artistData['is_stack_primary'] = (bool) $artist->pivot->is_stack_primary;
-                
-                $artistsByTier[$tier][] = $artistData;
-            }
-        }
-        
-        // Calculate avg score
-        $artistCount = $lineup->artists->count();
-        $scoringService = app(ArtistScoringService::class);
-        $totalScore = $lineup->artists->sum(fn ($artist) => $scoringService->calculateScore($artist));
-        
-        $avgScore = $artistCount > 0 ? round($totalScore / $artistCount) : 0;
-
         return Inertia::render('Lineups/Show', [
             'id' => $lineup->id,
-            'lineup' => [
-                'id' => $lineup->id,
-                'name' => $lineup->name,
-                'description' => $lineup->description,
-                'updated_at' => $lineup->updated_at,
-                'updated_at_human' => $lineup->updated_at->diffForHumans(),
-                'artists' => $artistsByTier,
-                'artistStatuses' => [], // Empty as requested
-                'stats' => [
-                    'artist_count' => $artistCount,
-                    'avg_score' => $avgScore,
-                ]
-            ],
+            'lineup' => $this->lineupService->getLineupPayload($lineup),
         ]);
     }
 }

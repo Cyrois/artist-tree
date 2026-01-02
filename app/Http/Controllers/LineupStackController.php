@@ -4,68 +4,89 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PromoteStackArtistRequest;
 use App\Http\Requests\StoreLineupStackRequest;
-use App\Models\Artist;
+use App\Services\LineupService;
 use App\Models\Lineup;
 use App\Services\LineupStackService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 class LineupStackController extends Controller
 {
     public function __construct(
-        protected LineupStackService $stackService
+        protected LineupStackService $stackService,
+        protected LineupService $lineupService
     ) {}
 
     /**
      * Create a stack or add an artist to an existing stack.
      */
-    public function store(int $lineup, StoreLineupStackRequest $request): RedirectResponse
+    public function store(int $lineupId, StoreLineupStackRequest $request): JsonResponse
     {
         $artistId = $request->validated('artist_id');
 
-        if (!$this->stackService->isArtistInLineup($lineup, $artistId)) {
-            return redirect()->back()->with('error', 'Artist not in lineup.');
+        if (!$this->stackService->isArtistInLineup($lineupId, $artistId)) {
+            return response()->json(['error' => 'Artist not in lineup.'], 422);
         }
 
         $this->stackService->addToStack(
-            $lineup,
+            $lineupId,
             $artistId,
             $request->validated('stack_id')
         );
 
-        return redirect()->back()->with('success', 'Stack updated.');
+        $lineup = Lineup::findOrFail($lineupId);
+
+        return response()->json([
+            'lineup' => $this->lineupService->getLineupPayload($lineup),
+            'message' => 'Stack updated.'
+        ]);
     }
 
     /**
      * Promote an artist to primary within a stack.
      */
-    public function promote(int $lineup, string $stack_id, PromoteStackArtistRequest $request): RedirectResponse
+    public function promote(int $lineupId, string $stack_id, PromoteStackArtistRequest $request): JsonResponse
     {
         $this->stackService->promoteArtist(
-            $lineup,
+            $lineupId,
             $stack_id,
             $request->validated('artist_id')
         );
 
-        return redirect()->back()->with('success', 'Artist promoted to primary.');
+        $lineup = Lineup::findOrFail($lineupId);
+
+        return response()->json([
+            'lineup' => $this->lineupService->getLineupPayload($lineup),
+            'message' => 'Artist promoted to primary.'
+        ]);
     }
 
     /**
      * Remove an artist from a stack.
      */
-    public function removeArtist(int $lineup, int $artist, LineupStackService $stackService): RedirectResponse
+    public function removeArtist(int $lineupId, int $artist): JsonResponse
     {
-        $stackService->removeArtistFromStack($lineup, $artist);
+        $this->stackService->removeArtistFromStack($lineupId, $artist);
 
-        return redirect()->back()->with('success', 'Artist removed from stack.');
+        $lineup = Lineup::findOrFail($lineupId);
+
+        return response()->json([
+            'lineup' => $this->lineupService->getLineupPayload($lineup),
+            'message' => 'Artist removed from stack.'
+        ]);
     }
 
     /**
      * Dissolve a stack entirely.
      */
-    public function dissolve(int $lineup, string $stack_id): RedirectResponse
+    public function dissolve(int $lineupId, string $stack_id): JsonResponse
     {
-        $this->stackService->dissolveStack($lineup, $stack_id);
+        $this->stackService->dissolveStack($lineupId, $stack_id);
 
-        return redirect()->back()->with('success', 'Stack dissolved.');
+        $lineup = Lineup::findOrFail($lineupId);
+
+        return response()->json([
+            'lineup' => $this->lineupService->getLineupPayload($lineup),
+            'message' => 'Stack dissolved.'
+        ]);
     }
 }

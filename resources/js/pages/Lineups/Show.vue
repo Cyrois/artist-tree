@@ -32,7 +32,7 @@ import {
     Trash2,
     Users,
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface ApiArtist extends Artist {
     lineup_tier: TierType;
@@ -70,10 +70,18 @@ interface Props {
 const props = defineProps<Props>();
 const { lineup: lineupBreadcrumbs } = useBreadcrumbs();
 
+// Local state for dynamic updates
+const lineupData = ref(props.lineup);
+
+// Sync local state when props change
+watch(() => props.lineup, (newVal) => {
+    lineupData.value = newVal;
+}, { deep: true });
+
 // Flatten artists for search/avatar lookup
 const allArtists = computed(() => {
-    if (!props.lineup) return [];
-    return Object.values(props.lineup.artists).flat();
+    if (!lineupData.value) return [];
+    return Object.values(lineupData.value.artists).flat();
 });
 
 // Mode states
@@ -109,17 +117,17 @@ const artistToRemove = ref<ApiArtist | null>(null);
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
-    if (!props.lineup) return [];
+    if (!lineupData.value) return [];
 
     // Map API structure to component expectations
-    return props.lineup.artists[tier].map((artist) => ({
+    return lineupData.value.artists[tier].map((artist) => ({
         ...artist,
         image: artist.image_url, // Map image_url for ArtistAvatar
         genre: artist.genres || [], // Map genres for TierSection
     }));
 }
 
-function handleArtistSelect(artist: Artist) {
+async function handleArtistSelect(artist: Artist) {
     if (compareMode.value) {
         const index = selectedArtistIds.value.indexOf(artist.id);
         if (index === -1 && selectedArtistIds.value.length < 4) {
@@ -134,12 +142,15 @@ function handleArtistSelect(artist: Artist) {
         // Only allow selecting artists in the same tier
         if (stackingTier.value && artist.lineup_tier !== stackingTier.value) return;
         
-        router.post(`/lineups/${props.id}/stacks`, {
-            artist_id: artist.id,
-            stack_id: isAddingAlternativesTo.value
-        }, {
-            preserveScroll: true
-        });
+        try {
+            const response = await axios.post(`/api/lineups/${props.id}/stacks`, {
+                artist_id: artist.id,
+                stack_id: isAddingAlternativesTo.value
+            });
+            lineupData.value = response.data.lineup;
+        } catch (e) {
+            console.error('Failed to update stack', e);
+        }
     }
 }
 
@@ -154,7 +165,7 @@ function handleArtistRemove(artist: Artist) {
     isRemoveArtistModalOpen.value = true;
 }
 
-function handleStartStack(artist: Artist) {
+async function handleStartStack(artist: Artist) {
     stackingTier.value = artist.lineup_tier || null;
 
     if (artist.stack_id) {
@@ -163,44 +174,53 @@ function handleStartStack(artist: Artist) {
         return;
     }
 
-    router.post(`/lineups/${props.id}/stacks`, {
-        artist_id: artist.id
-    }, {
-        preserveScroll: true,
-        onSuccess: (page) => {
-            // Find the new stack_id for this artist
-            // @ts-ignore
-            const lineup = page.props.lineup;
-            const updatedArtist = (Object.values(lineup.artists).flat() as Artist[])
-                .find(a => a.id === artist.id);
-            if (updatedArtist?.stack_id) {
-                isAddingAlternativesTo.value = updatedArtist.stack_id;
-                stackMode.value = true;
-            }
+    try {
+        const response = await axios.post(`/api/lineups/${props.id}/stacks`, {
+            artist_id: artist.id
+        });
+        lineupData.value = response.data.lineup;
+        
+        // Find the new stack_id for this artist
+        const updatedArtist = (Object.values(lineupData.value.artists).flat() as Artist[])
+            .find(a => a.id === artist.id);
+        if (updatedArtist?.stack_id) {
+            isAddingAlternativesTo.value = updatedArtist.stack_id;
+            stackMode.value = true;
         }
-    });
+    } catch (e) {
+        console.error('Failed to start stack', e);
+    }
 }
 
-function handlePromoteArtist(artist: Artist) {
+async function handlePromoteArtist(artist: Artist) {
     if (!artist.stack_id) return;
     
-    router.post(`/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
-        artist_id: artist.id
-    }, {
-        preserveScroll: true
-    });
+    try {
+        const response = await axios.post(`/api/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
+            artist_id: artist.id
+        });
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to promote artist', e);
+    }
 }
 
-function handleRemoveFromStack(artist: Artist) {
-    router.post(`/lineups/${props.id}/stacks/artists/${artist.id}/remove`, {}, {
-        preserveScroll: true
-    });
+async function handleRemoveFromStack(artist: Artist) {
+    try {
+        const response = await axios.post(`/api/lineups/${props.id}/stacks/artists/${artist.id}/remove`);
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to remove from stack', e);
+    }
 }
 
-function handleDissolveStack(stackId: string) {
-    router.post(`/lineups/${props.id}/stacks/${stackId}/dissolve`, {}, {
-        preserveScroll: true,
-    });
+async function handleDissolveStack(stackId: string) {
+    try {
+        const response = await axios.post(`/api/lineups/${props.id}/stacks/${stackId}/dissolve`);
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to dissolve stack', e);
+    }
 }
 
 function clearSelection() {
@@ -222,7 +242,7 @@ async function openAddModal(artist: SearchResultArtist) {
     // Fetch suggested tier from backend
     try {
         const score = artist.score || artist.spotify_popularity || 0;
-        const response = await axios.get(`/lineups/${props.id}/suggest-tier`, {
+        const response = await axios.get(`/api/lineups/${props.id}/suggest-tier`, {
             params: { 
                 artist_id: artist.id,
                 score: score 
@@ -253,12 +273,20 @@ async function confirmAddArtist(payload: {
             artistId = selectResponse.data.data.id;
         }
 
-        await axios.post(`/lineups/${props.id}/artists`, {
+        const response = await axios.post(`/api/lineups/${props.id}/artists`, {
             artist_id: artistId,
             tier: tier,
         });
+        
+        // If the backend returns the updated lineup, update local state
+        if (response.data.lineup) {
+            lineupData.value = response.data.lineup;
+        } else {
+            // Fallback for safety
+            router.reload({ only: ['lineup'] });
+        }
+        
         isAddModalOpen.value = false;
-        router.reload({ only: ['lineup'] });
     } catch (e) {
         console.error('Failed to add artist', e);
     } finally {
@@ -278,7 +306,7 @@ function isArtistInLineup(artist: SearchResultArtist) {
 
 const breadcrumbs = computed(() =>
     lineupBreadcrumbs(
-        props.lineup?.name ?? trans('lineups.show_page_title'),
+        lineupData.value?.name ?? trans('lineups.show_page_title'),
         props.id,
     ),
 );
@@ -286,10 +314,10 @@ const breadcrumbs = computed(() =>
 
 <template>
     <Head
-        :title="`${props.lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
+        :title="`${lineupData?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
     />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div v-if="props.lineup" class="space-y-6">
+        <div v-if="lineupData" class="space-y-6">
             <!-- Mode Banners -->
             <Transition
                 enter-active-class="transition-all duration-300 ease-out"
@@ -341,12 +369,12 @@ const breadcrumbs = computed(() =>
                         <!-- Info -->
                         <div class="flex-1">
                             <h1 class="text-3xl font-bold">
-                                {{ props.lineup.name }}
+                                {{ lineupData.name }}
                             </h1>
                             <p
                                 class="mt-1 min-h-[1.25rem] text-sm text-muted-foreground"
                             >
-                                {{ lineup.description }}
+                                {{ lineupData.description }}
                             </p>
 
                             <div class="mt-6 flex flex-wrap items-center gap-8">
@@ -368,7 +396,7 @@ const breadcrumbs = computed(() =>
                                         <p
                                             class="text-xl leading-none font-bold"
                                         >
-                                            {{ props.lineup.stats.artist_count }}
+                                            {{ lineupData.stats.artist_count }}
                                         </p>
                                     </div>
                                 </div>
@@ -376,10 +404,10 @@ const breadcrumbs = computed(() =>
                                 <!-- Avg Score -->
                                 <div class="flex items-center gap-3">
                                     <ScoreBadge
-                                        v-if="props.lineup.stats.avg_score"
+                                        v-if="lineupData.stats.avg_score"
                                         :score="
                                             Math.round(
-                                                props.lineup.stats.avg_score,
+                                                lineupData.stats.avg_score,
                                             )
                                         "
                                         size="lg"
@@ -407,7 +435,7 @@ const breadcrumbs = computed(() =>
                                     class="mt-1 self-end text-xs text-muted-foreground"
                                 >
                                     {{ $t('lineups.card_updated') }}
-                                    {{ lineup.updated_at_human }}
+                                    {{ lineupData.updated_at_human }}
                                 </div>
                             </div>
                         </div>
@@ -537,32 +565,33 @@ const breadcrumbs = computed(() =>
         </div>
 
         <AddToLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isAddModalOpen"
             :artist="artistToAdd"
-            :lineup-name="props.lineup.name"
+            :lineup-name="lineupData.name"
             :suggested-tier="suggestedTier"
             :is-adding="isAddingToLineup"
             @add="confirmAddArtist"
         />
 
         <RemoveArtistFromLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isRemoveArtistModalOpen"
-            :lineup-id="props.lineup.id"
+            :lineup-id="lineupData.id"
             :artist="artistToRemove"
+            @updated="(data) => lineupData = data"
         />
 
         <EditLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isEditModalOpen"
-            :lineup="props.lineup"
+            :lineup="lineupData"
         />
 
         <DeleteLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isDeleteModalOpen"
-            :lineup="props.lineup"
+            :lineup="lineupData"
         />
     </MainLayout>
 </template>
