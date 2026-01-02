@@ -6,7 +6,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ArrowUpCircle, X } from 'lucide-vue-next';
+import { ArrowUpCircle, CircleMinus } from 'lucide-vue-next';
 
 const emit = defineEmits<{
     promote: [];
@@ -41,10 +41,10 @@ const emit = defineEmits<{
                     <Button 
                         variant="ghost" 
                         size="icon" 
-                        class="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground" 
+                        class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10" 
                         @click.stop="emit('remove')"
                     >
-                        <X class="h-4 w-4" />
+                        <CircleMinus class="h-4 w-4" />
                         <span class="sr-only">{{ $t('lineups.show_stack_remove_alt') }}</span>
                     </Button>
                 </TooltipTrigger>

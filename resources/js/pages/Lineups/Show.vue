@@ -28,8 +28,8 @@ import { trans } from 'laravel-vue-i18n';
 import {
     Download,
     Layers,
-    MoreHorizontal,
     Pencil,
+    Settings,
     Trash2,
     Users,
 } from 'lucide-vue-next';
@@ -327,7 +327,7 @@ const breadcrumbs = computed(() =>
             />
 
             <!-- Lineup Header Card -->
-            <Card class="py-0">
+            <Card class="relative py-0">
                 <CardContent class="p-6">
                     <div
                         class="flex flex-col justify-between gap-6 md:flex-row"
@@ -396,13 +396,6 @@ const breadcrumbs = computed(() =>
                                         </p>
                                     </div>
                                 </div>
-
-                                <div
-                                    class="mt-1 self-end text-xs text-muted-foreground"
-                                >
-                                    {{ $t('lineups.card_updated') }}
-                                    {{ lineupData.updated_at_human }}
-                                </div>
                             </div>
                         </div>
 
@@ -415,7 +408,7 @@ const breadcrumbs = computed(() =>
                                         size="icon"
                                         class="h-8 w-8"
                                     >
-                                        <MoreHorizontal class="h-4 w-4" />
+                                        <Settings class="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -440,6 +433,14 @@ const breadcrumbs = computed(() =>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
+                    </div>
+
+                    <!-- Updated Timestamp at bottom right -->
+                    <div
+                        class="absolute right-6 bottom-6 text-xs text-muted-foreground"
+                    >
+                        {{ $t('lineups.card_updated') }}
+                        {{ lineupData.updated_at_human }}
                     </div>
                 </CardContent>
             </Card>
