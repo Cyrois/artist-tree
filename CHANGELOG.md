@@ -19,6 +19,23 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Artist Stacking Feature (2026-01-02)
+**Summary:** Implemented the "Artist Stacking" feature, allowing users to group alternative artists for the same slot in a lineup.
+- **Backend:**
+  - Added `stack_id` (UUID) and `is_stack_primary` (boolean) to `lineup_artists` pivot table.
+  - Created `LineupStackController` to handle stack management (store, promote, remove, dissolve).
+  - Updated `LineupController` to return stacking metadata in the API response.
+  - Added specialized stack routes in `web.php`.
+- **Frontend:**
+  - Implemented "Stack Mode" in `Lineups/Show.vue` with a purple theme and banner.
+  - Rewrote `TierSection.vue` to support grouped artist rendering (Primary + Alternatives).
+  - Added primary/alternative visual styles with nesting and purple accents.
+  - Implemented stack management actions: "Make Primary", "Remove from Stack", and "Dissolve Stack".
+  - Updated `ArtistAvatar.vue` to support `xs` size for alternative artists.
+  - Added all necessary translations for the stacking interface.
+- **Data:**
+  - Updated `Artist` and `TierType` interfaces in `resources/js/data/types.ts` to include stacking and additional tiers.
+
 ### Frontend Fixes for API Consistency (2025-12-30)
 **Summary:** Updated frontend components and types to match the snake_case keys from the updated `LineupResource` and `LineupController`.
 - **Frontend:**

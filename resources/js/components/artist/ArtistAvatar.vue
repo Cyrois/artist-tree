@@ -7,7 +7,7 @@ import { computed } from 'vue';
 
 interface Props {
     artist: Artist;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +29,9 @@ const sizeClasses = computed(() => {
         case 'md':
             return 'h-16 w-16 text-xl';
         case 'sm':
+            return 'h-12 w-12 text-sm';
+        case 'xs':
+            return 'h-8 w-8 text-[10px]';
         default:
             return 'h-12 w-12 text-sm';
     }

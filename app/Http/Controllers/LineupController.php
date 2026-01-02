@@ -125,6 +125,8 @@ class LineupController extends Controller
                 $artistData = (new ArtistResource($artist))->resolve();
                 // Add pivot data
                 $artistData['lineup_tier'] = $tier;
+                $artistData['stack_id'] = $artist->pivot->stack_id;
+                $artistData['is_stack_primary'] = (bool) $artist->pivot->is_stack_primary;
                 
                 $artistsByTier[$tier][] = $artistData;
             }

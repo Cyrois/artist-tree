@@ -19,13 +19,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { tierOrder } from '@/data/constants';
-import type { TierType } from '@/data/types';
+import type { Artist, TierType } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
 import {
     Download,
+    Layers,
     MoreHorizontal,
     Pencil,
     Trash2,
@@ -33,16 +34,8 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-interface ApiArtist {
-    id: number;
-    spotify_id: string;
-    name: string;
-    genres: string[];
-    image_url: string | null;
-    score: number;
+interface ApiArtist extends Artist {
     lineup_tier: TierType;
-    // Map properties for compatibility with TierSection if needed
-    genre?: string[];
 }
 
 interface SearchResultArtist {
@@ -87,6 +80,12 @@ const allArtists = computed(() => {
 const stackMode = ref(false);
 const compareMode = ref(false);
 const selectedArtistIds = ref<number[]>([]);
+const isAddingAlternativesTo = ref<string | null>(null); // stack_id
+
+const stackingPrimaryArtist = computed(() => {
+    if (!isAddingAlternativesTo.value) return null;
+    return allArtists.value.find(a => a.stack_id === isAddingAlternativesTo.value && a.is_stack_primary);
+});
 
 // Search State
 const addingArtistId = ref<string | number | null>(null);
@@ -119,7 +118,7 @@ function getArtistsByTier(tier: TierType) {
     }));
 }
 
-function handleArtistSelect(artist: ApiArtist) {
+function handleArtistSelect(artist: Artist) {
     if (compareMode.value) {
         const index = selectedArtistIds.value.indexOf(artist.id);
         if (index === -1 && selectedArtistIds.value.length < 4) {
@@ -127,18 +126,77 @@ function handleArtistSelect(artist: ApiArtist) {
         } else if (index !== -1) {
             selectedArtistIds.value.splice(index, 1);
         }
+    } else if (stackMode.value && isAddingAlternativesTo.value) {
+        // Adding alternative to stack
+        if (artist.stack_id === isAddingAlternativesTo.value) return;
+        
+        axios.post(`/lineups/${props.id}/stacks`, {
+            artist_id: artist.id,
+            stack_id: isAddingAlternativesTo.value
+        }).then(() => {
+            router.reload({ only: ['lineup'] });
+        });
     }
 }
 
-function handleArtistView(artist: ApiArtist) {
+function handleArtistView(artist: Artist) {
     if (!compareMode.value && !stackMode.value) {
         router.visit(`/artist/${artist.id}`);
     }
 }
 
-function handleArtistRemove(artist: ApiArtist) {
-    artistToRemove.value = artist;
+function handleArtistRemove(artist: Artist) {
+    artistToRemove.value = artist as ApiArtist;
     isRemoveArtistModalOpen.value = true;
+}
+
+function handleStartStack(artist: Artist) {
+    if (artist.stack_id) {
+        isAddingAlternativesTo.value = artist.stack_id;
+        stackMode.value = true;
+        return;
+    }
+
+    axios.post(`/lineups/${props.id}/stacks`, {
+        artist_id: artist.id
+    }).then(() => {
+        router.reload({ 
+            only: ['lineup'],
+            onSuccess: (page) => {
+                // Find the new stack_id for this artist
+                const updatedArtist = (Object.values(page.props.lineup.artists).flat() as Artist[])
+                    .find(a => a.id === artist.id);
+                if (updatedArtist?.stack_id) {
+                    isAddingAlternativesTo.value = updatedArtist.stack_id;
+                    stackMode.value = true;
+                }
+            }
+        });
+    });
+}
+
+function handlePromoteArtist(artist: Artist) {
+    if (!artist.stack_id) return;
+    
+    axios.post(`/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
+        artist_id: artist.id
+    }).then(() => {
+        router.reload({ only: ['lineup'] });
+    });
+}
+
+function handleRemoveFromStack(artist: Artist) {
+    axios.post(`/lineups/${props.id}/stacks/artists/${artist.id}/remove`)
+        .then(() => {
+            router.reload({ only: ['lineup'] });
+        });
+}
+
+function handleDissolveStack(stackId: string) {
+    axios.delete(`/lineups/${props.id}/stacks/${stackId}`)
+        .then(() => {
+            router.reload({ only: ['lineup'] });
+        });
 }
 
 function clearSelection() {
@@ -352,21 +410,41 @@ const breadcrumbs = computed(() =>
                 <ArtistSearch
                     :adding-artist-id="addingArtistId"
                     :is-artist-in-lineup="isArtistInLineup"
+                    :stack-mode="stackMode"
+                    :compare-mode="compareMode"
                     @add-artist="openAddModal"
+                    @toggle-stack="stackMode = !stackMode; if (!stackMode) isAddingAlternativesTo = null"
+                    @toggle-compare="compareMode = !compareMode; if (!compareMode) selectedArtistIds = []"
                 />
 
                 <!-- Mode Banners -->
                 <div
                     v-if="stackMode"
-                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--stack-purple))]/30 bg-[hsl(var(--stack-purple-bg))] p-4"
+                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--stack-purple))]/30 bg-[hsl(var(--stack-purple-bg))] p-4 transition-all"
                 >
-                    <p class="text-sm">
-                        {{ $t('lineups.show_stack_mode_description') }}
-                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full bg-primary/20 p-2 text-primary">
+                            <Layers class="h-4 w-4" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">
+                                <template v-if="stackingPrimaryArtist">
+                                    {{ $t('lineups.show_stack_mode_adding_to', { name: stackingPrimaryArtist.name }) }}
+                                </template>
+                                <template v-else>
+                                    {{ $t('lineups.show_stack_mode_description') }}
+                                </template>
+                            </p>
+                            <p class="text-xs text-muted-foreground">
+                                {{ $t('lineups.show_stack_mode_instruction') }}
+                            </p>
+                        </div>
+                    </div>
                     <Button
                         variant="outline"
                         size="sm"
-                        @click="stackMode = false"
+                        class="border-primary/30 hover:bg-primary/10"
+                        @click="stackMode = false; isAddingAlternativesTo = null"
                     >
                         {{ $t('lineups.show_stack_mode_done') }}
                     </Button>
@@ -418,10 +496,16 @@ const breadcrumbs = computed(() =>
                         :tier="tier"
                         :artists="getArtistsByTier(tier)"
                         :compare-mode="compareMode"
+                        :stack-mode="stackMode"
                         :selected-artist-ids="selectedArtistIds"
+                        :is-adding-alternatives-to="isAddingAlternativesTo"
                         @select-artist="handleArtistSelect"
                         @view-artist="handleArtistView"
                         @remove-artist="handleArtistRemove"
+                        @start-stack="handleStartStack"
+                        @promote-artist="handlePromoteArtist"
+                        @remove-from-stack="handleRemoveFromStack"
+                        @dissolve-stack="handleDissolveStack"
                     />
                 </div>
             </div>

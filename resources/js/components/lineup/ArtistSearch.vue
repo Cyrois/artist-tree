@@ -33,12 +33,16 @@ interface SearchResultArtist {
 interface Props {
     addingArtistId: string | number | null;
     isArtistInLineup: (artist: SearchResultArtist) => boolean;
+    stackMode: boolean;
+    compareMode: boolean;
 }
 
 defineProps<Props>();
 
 const emit = defineEmits<{
     'add-artist': [artist: SearchResultArtist];
+    'toggle-stack': [];
+    'toggle-compare': [];
 }>();
 
 // Search State
@@ -151,16 +155,18 @@ function navigateToArtist(artist: SearchResultArtist) {
                         <div class="mr-2 flex hidden gap-2 sm:flex">
                             <Button
                                 variant="outline"
-                                disabled
+                                :class="{ 'border-primary bg-primary/10': stackMode }"
                                 class="h-9 gap-2"
+                                @click="emit('toggle-stack')"
                             >
                                 <Layers class="h-4 w-4" />
                                 {{ $t('lineups.show_stack_button') }}
                             </Button>
                             <Button
                                 variant="outline"
-                                disabled
+                                :class="{ 'border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral-bg))]': compareMode }"
                                 class="h-9 gap-2"
+                                @click="emit('toggle-compare')"
                             >
                                 <Scale class="h-4 w-4" />
                                 {{ $t('lineups.show_compare_button') }}

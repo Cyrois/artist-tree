@@ -24,10 +24,15 @@ export interface Artist {
     tierSuggestion: TierType;
     similarArtists: number[];
     image?: string;
+    
+    // Lineup specific pivot data
+    lineup_tier?: TierType;
+    stack_id?: string | null;
+    is_stack_primary?: boolean;
 }
 
 // Tier Types
-export type TierType = 'headliner' | 'sub_headliner' | 'mid_tier' | 'undercard';
+export type TierType = 'headliner' | 'sub_headliner' | 'mid_tier' | 'undercard' | 'supporting' | 'emerging' | 'local';
 
 export interface TierConfig {
     label: string;

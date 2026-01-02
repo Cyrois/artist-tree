@@ -29,6 +29,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('lineups/{lineup}/suggest-tier', [LineupController::class, 'suggestTier'])->name('lineups.suggest-tier');
     Route::post('lineups/{lineup}/artists', [LineupController::class, 'addArtist'])->name('lineups.artists.store');
     Route::delete('lineups/{lineup}/artists/{artist}', [LineupController::class, 'removeArtist'])->name('lineups.artists.destroy');
+
+    // Lineup Stacking
+    Route::post('lineups/{lineup}/stacks', [\App\Http\Controllers\LineupStackController::class, 'store'])->name('lineups.stacks.store');
+    Route::post('lineups/{lineup}/stacks/{stackId}/promote', [\App\Http\Controllers\LineupStackController::class, 'promote'])->name('lineups.stacks.promote');
+    Route::post('lineups/{lineup}/stacks/artists/{artist}/remove', [\App\Http\Controllers\LineupStackController::class, 'removeArtist'])->name('lineups.stacks.remove-artist');
+    Route::delete('lineups/{lineup}/stacks/{stackId}', [\App\Http\Controllers\LineupStackController::class, 'dissolve'])->name('lineups.stacks.dissolve');
+
     // Settings routes are in routes/settings.php
 });
 
