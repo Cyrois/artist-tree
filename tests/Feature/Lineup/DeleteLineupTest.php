@@ -4,7 +4,6 @@ use App\Models\Lineup;
 use App\Models\User;
 
 test('owner can delete lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($user->id, ['role' => 'owner']);
@@ -12,48 +11,40 @@ test('owner can delete lineup', function () {
     $response = $this->actingAs($user)
         ->delete(route('lineups.destroy', $lineup));
 
-    $response->assertRedirect(route('lineups.index'))
-        ->assertSessionHas('success', 'Lineup deleted successfully.');
-
-    $this->assertDatabaseMissing('lineups', ['id' => $lineup->id]);
+    $response->assertRedirect(route('lineups.index'));
+    $this->assertSoftDeleted('lineups', ['id' => $lineup->id]);
 });
 
 test('non-owner member cannot delete lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
-    $owner = User::factory()->create();
     $lineup = Lineup::factory()->create();
-    $lineup->users()->attach($owner->id, ['role' => 'owner']);
     $lineup->users()->attach($user->id, ['role' => 'member']);
 
     $response = $this->actingAs($user)
         ->delete(route('lineups.destroy', $lineup));
 
     $response->assertForbidden();
-
-    $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
+    $this->assertDatabaseHas('lineups', ['id' => $lineup->id, 'deleted_at' => null]);
 });
 
 test('unrelated user cannot delete lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
+    $otherUser = User::factory()->create();
     $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($otherUser->id, ['role' => 'owner']);
 
     $response = $this->actingAs($user)
         ->delete(route('lineups.destroy', $lineup));
 
     $response->assertForbidden();
-
-    $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
+    $this->assertDatabaseHas('lineups', ['id' => $lineup->id, 'deleted_at' => null]);
 });
 
 test('unauthenticated user cannot delete lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $lineup = Lineup::factory()->create();
 
     $response = $this->delete(route('lineups.destroy', $lineup));
 
     $response->assertRedirect(route('login'));
-
-    $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
+    $this->assertDatabaseHas('lineups', ['id' => $lineup->id, 'deleted_at' => null]);
 });

@@ -24,9 +24,10 @@ class LineupController extends Controller
 
     public function index()
     {
-        $lineups = Lineup::with(['artists' => function ($query) {
-            $query->limit(10);
-        }])
+        $lineups = auth()->user()->lineups()
+            ->with(['artists' => function ($query) {
+                $query->limit(10);
+            }])
             ->withCount('artists')
             ->orderByDesc('updated_at')
             ->get();
@@ -38,6 +39,8 @@ class LineupController extends Controller
 
     public function suggestTier(Request $request, Lineup $lineup, TierCalculationService $tierService, ArtistScoringService $scoringService)
     {
+        Gate::authorize('view', $lineup);
+
         $request->validate([
             'artist_id' => 'required_without:score|nullable|exists:artists,id',
             'score' => 'required_without:artist_id|numeric|min:0|max:100',
@@ -87,8 +90,7 @@ class LineupController extends Controller
 
     public function addArtist(Lineup $lineup, AddArtistToLineupRequest $request)
     {
-        // Check authorization
-        // $this->authorize('update', $lineup); // Policy not implemented yet
+        Gate::authorize('update', $lineup);
         $validated = $request->validated();
 
         $artist = Artist::findOrFail($validated['artist_id']);
@@ -132,9 +134,9 @@ class LineupController extends Controller
         return redirect()->back();
     }
 
-    public function show($id)
+    public function show(Lineup $lineup)
     {
-        $lineup = Lineup::findOrFail($id);
+        Gate::authorize('view', $lineup);
 
         return Inertia::render('Lineups/Show', [
             'id' => $lineup->id,

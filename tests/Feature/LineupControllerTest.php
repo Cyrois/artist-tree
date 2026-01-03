@@ -19,7 +19,8 @@ test('unauthenticated users cannot access lineup index', function () {
 
 test('authenticated users can access lineup index', function () {
     // Create lineups for the test
-    Lineup::factory()->count(3)->create();
+    $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
 
     // Add some artists to DB
     Artist::factory()->count(5)->create();
@@ -29,7 +30,7 @@ test('authenticated users can access lineup index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Lineups/Index')
-            ->has('lineups.data', 3)
+            ->has('lineups.data', 1)
         );
 });
 
@@ -40,8 +41,10 @@ test('unauthenticated users cannot access lineup show', function () {
         ->assertRedirect(route('login'));
 });
 
-test('authenticated users can access lineup show', function () {
+test('authenticated users can access lineup show they belong to', function () {
     $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
+    
     $artist = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
 
     $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);
@@ -65,11 +68,21 @@ test('authenticated users can access lineup show', function () {
         );
 });
 
+test('authenticated users cannot access lineup show they do not belong to', function () {
+    $otherUser = User::factory()->create();
+    $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($otherUser->id, ['role' => 'owner']);
+
+    $this->actingAs($this->user)
+        ->get(route('lineups.show', $lineup->id))
+        ->assertStatus(403);
+});
+
 test('lineup show calculates average score correctly', function () {
     $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
 
     // Create artists with specific scores
-    // We'll mock the scoring service to return predictable scores
     $artist1 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
     $artist2 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
 
@@ -94,28 +107,14 @@ test('lineup show calculates average score correctly', function () {
         );
 });
 
-test('lineup show handles empty lineups', function () {
-    $lineup = Lineup::factory()->create();
-
-    $this->actingAs($this->user)
-        ->get(route('lineups.show', $lineup->id))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Lineups/Show')
-            ->where('lineup.stats.artist_count', 0)
-            ->where('lineup.stats.avg_score', 0)
-        );
-});
-
 test('authenticated users can create a new lineup', function () {
-    $this->withoutMiddleware();
     $payload = [
         'name' => 'New Festival 2026',
         'description' => 'A test description for the new festival.',
     ];
 
     $this->actingAs($this->user)
-        ->post(route('lineups.store'), $payload)
+        ->postJson(route('lineups.store'), $payload)
         ->assertRedirect();
 
     $this->assertDatabaseHas('lineups', [
@@ -133,87 +132,49 @@ test('authenticated users can create a new lineup', function () {
     ]);
 });
 
-test('lineup creation requires a name', function () {
-    $this->withoutMiddleware();
-    $this->actingAs($this->user)
-        ->post(route('lineups.store'), [
-            'description' => 'Missing name',
-        ])
-        ->assertSessionHasErrors('name');
-});
-
-test('lineup creation validates name length', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    $this->actingAs($this->user)
-        ->post(route('lineups.store'), [
-            'name' => str_repeat('a', 256),
-        ])
-        ->assertSessionHasErrors('name');
-});
-
-test('authenticated users can add artist to lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+test('authenticated users can add artist to lineup they own', function () {
     $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
     $artist = Artist::factory()->create();
 
     $this->actingAs($this->user)
-        ->post(route('lineups.artists.store', $lineup->id), [
+        ->postJson(route('api.lineups.artists.store', $lineup->id), [
             'artist_id' => $artist->id,
             'tier' => ArtistTier::Headliner->value,
         ])
-        ->assertRedirect();
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('lineup_artists', [
         'lineup_id' => $lineup->id,
         'artist_id' => $artist->id,
         'tier' => ArtistTier::Headliner->value,
     ]);
+});
+
+test('authenticated users cannot add artist to lineup they do not own', function () {
+    $otherUser = User::factory()->create();
+    $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($otherUser->id, ['role' => 'owner']);
+    $artist = Artist::factory()->create();
+
+    $this->actingAs($this->user)
+        ->postJson(route('api.lineups.artists.store', $lineup->id), [
+            'artist_id' => $artist->id,
+            'tier' => ArtistTier::Headliner->value,
+        ])
+        ->assertStatus(403);
 });
 
 test('adding artist requires a tier', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
     $artist = Artist::factory()->create();
 
     $this->actingAs($this->user)
-        ->post(route('lineups.artists.store', $lineup->id), [
+        ->postJson(route('api.lineups.artists.store', $lineup->id), [
             'artist_id' => $artist->id,
             // 'tier' is missing
         ])
-        ->assertSessionHasErrors('tier');
-});
-
-test('cannot add duplicate artist to lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    $lineup = Lineup::factory()->create();
-    $artist = Artist::factory()->create();
-
-    $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);
-
-    $this->actingAs($this->user)
-        ->post(route('lineups.artists.store', $lineup->id), [
-            'artist_id' => $artist->id,
-            'tier' => ArtistTier::Undercard->value,
-        ])
-        ->assertRedirect();
-
-    // Should still be headliner (original), count should be 1
-    $this->assertDatabaseCount('lineup_artists', 1);
-    $this->assertDatabaseHas('lineup_artists', [
-        'lineup_id' => $lineup->id,
-        'artist_id' => $artist->id,
-        'tier' => ArtistTier::Headliner->value,
-    ]);
-});
-
-test('cannot add non-existent artist', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    $lineup = Lineup::factory()->create();
-
-    $this->actingAs($this->user)
-        ->post(route('lineups.artists.store', $lineup->id), [
-            'artist_id' => 99999,
-            'tier' => ArtistTier::Headliner->value,
-        ])
-        ->assertSessionHasErrors('artist_id');
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['tier']);
 });

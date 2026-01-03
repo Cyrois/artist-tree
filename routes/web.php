@@ -25,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('lineups', [LineupController::class, 'store'])->name('lineups.store');
     Route::put('lineups/{lineup}', [LineupController::class, 'update'])->name('lineups.update');
     Route::delete('lineups/{lineup}', [LineupController::class, 'destroy'])->name('lineups.destroy');
-    Route::get('lineups/{id}', [LineupController::class, 'show'])->name('lineups.show');
+    Route::get('lineups/{lineup}', [LineupController::class, 'show'])->name('lineups.show');
 
     // Settings routes are in routes/settings.php
 });

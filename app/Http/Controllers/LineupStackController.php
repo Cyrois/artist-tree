@@ -8,6 +8,7 @@ use App\Models\Lineup;
 use App\Services\LineupService;
 use App\Services\LineupStackService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class LineupStackController extends Controller
 {
@@ -21,6 +22,9 @@ class LineupStackController extends Controller
      */
     public function store(int $lineupId, StoreLineupStackRequest $request): JsonResponse
     {
+        $lineup = Lineup::findOrFail($lineupId);
+        Gate::authorize('update', $lineup);
+
         $artistId = $request->validated('artist_id');
 
         if (! $this->stackService->isArtistInLineup($lineupId, $artistId)) {
@@ -46,6 +50,9 @@ class LineupStackController extends Controller
      */
     public function promote(int $lineupId, string $stack_id, PromoteStackArtistRequest $request): JsonResponse
     {
+        $lineup = Lineup::findOrFail($lineupId);
+        Gate::authorize('update', $lineup);
+
         $this->stackService->promoteArtist(
             $lineupId,
             $stack_id,
@@ -65,6 +72,9 @@ class LineupStackController extends Controller
      */
     public function removeArtist(int $lineupId, int $artist): JsonResponse
     {
+        $lineup = Lineup::findOrFail($lineupId);
+        Gate::authorize('update', $lineup);
+
         $this->stackService->removeArtistFromStack($lineupId, $artist);
 
         $lineup = Lineup::findOrFail($lineupId);
@@ -80,6 +90,9 @@ class LineupStackController extends Controller
      */
     public function dissolve(int $lineupId, string $stack_id): JsonResponse
     {
+        $lineup = Lineup::findOrFail($lineupId);
+        Gate::authorize('update', $lineup);
+
         $this->stackService->dissolveStack($lineupId, $stack_id);
 
         $lineup = Lineup::findOrFail($lineupId);
