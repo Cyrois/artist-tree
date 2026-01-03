@@ -12,6 +12,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { Artist } from '@/data/types';
 import type { GroupedArtist } from '@/types/lineup';
 import { cn } from '@/lib/utils';
@@ -119,31 +125,108 @@ function isSelected(artistId: number) {
             </div>
         </div>
 
-        <DropdownMenu v-if="!compareMode && !stackMode">
-            <DropdownMenuTrigger as-child>
-                <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>
-                    <MoreHorizontal class="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" @click.stop>
-                <DropdownMenuItem @click="emit('view-artist', group.artist)">
-                    <ExternalLink class="mr-2 h-4 w-4" />
-                    {{ trans('lineups.tier_view_artist') }}
-                </DropdownMenuItem>
-                <DropdownMenuItem @click="emit('start-stack', group.artist)">
-                    <Layers class="mr-2 h-4 w-4" />
-                    {{ trans('lineups.tier_create_stack') }}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                    class="text-destructive"
-                    @click="emit('remove-artist', group.artist)"
-                >
-                    <Trash2 class="mr-2 h-4 w-4" />
-                    {{ trans('lineups.tier_remove_from_lineup') }}
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <div v-if="!compareMode && !stackMode" class="flex items-center">
+            <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-8 w-8 lg:hidden"
+                        @click.stop
+                    >
+                        <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" @click.stop>
+                    <DropdownMenuItem
+                        @click="emit('view-artist', group.artist)"
+                    >
+                        <ExternalLink class="mr-2 h-4 w-4" />
+                        {{ trans('lineups.tier_view_artist') }}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        @click="emit('start-stack', group.artist)"
+                    >
+                        <Layers class="mr-2 h-4 w-4" />
+                        {{ trans('lineups.tier_create_stack') }}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                        class="text-destructive"
+                        @click="emit('remove-artist', group.artist)"
+                    >
+                        <Trash2 class="mr-2 h-4 w-4" />
+                        {{ trans('lineups.tier_remove_from_lineup') }}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <!-- Desktop Hover Actions -->
+            <div class="hidden items-center gap-1 lg:group-hover:flex">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8"
+                                @click.stop="emit('view-artist', group.artist)"
+                            >
+                                <ExternalLink class="h-4 w-4" />
+                                <span class="sr-only">{{
+                                    trans('lineups.tier_view_artist')
+                                }}</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ trans('lineups.tier_view_artist') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]"
+                                @click.stop="emit('start-stack', group.artist)"
+                            >
+                                <Layers class="h-4 w-4" />
+                                <span class="sr-only">{{
+                                    trans('lineups.tier_create_stack')
+                                }}</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ trans('lineups.tier_create_stack') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                @click.stop="emit('remove-artist', group.artist)"
+                            >
+                                <Trash2 class="h-4 w-4" />
+                                <span class="sr-only">{{
+                                    trans('lineups.tier_remove_from_lineup')
+                                }}</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ trans('lineups.tier_remove_from_lineup') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+        </div>
 
         <!-- Inline Stack Action for Stack Mode -->
         <div v-if="stackMode">
@@ -164,7 +247,7 @@ function isSelected(artistId: number) {
         <div
             :class="
                 cn(
-                    'flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))] p-4',
+                    'group flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))] p-4',
                     compareMode || stackMode
                         ? 'cursor-pointer hover:bg-[hsl(var(--stack-purple))]/10'
                         : '',
@@ -196,41 +279,106 @@ function isSelected(artistId: number) {
                 />
             </div>
 
-            <DropdownMenu v-if="!compareMode && !stackMode">
-                <DropdownMenuTrigger as-child>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-8 w-8"
-                        @click.stop
-                    >
-                        <MoreHorizontal class="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" @click.stop>
-                    <DropdownMenuItem
-                        @click="emit('dissolve-stack', group.stack.id)"
-                    >
-                        <X class="mr-2 h-4 w-4" />
-                        {{ $t('lineups.show_stack_dissolve') }}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        class="text-destructive"
-                        @click="emit('remove-artist', group.stack.primary)"
-                    >
-                        <Trash2 class="mr-2 h-4 w-4" />
-                        {{ trans('lineups.tier_remove_from_lineup') }}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div
+                v-if="!compareMode && !stackMode"
+                class="flex items-center"
+            >
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="h-8 w-8 lg:hidden"
+                            @click.stop
+                        >
+                            <MoreHorizontal class="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" @click.stop>
+                        <DropdownMenuItem
+                            @click="emit('dissolve-stack', group.stack.id)"
+                        >
+                            <X class="mr-2 h-4 w-4" />
+                            {{ $t('lineups.show_stack_dissolve') }}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            class="text-destructive"
+                            @click="emit('remove-artist', group.stack.primary)"
+                        >
+                            <Trash2 class="mr-2 h-4 w-4" />
+                            {{ trans('lineups.tier_remove_from_lineup') }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <!-- Desktop Hover Actions -->
+                <div class="hidden items-center gap-1 lg:group-hover:flex">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]"
+                                    @click.stop="
+                                        emit('dissolve-stack', group.stack.id)
+                                    "
+                                >
+                                    <X class="h-4 w-4" />
+                                    <span class="sr-only">{{
+                                        $t('lineups.show_stack_dissolve')
+                                    }}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{{ $t('lineups.show_stack_dissolve') }}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    @click.stop="
+                                        emit(
+                                            'remove-artist',
+                                            group.stack.primary,
+                                        )
+                                    "
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                    <span class="sr-only">{{
+                                        trans('lineups.tier_remove_from_lineup')
+                                    }}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>
+                                    {{
+                                        trans('lineups.tier_remove_from_lineup')
+                                    }}
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+            </div>
         </div>
 
         <!-- Alternatives -->
         <div
             v-for="alt in group.stack.alternatives"
             :key="alt.id"
-            class="flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5"
+            :class="
+                cn(
+                    'group flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5',
+                )
+            "
         >
             <ArtistAvatar :artist="alt" size="xs" />
             <div class="min-w-0 flex-1 flex items-center gap-2">
@@ -245,36 +393,113 @@ function isSelected(artistId: number) {
                 @remove="emit('remove-from-stack', alt)"
             />
 
-            <DropdownMenu v-if="!compareMode && !stackMode">
-                <DropdownMenuTrigger as-child>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-7 w-7"
-                        @click.stop
-                    >
-                        <MoreHorizontal class="h-3 w-3" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" @click.stop>
-                    <DropdownMenuItem @click="emit('promote-artist', alt)">
-                        <ArrowUpCircle class="mr-2 h-4 w-4" />
-                        {{ $t('lineups.show_stack_promote') }}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem @click="emit('remove-from-stack', alt)">
-                        <X class="mr-2 h-4 w-4" />
-                        {{ $t('lineups.show_stack_remove_alt') }}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        class="text-destructive"
-                        @click="emit('remove-artist', alt)"
-                    >
-                        <Trash2 class="mr-2 h-4 w-4" />
-                        {{ trans('lineups.tier_remove_from_lineup') }}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div
+                v-if="!compareMode && !stackMode"
+                class="flex items-center"
+            >
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="h-7 w-7 lg:hidden"
+                            @click.stop
+                        >
+                            <MoreHorizontal class="h-3 w-3" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" @click.stop>
+                        <DropdownMenuItem @click="emit('promote-artist', alt)">
+                            <ArrowUpCircle class="mr-2 h-4 w-4" />
+                            {{ $t('lineups.show_stack_promote') }}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            @click="emit('remove-from-stack', alt)"
+                        >
+                            <X class="mr-2 h-4 w-4" />
+                            {{ $t('lineups.show_stack_remove_alt') }}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            class="text-destructive"
+                            @click="emit('remove-artist', alt)"
+                        >
+                            <Trash2 class="mr-2 h-4 w-4" />
+                            {{ trans('lineups.tier_remove_from_lineup') }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <!-- Desktop Hover Actions -->
+                <div class="hidden items-center gap-1 lg:group-hover:flex">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]"
+                                    @click.stop="emit('promote-artist', alt)"
+                                >
+                                    <ArrowUpCircle class="h-4 w-4" />
+                                    <span class="sr-only">{{
+                                        $t('lineups.show_stack_promote')
+                                    }}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{{ $t('lineups.show_stack_promote') }}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]"
+                                    @click.stop="emit('remove-from-stack', alt)"
+                                >
+                                    <X class="h-4 w-4" />
+                                    <span class="sr-only">{{
+                                        $t('lineups.show_stack_remove_alt')
+                                    }}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{{ $t('lineups.show_stack_remove_alt') }}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    @click.stop="emit('remove-artist', alt)"
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                    <span class="sr-only">{{
+                                        trans('lineups.tier_remove_from_lineup')
+                                    }}</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>
+                                    {{
+                                        trans('lineups.tier_remove_from_lineup')
+                                    }}
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+            </div>
         </div>
     </div>
 </template>
