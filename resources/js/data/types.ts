@@ -24,7 +24,10 @@ export interface Artist {
     tierSuggestion: TierType;
     similarArtists: number[];
     image?: string;
-    
+    image_url?: string | null;
+    genres?: string[];
+    spotify_id?: string;
+
     // Lineup specific pivot data
     lineup_tier?: TierType;
     stack_id?: string | null;
@@ -73,7 +76,7 @@ export interface Lineup {
     updated_at: string; // API uses snake_case
     updated_at_human?: string; // From Resource
     created_at: string; // API uses snake_case
-    
+
     // API flattened structure
     artist_count?: number;
     avg_score?: number;
@@ -83,9 +86,9 @@ export interface Lineup {
         image_url: string | null;
         tier?: TierType;
     }[];
-    
+
     // Legacy/Manual structure (keep for now if needed, but mark optional)
-    artists?: Record<TierType, number[]> | any[]; 
+    artists?: Record<TierType, number[]> | any[];
     artistStatuses?: Record<number, ArtistStatus>;
     stats?: {
         artistCount: number; // Deprecated

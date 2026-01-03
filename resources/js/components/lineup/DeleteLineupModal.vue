@@ -43,7 +43,8 @@ function handleDelete() {
             emit('update:open', false);
         },
     });
-}</script>
+}
+</script>
 
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">

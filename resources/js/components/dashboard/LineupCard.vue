@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import Divider from '@/components/ui/divider/Divider.vue';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import type { Lineup } from '@/data/types';
 import { trans } from 'laravel-vue-i18n';
-import { Calendar, ChevronRight, Users } from 'lucide-vue-next';
+import { ChevronRight, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -29,12 +34,12 @@ const stats = computed(() => {
     };
 });
 
-const previewArtists = computed(() => props.lineup.preview_artists || props.lineup.previewArtists || []);
+const previewArtists = computed(() => props.lineup.preview_artists || []);
 </script>
 
 <template>
     <Card
-        class="group cursor-pointer transition-all duration-200 hover:border-border/80 hover:shadow-md gap-0 pb-0"
+        class="group cursor-pointer gap-0 pb-0 transition-all duration-200 hover:border-border/80 hover:shadow-md"
         data-slot="lineup-card"
         @click="emit('click', lineup)"
     >
@@ -51,11 +56,20 @@ const previewArtists = computed(() => props.lineup.preview_artists || props.line
 
         <CardContent class="space-y-4 pb-6">
             <!-- Artist Avatars Preview -->
-            <div v-if="previewArtists.length > 0" class="flex -space-x-2 overflow-hidden">
+            <div
+                v-if="previewArtists.length > 0"
+                class="flex -space-x-2 overflow-hidden"
+            >
                 <ArtistAvatar
                     v-for="artist in previewArtists"
                     :key="artist.id"
-                    :artist="{ id: artist.id, name: artist.name, image: artist.image_url || (artist as any).image } as any"
+                    :artist="
+                        {
+                            id: artist.id,
+                            name: artist.name,
+                            image: artist.image_url,
+                        } as any
+                    "
                     size="sm"
                     class="ring-2 ring-background"
                 />
@@ -85,12 +99,15 @@ const previewArtists = computed(() => props.lineup.preview_artists || props.line
             <!-- Last updated -->
             <div class="flex justify-end">
                 <span class="text-xs text-muted-foreground">
-                    {{ trans('lineups.card_updated') }} {{ lineup.updated_at_human || lineup.updatedAt }}
+                    {{ trans('lineups.card_updated') }}
+                    {{ lineup.updated_at_human || lineup.updated_at }}
                 </span>
             </div>
         </CardContent>
 
-        <CardFooter class="flex items-center justify-between border-t p-6 transition-all duration-200 group-hover:bg-muted/50">
+        <CardFooter
+            class="flex items-center justify-between border-t p-6 transition-all duration-200 group-hover:bg-muted/50"
+        >
             <span
                 class="font-medium text-primary decoration-2 underline-offset-4 transition-all duration-200 group-hover:text-foreground group-hover:underline"
             >

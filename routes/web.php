@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('search', fn () => Inertia::render('Search'))->name('search');
     Route::get('artist/{id}', fn ($id) => Inertia::render('Artist/Show', [
         'id' => (int) $id,
-        'userLineups' => auth()->user()->lineups()->select('lineups.id', 'name')->withCount('artists')->get()
+        'userLineups' => auth()->user()->lineups()->select('lineups.id', 'name')->withCount('artists')->get(),
     ]))->name('artist.show');
     Route::get('lineups', [LineupController::class, 'index'])->name('lineups.index');
     Route::post('lineups', [LineupController::class, 'store'])->name('lineups.store');
@@ -29,6 +29,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Settings routes are in routes/settings.php
 });
-
 
 require __DIR__.'/settings.php';

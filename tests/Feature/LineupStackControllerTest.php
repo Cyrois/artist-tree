@@ -20,15 +20,11 @@ test('authenticated users can create a new stack', function () {
 
     $lineup->artists()->attach($artist->id);
 
-
-
     $this->actingAs($this->user)
         ->post(route('api.lineups.stacks.store', $lineup->id), [
             'artist_id' => $artist->id,
         ])
         ->assertSuccessful();
-
-
 
     $this->assertDatabaseHas('lineup_artists', [
 
@@ -40,8 +36,6 @@ test('authenticated users can create a new stack', function () {
 
     ]);
 
-    
-
     $pivot = DB::table('lineup_artists')
 
         ->where('lineup_id', $lineup->id)
@@ -50,13 +44,9 @@ test('authenticated users can create a new stack', function () {
 
         ->first();
 
-        
-
     expect($pivot->stack_id)->not->toBeNull();
 
 });
-
-
 
 test('authenticated users can add to existing stack', function () {
 
@@ -70,8 +60,6 @@ test('authenticated users can add to existing stack', function () {
 
     $lineup->artists()->attach([$artist1->id, $artist2->id]);
 
-    
-
     $stackId = (string) Str::uuid();
 
     DB::table('lineup_artists')
@@ -82,16 +70,12 @@ test('authenticated users can add to existing stack', function () {
 
         ->update(['stack_id' => $stackId, 'is_stack_primary' => true]);
 
-
-
     $this->actingAs($this->user)
         ->post(route('api.lineups.stacks.store', $lineup->id), [
             'artist_id' => $artist2->id,
             'stack_id' => $stackId,
         ])
         ->assertSuccessful();
-
-
 
     $this->assertDatabaseHas('lineup_artists', [
 
@@ -107,33 +91,17 @@ test('authenticated users can add to existing stack', function () {
 
 });
 
-
-
 test('authenticated users can promote artist in stack', function () {
-
-
 
     $this->withoutMiddleware();
 
-
-
     $lineup = Lineup::factory()->create();
-
-
-
-
-
-
-
-
 
     $artist1 = Artist::factory()->create();
 
     $artist2 = Artist::factory()->create();
 
     $lineup->artists()->attach([$artist1->id, $artist2->id]);
-
-    
 
     $stackId = (string) Str::uuid();
 
@@ -153,15 +121,11 @@ test('authenticated users can promote artist in stack', function () {
 
         ->update(['stack_id' => $stackId, 'is_stack_primary' => false]);
 
-
-
-        $this->actingAs($this->user)
-            ->post(route('api.lineups.stacks.promote', ['lineup' => $lineup->id, 'stack_id' => $stackId]), [
-                'artist_id' => $artist2->id,
-            ])
+    $this->actingAs($this->user)
+        ->post(route('api.lineups.stacks.promote', ['lineup' => $lineup->id, 'stack_id' => $stackId]), [
+            'artist_id' => $artist2->id,
+        ])
         ->assertSuccessful();
-
-
 
     $this->assertDatabaseHas('lineup_artists', [
 
@@ -185,31 +149,15 @@ test('authenticated users can promote artist in stack', function () {
 
 });
 
-
-
 test('authenticated users can remove artist from stack', function () {
-
-
 
     $this->withoutMiddleware();
 
-
-
     $lineup = Lineup::factory()->create();
-
-
-
-
-
-
-
-
 
     $artist = Artist::factory()->create();
 
     $lineup->artists()->attach($artist->id);
-
-    
 
     $stackId = (string) Str::uuid();
 
@@ -221,13 +169,9 @@ test('authenticated users can remove artist from stack', function () {
 
         ->update(['stack_id' => $stackId, 'is_stack_primary' => true]);
 
-
-
     $this->actingAs($this->user)
         ->post(route('api.lineups.stacks.remove-artist', ['lineup' => $lineup->id, 'artist' => $artist->id]))
         ->assertSuccessful();
-
-
 
     $this->assertDatabaseHas('lineup_artists', [
 
@@ -243,8 +187,6 @@ test('authenticated users can remove artist from stack', function () {
 
 });
 
-
-
 test('authenticated users can dissolve stack', function () {
 
     $this->withoutMiddleware();
@@ -257,8 +199,6 @@ test('authenticated users can dissolve stack', function () {
 
     $lineup->artists()->attach([$artist1->id, $artist2->id]);
 
-    
-
     $stackId = (string) Str::uuid();
 
     DB::table('lineup_artists')
@@ -267,17 +207,9 @@ test('authenticated users can dissolve stack', function () {
 
         ->update(['stack_id' => $stackId]);
 
-
-
-        $this->actingAs($this->user)
-            ->post(route('api.lineups.stacks.dissolve', ['lineup' => $lineup->id, 'stack_id' => $stackId]))
-            ->assertSuccessful();
-
-
-
-    
-
-
+    $this->actingAs($this->user)
+        ->post(route('api.lineups.stacks.dissolve', ['lineup' => $lineup->id, 'stack_id' => $stackId]))
+        ->assertSuccessful();
 
     $this->assertDatabaseHas('lineup_artists', [
 

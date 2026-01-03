@@ -25,14 +25,7 @@ import MainLayout from '@/layouts/MainLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
-import {
-    Download,
-    Layers,
-    Pencil,
-    Settings,
-    Trash2,
-    Users,
-} from 'lucide-vue-next';
+import { Download, Pencil, Settings, Trash2, Users } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface ApiArtist extends Artist {
@@ -75,9 +68,13 @@ const { lineup: lineupBreadcrumbs } = useBreadcrumbs();
 const lineupData = ref(props.lineup);
 
 // Sync local state when props change
-watch(() => props.lineup, (newVal) => {
-    lineupData.value = newVal;
-}, { deep: true });
+watch(
+    () => props.lineup,
+    (newVal) => {
+        lineupData.value = newVal;
+    },
+    { deep: true },
+);
 
 // Flatten artists for search/avatar lookup
 const allArtists = computed(() => {
@@ -94,7 +91,10 @@ const stackingTier = ref<TierType | null>(null);
 
 const stackingPrimaryArtist = computed(() => {
     if (!isAddingAlternativesTo.value) return null;
-    return allArtists.value.find(a => a.stack_id === isAddingAlternativesTo.value && a.is_stack_primary);
+    return allArtists.value.find(
+        (a) =>
+            a.stack_id === isAddingAlternativesTo.value && a.is_stack_primary,
+    );
 });
 
 // Search State
@@ -123,7 +123,7 @@ function getArtistsByTier(tier: TierType) {
     // Map API structure to component expectations
     return lineupData.value.artists[tier].map((artist) => ({
         ...artist,
-        image: artist.image_url, // Map image_url for ArtistAvatar
+        image: artist.image_url || undefined, // Map image_url for ArtistAvatar
         genre: artist.genres || [], // Map genres for TierSection
     }));
 }
@@ -139,15 +139,19 @@ async function handleArtistSelect(artist: Artist) {
     } else if (stackMode.value && isAddingAlternativesTo.value) {
         // Adding alternative to stack
         if (artist.stack_id === isAddingAlternativesTo.value) return;
-        
+
         // Only allow selecting artists in the same tier
-        if (stackingTier.value && artist.lineup_tier !== stackingTier.value) return;
-        
+        if (stackingTier.value && artist.lineup_tier !== stackingTier.value)
+            return;
+
         try {
-            const response = await axios.post(`/api/lineups/${props.id}/stacks`, {
-                artist_id: artist.id,
-                stack_id: isAddingAlternativesTo.value
-            });
+            const response = await axios.post(
+                `/api/lineups/${props.id}/stacks`,
+                {
+                    artist_id: artist.id,
+                    stack_id: isAddingAlternativesTo.value,
+                },
+            );
             lineupData.value = response.data.lineup;
         } catch (e) {
             console.error('Failed to update stack', e);
@@ -177,13 +181,14 @@ async function handleStartStack(artist: Artist) {
 
     try {
         const response = await axios.post(`/api/lineups/${props.id}/stacks`, {
-            artist_id: artist.id
+            artist_id: artist.id,
         });
         lineupData.value = response.data.lineup;
-        
+
         // Find the new stack_id for this artist
-        const updatedArtist = (Object.values(lineupData.value.artists).flat() as Artist[])
-            .find(a => a.id === artist.id);
+        const updatedArtist = (
+            Object.values(lineupData.value.artists).flat() as Artist[]
+        ).find((a) => a.id === artist.id);
         if (updatedArtist?.stack_id) {
             isAddingAlternativesTo.value = updatedArtist.stack_id;
             stackMode.value = true;
@@ -195,11 +200,14 @@ async function handleStartStack(artist: Artist) {
 
 async function handlePromoteArtist(artist: Artist) {
     if (!artist.stack_id) return;
-    
+
     try {
-        const response = await axios.post(`/api/lineups/${props.id}/stacks/${artist.stack_id}/promote`, {
-            artist_id: artist.id
-        });
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/${artist.stack_id}/promote`,
+            {
+                artist_id: artist.id,
+            },
+        );
         lineupData.value = response.data.lineup;
     } catch (e) {
         console.error('Failed to promote artist', e);
@@ -208,7 +216,9 @@ async function handlePromoteArtist(artist: Artist) {
 
 async function handleRemoveFromStack(artist: Artist) {
     try {
-        const response = await axios.post(`/api/lineups/${props.id}/stacks/artists/${artist.id}/remove`);
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/artists/${artist.id}/remove`,
+        );
         lineupData.value = response.data.lineup;
     } catch (e) {
         console.error('Failed to remove from stack', e);
@@ -217,7 +227,9 @@ async function handleRemoveFromStack(artist: Artist) {
 
 async function handleDissolveStack(stackId: string) {
     try {
-        const response = await axios.post(`/api/lineups/${props.id}/stacks/${stackId}/dissolve`);
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/${stackId}/dissolve`,
+        );
         lineupData.value = response.data.lineup;
     } catch (e) {
         console.error('Failed to dissolve stack', e);
@@ -243,12 +255,15 @@ async function openAddModal(artist: SearchResultArtist) {
     // Fetch suggested tier from backend
     try {
         const score = artist.score || artist.spotify_popularity || 0;
-        const response = await axios.get(`/api/lineups/${props.id}/suggest-tier`, {
-            params: { 
-                artist_id: artist.id,
-                score: score 
-            }
-        });
+        const response = await axios.get(
+            `/api/lineups/${props.id}/suggest-tier`,
+            {
+                params: {
+                    artist_id: artist.id,
+                    score: score,
+                },
+            },
+        );
         suggestedTier.value = response.data.suggested_tier;
     } catch (e) {
         console.error('Failed to get tier suggestion', e);
@@ -278,7 +293,7 @@ async function confirmAddArtist(payload: {
             artist_id: artistId,
             tier: tier,
         });
-        
+
         // If the backend returns the updated lineup, update local state
         if (response.data.lineup) {
             lineupData.value = response.data.lineup;
@@ -286,7 +301,7 @@ async function confirmAddArtist(payload: {
             // Fallback for safety
             router.reload({ only: ['lineup'] });
         }
-        
+
         isAddModalOpen.value = false;
     } catch (e) {
         console.error('Failed to add artist', e);
@@ -320,10 +335,14 @@ const breadcrumbs = computed(() =>
     <MainLayout :breadcrumbs="breadcrumbs">
         <div v-if="lineupData" class="space-y-6">
             <!-- Mode Banners -->
-            <StackModeBanner 
-                :show="stackMode" 
-                :primary-artist-name="stackingPrimaryArtist?.name" 
-                @close="stackMode = false; isAddingAlternativesTo = null; stackingTier = null"
+            <StackModeBanner
+                :show="stackMode"
+                :primary-artist-name="stackingPrimaryArtist?.name"
+                @close="
+                    stackMode = false;
+                    isAddingAlternativesTo = null;
+                    stackingTier = null;
+                "
             />
 
             <!-- Lineup Header Card -->
@@ -454,8 +473,17 @@ const breadcrumbs = computed(() =>
                     :stack-mode="stackMode"
                     :compare-mode="compareMode"
                     @add-artist="openAddModal"
-                    @toggle-stack="stackMode = !stackMode; if (!stackMode) { isAddingAlternativesTo = null; stackingTier = null; }"
-                    @toggle-compare="compareMode = !compareMode; if (!compareMode) selectedArtistIds = []"
+                    @toggle-stack="
+                        stackMode = !stackMode;
+                        if (!stackMode) {
+                            isAddingAlternativesTo = null;
+                            stackingTier = null;
+                        }
+                    "
+                    @toggle-compare="
+                        compareMode = !compareMode;
+                        if (!compareMode) selectedArtistIds = [];
+                    "
                 />
 
                 <!-- Mode Banners -->
@@ -516,7 +544,10 @@ const breadcrumbs = computed(() =>
                         @promote-artist="handlePromoteArtist"
                         @remove-from-stack="handleRemoveFromStack"
                         @dissolve-stack="handleDissolveStack"
-                        @deselect-stack="isAddingAlternativesTo = null; stackingTier = null"
+                        @deselect-stack="
+                            isAddingAlternativesTo = null;
+                            stackingTier = null;
+                        "
                     />
                 </div>
             </div>
@@ -547,7 +578,7 @@ const breadcrumbs = computed(() =>
             v-model:open="isRemoveArtistModalOpen"
             :lineup-id="lineupData.id"
             :artist="artistToRemove"
-            @updated="(data) => lineupData = data"
+            @updated="(data) => (lineupData = data)"
         />
 
         <EditLineupModal

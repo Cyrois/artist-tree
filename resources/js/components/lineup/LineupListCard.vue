@@ -166,7 +166,8 @@ function getRandomColor(name: string) {
                 </div>
 
                 <div class="mt-4 text-right text-xs text-muted-foreground">
-                    {{ $t('lineups.card_updated') }} {{ lineup.updated_at_human }}
+                    {{ $t('lineups.card_updated') }}
+                    {{ lineup.updated_at_human }}
                 </div>
             </div>
         </div>

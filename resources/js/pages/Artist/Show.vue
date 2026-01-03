@@ -39,6 +39,7 @@ interface ApiArtist {
         youtube_subscribers: number | null;
         instagram_followers: number | null;
         tiktok_followers: number | null;
+        refreshed_at?: string;
     } | null;
     created_at: string;
     updated_at: string;

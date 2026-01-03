@@ -29,7 +29,9 @@ async function handleRemove() {
 
     isRemoving.value = true;
     try {
-        const response = await axios.delete(`/api/lineups/${props.lineupId}/artists/${props.artist.id}`);
+        const response = await axios.delete(
+            `/api/lineups/${props.lineupId}/artists/${props.artist.id}`,
+        );
         emit('updated', response.data.lineup);
         emit('update:open', false);
     } catch (e) {

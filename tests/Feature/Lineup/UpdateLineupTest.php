@@ -16,7 +16,7 @@ test('authenticated user can update lineup name and description', function () {
         ]);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('lineups', [
         'id' => $lineup->id,
         'name' => 'Updated Lineup Name',
@@ -37,7 +37,7 @@ test('user cannot update lineup they do not belong to', function () {
         ]);
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseMissing('lineups', [
         'id' => $lineup->id,
         'name' => 'Hacked Lineup Name',

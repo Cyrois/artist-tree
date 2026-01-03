@@ -23,19 +23,29 @@ const emit = defineEmits<{
     <TooltipProvider>
         <Tooltip>
             <TooltipTrigger as-child>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]" 
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]"
                     @click.stop="emit('click')"
                 >
                     <CirclePlus v-if="isAddingToStack" class="h-4 w-4" />
                     <Layers v-else class="h-4 w-4" />
-                    <span class="sr-only">{{ isAddingToStack ? $t('lineups.show_stack_add_to') : $t('lineups.show_stack_choose') }}</span>
+                    <span class="sr-only">{{
+                        isAddingToStack
+                            ? $t('lineups.show_stack_add_to')
+                            : $t('lineups.show_stack_choose')
+                    }}</span>
                 </Button>
             </TooltipTrigger>
             <TooltipContent>
-                <p>{{ isAddingToStack ? $t('lineups.show_stack_add_to') : $t('lineups.show_stack_choose') }}</p>
+                <p>
+                    {{
+                        isAddingToStack
+                            ? $t('lineups.show_stack_add_to')
+                            : $t('lineups.show_stack_choose')
+                    }}
+                </p>
             </TooltipContent>
         </Tooltip>
     </TooltipProvider>

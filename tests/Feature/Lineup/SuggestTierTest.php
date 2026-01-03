@@ -23,8 +23,8 @@ class SuggestTierTest extends TestCase
         // Tier 1 (headliner): High score
         $headliner = Artist::factory()->create();
         $headliner->metrics()->create([
-            'spotify_popularity' => 90, 
-            'spotify_followers' => 1000000
+            'spotify_popularity' => 90,
+            'spotify_followers' => 1000000,
         ]);
         $lineup->artists()->attach($headliner->id, ['tier' => ArtistTier::Headliner->value]);
 
@@ -32,7 +32,7 @@ class SuggestTierTest extends TestCase
         $undercard = Artist::factory()->create();
         $undercard->metrics()->create([
             'spotify_popularity' => 10,
-            'spotify_followers' => 1000
+            'spotify_followers' => 1000,
         ]);
         $lineup->artists()->attach($undercard->id, ['tier' => ArtistTier::Undercard->value]);
 
@@ -40,36 +40,36 @@ class SuggestTierTest extends TestCase
         $targetArtist = Artist::factory()->create();
         $targetArtist->metrics()->create([
             'spotify_popularity' => 85,
-            'spotify_followers' => 900000
+            'spotify_followers' => 900000,
         ]);
 
         $response = $this->actingAs($user)
             ->getJson(route('lineups.suggest-tier', [
                 'lineup' => $lineup->id,
-                'artist_id' => $targetArtist->id
+                'artist_id' => $targetArtist->id,
             ]));
 
         $response->assertOk()
             ->assertJson([
-                'suggested_tier' => ArtistTier::Headliner->value
+                'suggested_tier' => ArtistTier::Headliner->value,
             ]);
-            
+
         // Target artist: Low score (should match undercard)
         $targetArtistLow = Artist::factory()->create();
         $targetArtistLow->metrics()->create([
             'spotify_popularity' => 15,
-            'spotify_followers' => 1500
+            'spotify_followers' => 1500,
         ]);
 
         $responseLow = $this->actingAs($user)
             ->getJson(route('lineups.suggest-tier', [
                 'lineup' => $lineup->id,
-                'artist_id' => $targetArtistLow->id
+                'artist_id' => $targetArtistLow->id,
             ]));
 
         $responseLow->assertOk()
             ->assertJson([
-                'suggested_tier' => ArtistTier::Undercard->value
+                'suggested_tier' => ArtistTier::Undercard->value,
             ]);
     }
 
@@ -88,26 +88,26 @@ class SuggestTierTest extends TestCase
         $response = $this->actingAs($user)
             ->getJson(route('lineups.suggest-tier', [
                 'lineup' => $lineup->id,
-                'score' => 88
+                'score' => 88,
             ]));
 
         $response->assertOk()
             ->assertJson([
-                'suggested_tier' => ArtistTier::Headliner->value
+                'suggested_tier' => ArtistTier::Headliner->value,
             ]);
     }
-    
+
     public function test_suggest_tier_validates_input()
     {
         $user = User::factory()->create();
         $lineup = Lineup::factory()->create();
-        
+
         $response = $this->actingAs($user)
             ->getJson(route('lineups.suggest-tier', [
                 'lineup' => $lineup->id,
                 // Missing artist_id and score
             ]));
-            
+
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['artist_id', 'score']);
     }

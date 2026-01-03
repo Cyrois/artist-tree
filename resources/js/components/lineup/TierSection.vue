@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
-import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import StackActionButton from '@/components/lineup/StackActionButton.vue';
-import StackPrimaryActionButton from '@/components/lineup/StackPrimaryActionButton.vue';
 import StackAlternativeActions from '@/components/lineup/StackAlternativeActions.vue';
+import StackPrimaryActionButton from '@/components/lineup/StackPrimaryActionButton.vue';
+import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,12 +18,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { tierConfig } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
@@ -35,8 +29,6 @@ import {
     ExternalLink,
     Layers,
     MoreHorizontal,
-    Plus,
-    Scale,
     Trash2,
     X,
 } from 'lucide-vue-next';
@@ -48,8 +40,8 @@ interface StackGroup {
     alternatives: Artist[];
 }
 
-type GroupedArtist = 
-    | { type: 'independent'; artist: Artist } 
+type GroupedArtist =
+    | { type: 'independent'; artist: Artist }
     | { type: 'stack'; stack: StackGroup };
 
 interface Props {
@@ -100,9 +92,13 @@ const groupedArtists = computed<GroupedArtist[]>(() => {
     props.artists.forEach((artist) => {
         if (artist.stack_id) {
             if (!groups[artist.stack_id]) {
-                groups[artist.stack_id] = { id: artist.stack_id, primary: artist, alternatives: [] };
+                groups[artist.stack_id] = {
+                    id: artist.stack_id,
+                    primary: artist,
+                    alternatives: [],
+                };
             }
-            
+
             if (artist.is_stack_primary) {
                 groups[artist.stack_id].primary = artist;
             } else {
@@ -114,14 +110,14 @@ const groupedArtists = computed<GroupedArtist[]>(() => {
     });
 
     const result: GroupedArtist[] = [];
-    
+
     // Add stacks first
-    Object.values(groups).forEach(stack => {
+    Object.values(groups).forEach((stack) => {
         result.push({ type: 'stack', stack });
     });
-    
+
     // Add independent
-    independent.forEach(artist => {
+    independent.forEach((artist) => {
         result.push({ type: 'independent', artist });
     });
 
@@ -138,7 +134,8 @@ function isSelected(artistId: number) {
         v-model:open="isOpen"
         class="overflow-hidden rounded-xl border transition-all"
         :class="{
-            'opacity-40 pointer-events-none grayscale-[0.5]': stackingTier && stackingTier !== tier,
+            'pointer-events-none opacity-40 grayscale-[0.5]':
+                stackingTier && stackingTier !== tier,
         }"
     >
         <CollapsibleTrigger class="w-full">
@@ -183,10 +180,15 @@ function isSelected(artistId: number) {
                                 compareMode &&
                                     isSelected(group.artist.id) &&
                                     'border-l-4 border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral-bg))]',
-                                stackMode && isAddingAlternativesTo && 'hover:bg-primary/5'
+                                stackMode &&
+                                    isAddingAlternativesTo &&
+                                    'hover:bg-primary/5',
                             )
                         "
-                        @click="(compareMode || stackMode) && emit('select-artist', group.artist)"
+                        @click="
+                            (compareMode || stackMode) &&
+                            emit('select-artist', group.artist)
+                        "
                     >
                         <div v-if="compareMode" class="flex-shrink-0">
                             <div
@@ -220,12 +222,23 @@ function isSelected(artistId: number) {
 
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="truncate font-medium">{{ group.artist.name }}</span>
+                                <span class="truncate font-medium">{{
+                                    group.artist.name
+                                }}</span>
                             </div>
                             <div class="mt-1 flex items-center gap-2">
-                                <div v-if="group.artist.genre && group.artist.genre.length > 0" class="flex flex-wrap gap-1">
+                                <div
+                                    v-if="
+                                        group.artist.genre &&
+                                        group.artist.genre.length > 0
+                                    "
+                                    class="flex flex-wrap gap-1"
+                                >
                                     <Badge
-                                        v-for="genre in group.artist.genre.slice(0, 2)"
+                                        v-for="genre in group.artist.genre.slice(
+                                            0,
+                                            2,
+                                        )"
                                         :key="genre"
                                         variant="secondary"
                                         class="h-5 px-1.5 py-0 text-[10px] font-normal"
@@ -240,32 +253,50 @@ function isSelected(artistId: number) {
 
                         <DropdownMenu v-if="!compareMode && !stackMode">
                             <DropdownMenuTrigger as-child>
-                                <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8"
+                                    @click.stop
+                                >
                                     <MoreHorizontal class="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" @click.stop>
-                                <DropdownMenuItem @click="emit('view-artist', group.artist)">
+                                <DropdownMenuItem
+                                    @click="emit('view-artist', group.artist)"
+                                >
                                     <ExternalLink class="mr-2 h-4 w-4" />
                                     {{ trans('lineups.tier_view_artist') }}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @click="emit('start-stack', group.artist)">
+                                <DropdownMenuItem
+                                    @click="emit('start-stack', group.artist)"
+                                >
                                     <Layers class="mr-2 h-4 w-4" />
                                     {{ trans('lineups.tier_create_stack') }}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', group.artist)">
+                                <DropdownMenuItem
+                                    class="text-destructive"
+                                    @click="emit('remove-artist', group.artist)"
+                                >
                                     <Trash2 class="mr-2 h-4 w-4" />
-                                    {{ trans('lineups.tier_remove_from_lineup') }}
+                                    {{
+                                        trans('lineups.tier_remove_from_lineup')
+                                    }}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        
+
                         <!-- Inline Stack Action for Stack Mode -->
                         <div v-if="stackMode">
-                            <StackActionButton 
+                            <StackActionButton
                                 :is-adding-to-stack="!!isAddingAlternativesTo"
-                                @click="isAddingAlternativesTo ? emit('select-artist', group.artist) : emit('start-stack', group.artist)"
+                                @click="
+                                    isAddingAlternativesTo
+                                        ? emit('select-artist', group.artist)
+                                        : emit('start-stack', group.artist)
+                                "
                             />
                         </div>
                     </div>
@@ -276,59 +307,107 @@ function isSelected(artistId: number) {
                         <div
                             :class="
                                 cn(
-                                    'flex items-center gap-4 p-4 border-l-4 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))]',
-                                    compareMode || stackMode ? 'cursor-pointer hover:bg-[hsl(var(--stack-purple))]/10' : ''
+                                    'flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple-bg))] p-4',
+                                    compareMode || stackMode
+                                        ? 'cursor-pointer hover:bg-[hsl(var(--stack-purple))]/10'
+                                        : '',
                                 )
                             "
-                            @click="(compareMode || stackMode) && emit('select-artist', group.stack.primary)"
+                            @click="
+                                (compareMode || stackMode) &&
+                                emit('select-artist', group.stack.primary)
+                            "
                         >
-                            <ArtistAvatar :artist="group.stack.primary" size="sm" />
+                            <ArtistAvatar
+                                :artist="group.stack.primary"
+                                size="sm"
+                            />
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2">
-                                    <span class="truncate font-bold">{{ group.stack.primary.name }}</span>
+                                    <span class="truncate font-bold">{{
+                                        group.stack.primary.name
+                                    }}</span>
                                 </div>
                             </div>
-                            <ScoreBadge :score="group.stack.primary.score" size="md" />
-                            
+                            <ScoreBadge
+                                :score="group.stack.primary.score"
+                                size="md"
+                            />
+
                             <!-- Inline Stack Action for Stack Mode -->
                             <div v-if="stackMode">
-                                <StackPrimaryActionButton 
-                                    :is-current-stack="isAddingAlternativesTo === group.stack.id"
-                                    @click="emit('start-stack', group.stack.primary)"
+                                <StackPrimaryActionButton
+                                    :is-current-stack="
+                                        isAddingAlternativesTo ===
+                                        group.stack.id
+                                    "
+                                    @click="
+                                        emit('start-stack', group.stack.primary)
+                                    "
                                     @deselect="emit('deselect-stack')"
                                 />
                             </div>
 
                             <DropdownMenu v-if="!compareMode && !stackMode">
                                 <DropdownMenuTrigger as-child>
-                                    <Button variant="ghost" size="icon" class="h-8 w-8" @click.stop>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-8 w-8"
+                                        @click.stop
+                                    >
                                         <MoreHorizontal class="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" @click.stop>
-                                    <DropdownMenuItem @click="emit('dissolve-stack', group.stack.id)">
+                                    <DropdownMenuItem
+                                        @click="
+                                            emit(
+                                                'dissolve-stack',
+                                                group.stack.id,
+                                            )
+                                        "
+                                    >
                                         <X class="mr-2 h-4 w-4" />
                                         {{ $t('lineups.show_stack_dissolve') }}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', group.stack.primary)">
+                                    <DropdownMenuItem
+                                        class="text-destructive"
+                                        @click="
+                                            emit(
+                                                'remove-artist',
+                                                group.stack.primary,
+                                            )
+                                        "
+                                    >
                                         <Trash2 class="mr-2 h-4 w-4" />
-                                        {{ trans('lineups.tier_remove_from_lineup') }}
+                                        {{
+                                            trans(
+                                                'lineups.tier_remove_from_lineup',
+                                            )
+                                        }}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
 
                         <!-- Alternatives -->
-                        <div v-for="alt in group.stack.alternatives" :key="alt.id" class="flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5">
+                        <div
+                            v-for="alt in group.stack.alternatives"
+                            :key="alt.id"
+                            class="flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5"
+                        >
                             <ArtistAvatar :artist="alt" size="xs" />
                             <div class="min-w-0 flex-1">
-                                <span class="text-sm font-medium">{{ alt.name }}</span>
+                                <span class="text-sm font-medium">{{
+                                    alt.name
+                                }}</span>
                             </div>
                             <ScoreBadge :score="alt.score" size="sm" />
-                            
+
                             <!-- Inline Actions for Stack Mode -->
-                            <StackAlternativeActions 
+                            <StackAlternativeActions
                                 v-if="stackMode"
                                 @promote="emit('promote-artist', alt)"
                                 @remove="emit('remove-from-stack', alt)"
@@ -336,23 +415,41 @@ function isSelected(artistId: number) {
 
                             <DropdownMenu v-if="!compareMode && !stackMode">
                                 <DropdownMenuTrigger as-child>
-                                    <Button variant="ghost" size="icon" class="h-7 w-7" @click.stop>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-7 w-7"
+                                        @click.stop
+                                    >
                                         <MoreHorizontal class="h-3 w-3" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" @click.stop>
-                                    <DropdownMenuItem @click="emit('promote-artist', alt)">
+                                    <DropdownMenuItem
+                                        @click="emit('promote-artist', alt)"
+                                    >
                                         <ArrowUpCircle class="mr-2 h-4 w-4" />
                                         {{ $t('lineups.show_stack_promote') }}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem @click="emit('remove-from-stack', alt)">
+                                    <DropdownMenuItem
+                                        @click="emit('remove-from-stack', alt)"
+                                    >
                                         <X class="mr-2 h-4 w-4" />
-                                        {{ $t('lineups.show_stack_remove_alt') }}
+                                        {{
+                                            $t('lineups.show_stack_remove_alt')
+                                        }}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem class="text-destructive" @click="emit('remove-artist', alt)">
+                                    <DropdownMenuItem
+                                        class="text-destructive"
+                                        @click="emit('remove-artist', alt)"
+                                    >
                                         <Trash2 class="mr-2 h-4 w-4" />
-                                        {{ trans('lineups.tier_remove_from_lineup') }}
+                                        {{
+                                            trans(
+                                                'lineups.tier_remove_from_lineup',
+                                            )
+                                        }}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

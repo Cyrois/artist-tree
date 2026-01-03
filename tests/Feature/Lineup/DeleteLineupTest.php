@@ -14,7 +14,7 @@ test('owner can delete lineup', function () {
 
     $response->assertRedirect(route('lineups.index'))
         ->assertSessionHas('success', 'Lineup deleted successfully.');
-    
+
     $this->assertDatabaseMissing('lineups', ['id' => $lineup->id]);
 });
 
@@ -30,7 +30,7 @@ test('non-owner member cannot delete lineup', function () {
         ->delete(route('lineups.destroy', $lineup));
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
 });
 
@@ -43,7 +43,7 @@ test('unrelated user cannot delete lineup', function () {
         ->delete(route('lineups.destroy', $lineup));
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
 });
 
@@ -54,6 +54,6 @@ test('unauthenticated user cannot delete lineup', function () {
     $response = $this->delete(route('lineups.destroy', $lineup));
 
     $response->assertRedirect(route('login'));
-    
+
     $this->assertDatabaseHas('lineups', ['id' => $lineup->id]);
 });

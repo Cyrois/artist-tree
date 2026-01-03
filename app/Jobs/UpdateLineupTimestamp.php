@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class UpdateLineupTimestamp implements ShouldQueue, ShouldBeUnique
+class UpdateLineupTimestamp implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
@@ -21,9 +21,7 @@ class UpdateLineupTimestamp implements ShouldQueue, ShouldBeUnique
     /**
      * Create a new job instance.
      */
-    public function __construct(public int $lineupId)
-    {
-    }
+    public function __construct(public int $lineupId) {}
 
     /**
      * Execute the job.
@@ -31,7 +29,7 @@ class UpdateLineupTimestamp implements ShouldQueue, ShouldBeUnique
     public function handle(): void
     {
         $lineup = Lineup::find($this->lineupId);
-        
+
         if ($lineup) {
             $lineup->touch();
         }

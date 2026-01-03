@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ArtistCard from '@/components/artist/ArtistCard.vue';
 import ArtistCardGrid from '@/components/artist/ArtistCardGrid.vue';
 import RecentSearches from '@/components/artist/RecentSearches.vue';
 import { Badge } from '@/components/ui/badge';

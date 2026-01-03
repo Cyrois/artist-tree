@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\ArtistTier;
 use App\Http\Resources\ArtistResource;
 use App\Models\Lineup;
-use App\Services\ArtistScoringService;
 
 class LineupService
 {
@@ -15,7 +14,7 @@ class LineupService
     public function getLineupPayload(Lineup $lineup): array
     {
         $lineup->load(['artists.metrics']);
-        
+
         // Group artists by tier
         $artistsByTier = array_fill_keys(ArtistTier::values(), []);
 
@@ -26,15 +25,15 @@ class LineupService
                 $artistData['lineup_tier'] = $tier;
                 $artistData['stack_id'] = $artist->pivot->stack_id;
                 $artistData['is_stack_primary'] = (bool) $artist->pivot->is_stack_primary;
-                
+
                 $artistsByTier[$tier][] = $artistData;
             }
         }
-        
+
         $artistCount = $lineup->artists->count();
         $scoringService = app(ArtistScoringService::class);
         $totalScore = $lineup->artists->sum(fn ($artist) => $scoringService->calculateScore($artist));
-        
+
         $avgScore = $artistCount > 0 ? round($totalScore / $artistCount) : 0;
 
         return [
@@ -44,11 +43,11 @@ class LineupService
             'updated_at' => $lineup->updated_at,
             'updated_at_human' => $lineup->updated_at->diffForHumans(),
             'artists' => $artistsByTier,
-            'artistStatuses' => [], 
+            'artistStatuses' => [],
             'stats' => [
                 'artist_count' => $artistCount,
                 'avg_score' => $avgScore,
-            ]
+            ],
         ];
     }
 }

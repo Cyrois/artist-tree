@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PromoteStackArtistRequest;
 use App\Http\Requests\StoreLineupStackRequest;
-use App\Services\LineupService;
 use App\Models\Lineup;
+use App\Services\LineupService;
 use App\Services\LineupStackService;
 use Illuminate\Http\JsonResponse;
 
@@ -23,7 +23,7 @@ class LineupStackController extends Controller
     {
         $artistId = $request->validated('artist_id');
 
-        if (!$this->stackService->isArtistInLineup($lineupId, $artistId)) {
+        if (! $this->stackService->isArtistInLineup($lineupId, $artistId)) {
             return response()->json(['error' => 'Artist not in lineup.'], 422);
         }
 
@@ -37,7 +37,7 @@ class LineupStackController extends Controller
 
         return response()->json([
             'lineup' => $this->lineupService->getLineupPayload($lineup),
-            'message' => 'Stack updated.'
+            'message' => 'Stack updated.',
         ]);
     }
 
@@ -56,7 +56,7 @@ class LineupStackController extends Controller
 
         return response()->json([
             'lineup' => $this->lineupService->getLineupPayload($lineup),
-            'message' => 'Artist promoted to primary.'
+            'message' => 'Artist promoted to primary.',
         ]);
     }
 
@@ -71,7 +71,7 @@ class LineupStackController extends Controller
 
         return response()->json([
             'lineup' => $this->lineupService->getLineupPayload($lineup),
-            'message' => 'Artist removed from stack.'
+            'message' => 'Artist removed from stack.',
         ]);
     }
 
@@ -86,7 +86,7 @@ class LineupStackController extends Controller
 
         return response()->json([
             'lineup' => $this->lineupService->getLineupPayload($lineup),
-            'message' => 'Stack dissolved.'
+            'message' => 'Stack dissolved.',
         ]);
     }
 }

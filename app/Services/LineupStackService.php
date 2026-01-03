@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Jobs\UpdateLineupTimestamp;
 use App\Models\Artist;
 use App\Models\Lineup;
-use App\Jobs\UpdateLineupTimestamp;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class LineupStackService
 {
@@ -63,7 +63,7 @@ class LineupStackService
             ->where('artist_id', $artistId)
             ->first();
 
-        if (!$pivot || !$pivot->stack_id) {
+        if (! $pivot || ! $pivot->stack_id) {
             return;
         }
 
@@ -95,6 +95,7 @@ class LineupStackService
                         'stack_id' => null,
                         'is_stack_primary' => false,
                     ]);
+
                 return;
             }
 

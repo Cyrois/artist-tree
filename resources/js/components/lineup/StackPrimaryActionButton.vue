@@ -13,7 +13,7 @@ interface Props {
     isCurrentStack: boolean;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
     click: [];
@@ -27,26 +27,39 @@ const isHovered = ref(false);
     <TooltipProvider>
         <Tooltip>
             <TooltipTrigger as-child>
-                <Button 
-                    variant="ghost" 
-                    :size="isCurrentStack ? 'sm' : 'icon'" 
+                <Button
+                    variant="ghost"
+                    :size="isCurrentStack ? 'sm' : 'icon'"
                     class="h-8 transition-all"
                     :class="[
-                        isCurrentStack 
-                            ? (isHovered 
-                                ? 'bg-[hsl(var(--stack-purple))]/10 text-[hsl(var(--stack-purple))] px-3 gap-2' 
-                                : 'bg-[hsl(var(--stack-purple))] text-white opacity-100 px-3 gap-2 cursor-pointer')
-                            : 'w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]'
+                        isCurrentStack
+                            ? isHovered
+                                ? 'gap-2 bg-[hsl(var(--stack-purple))]/10 px-3 text-[hsl(var(--stack-purple))]'
+                                : 'cursor-pointer gap-2 bg-[hsl(var(--stack-purple))] px-3 text-white opacity-100'
+                            : 'w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10 hover:text-[hsl(var(--stack-purple))]',
                     ]"
-                    @click.stop="isCurrentStack ? emit('deselect') : emit('click')"
+                    @click.stop="
+                        isCurrentStack ? emit('deselect') : emit('click')
+                    "
                     @mouseenter="isHovered = true"
                     @mouseleave="isHovered = false"
                 >
                     <Layers class="h-4 w-4" />
-                    <span v-if="isCurrentStack" class="text-xs font-bold whitespace-nowrap">
-                        {{ isHovered ? $t('lineups.show_stack_deselect') : $t('lineups.show_stack_current') }}
+                    <span
+                        v-if="isCurrentStack"
+                        class="text-xs font-bold whitespace-nowrap"
+                    >
+                        {{
+                            isHovered
+                                ? $t('lineups.show_stack_deselect')
+                                : $t('lineups.show_stack_current')
+                        }}
                     </span>
-                    <span class="sr-only">{{ isCurrentStack ? $t('lineups.show_stack_primary') : $t('lineups.show_stack_choose') }}</span>
+                    <span class="sr-only">{{
+                        isCurrentStack
+                            ? $t('lineups.show_stack_primary')
+                            : $t('lineups.show_stack_choose')
+                    }}</span>
                 </Button>
             </TooltipTrigger>
             <TooltipContent v-if="!isCurrentStack">

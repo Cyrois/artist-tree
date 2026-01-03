@@ -15,6 +15,7 @@ use Tests\TestCase;
 class TierCalculationServiceTest extends TestCase
 {
     private TierCalculationService $tierService;
+
     private $scoringServiceMock;
 
     protected function setUp(): void
@@ -30,7 +31,7 @@ class TierCalculationServiceTest extends TestCase
         // Use a real instance but partial mock to intercept loadMissing
         $lineup = Mockery::mock(Lineup::class)->makePartial();
         $lineup->shouldReceive('loadMissing')->once();
-        
+
         // Use setRelation to simulate loaded relationship
         $lineup->setRelation('artists', new Collection([]));
 
@@ -45,11 +46,11 @@ class TierCalculationServiceTest extends TestCase
         $lineup->shouldReceive('loadMissing')->times(2);
 
         // Mock Artists
-        $headliner1 = new Artist();
+        $headliner1 = new Artist;
         $headliner1->setRelation('pivot', new LineupArtist(['tier' => ArtistTier::Headliner->value]));
         $this->scoringServiceMock->shouldReceive('calculateScore')->with($headliner1)->andReturn(90);
 
-        $sub1 = new Artist();
+        $sub1 = new Artist;
         $sub1->setRelation('pivot', new LineupArtist(['tier' => ArtistTier::SubHeadliner->value]));
         $this->scoringServiceMock->shouldReceive('calculateScore')->with($sub1)->andReturn(70);
 

@@ -19,14 +19,16 @@ const emit = defineEmits<{
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger as-child>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10" 
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10"
                         @click.stop="emit('promote')"
                     >
                         <ArrowUpCircle class="h-4 w-4" />
-                        <span class="sr-only">{{ $t('lineups.show_stack_promote') }}</span>
+                        <span class="sr-only">{{
+                            $t('lineups.show_stack_promote')
+                        }}</span>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -38,14 +40,16 @@ const emit = defineEmits<{
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger as-child>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10" 
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-8 w-8 text-[hsl(var(--stack-purple))] hover:bg-[hsl(var(--stack-purple))]/10"
                         @click.stop="emit('remove')"
                     >
                         <CircleMinus class="h-4 w-4" />
-                        <span class="sr-only">{{ $t('lineups.show_stack_remove_alt') }}</span>
+                        <span class="sr-only">{{
+                            $t('lineups.show_stack_remove_alt')
+                        }}</span>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>

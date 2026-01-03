@@ -239,7 +239,9 @@ const breadcrumbs = [
                             <AlertDescription>
                                 {{
                                     $t('settings.scoring_weights_error', {
-                                        total: Math.round(totalWeight * 100),
+                                        total: Math.round(
+                                            totalWeight * 100,
+                                        ).toString(),
                                     })
                                 }}
                             </AlertDescription>

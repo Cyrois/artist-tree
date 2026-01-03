@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ArtistResource;
 use App\Http\Resources\LineupResource;
-use App\Models\Artist;
 use App\Services\ArtistScoringService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,6 +29,7 @@ class DashboardController extends Controller
         foreach ($lineups as $lineup) {
             if ($lineup->artists_count === 0) {
                 $lineup->avg_score = 0;
+
                 continue;
             }
 

@@ -2,22 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ArtistTier;
+use App\Http\Requests\AddArtistToLineupRequest;
 use App\Http\Requests\StoreLineupRequest;
 use App\Http\Requests\UpdateLineupRequest;
-use App\Http\Requests\AddArtistToLineupRequest;
 use App\Models\Artist;
 use App\Models\Lineup;
-use App\Http\Resources\ArtistResource;
 use App\Services\ArtistScoringService;
+use App\Services\LineupService;
+use App\Services\LineupStackService;
+use App\Services\TierCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-
-use App\Services\TierCalculationService;
-
-use App\Services\LineupService;
-use App\Services\LineupStackService;
 
 class LineupController extends Controller
 {
@@ -28,15 +24,15 @@ class LineupController extends Controller
 
     public function index()
     {
-        $lineups = Lineup::with(['artists' => function($query) {
+        $lineups = Lineup::with(['artists' => function ($query) {
             $query->limit(10);
         }])
-        ->withCount('artists')
-        ->orderByDesc('updated_at')
-        ->get();
+            ->withCount('artists')
+            ->orderByDesc('updated_at')
+            ->get();
 
         return Inertia::render('Lineups/Index', [
-            'lineups' => \App\Http\Resources\LineupResource::collection($lineups)
+            'lineups' => \App\Http\Resources\LineupResource::collection($lineups),
         ]);
     }
 
@@ -53,7 +49,7 @@ class LineupController extends Controller
             $artist = Artist::findOrFail($request->artist_id);
             $score = $scoringService->calculateScore($artist);
         }
-        
+
         $suggestedTier = $tierService->suggestTier($lineup, $score);
 
         return response()->json([
@@ -94,12 +90,12 @@ class LineupController extends Controller
         // Check authorization
         // $this->authorize('update', $lineup); // Policy not implemented yet
         $validated = $request->validated();
-        
+
         $artist = Artist::findOrFail($validated['artist_id']);
         $tier = $validated['tier'];
 
         // Attach artist if not already in lineup
-        if (!$lineup->artists()->where('artist_id', $artist->id)->exists()) {
+        if (! $lineup->artists()->where('artist_id', $artist->id)->exists()) {
             $lineup->artists()->attach($artist->id, [
                 'tier' => $tier,
             ]);
@@ -108,7 +104,7 @@ class LineupController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'lineup' => $this->lineupService->getLineupPayload($lineup),
-                'message' => 'Artist added to lineup successfully.'
+                'message' => 'Artist added to lineup successfully.',
             ]);
         }
 
@@ -126,9 +122,10 @@ class LineupController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'lineup' => $this->lineupService->getLineupPayload($lineup),
-                    'message' => 'Artist removed successfully.'
+                    'message' => 'Artist removed successfully.',
                 ]);
             }
+
             return redirect()->back()->with('success', 'Artist removed successfully.');
         }
 
@@ -138,7 +135,7 @@ class LineupController extends Controller
     public function show($id)
     {
         $lineup = Lineup::findOrFail($id);
-        
+
         return Inertia::render('Lineups/Show', [
             'id' => $lineup->id,
             'lineup' => $this->lineupService->getLineupPayload($lineup),

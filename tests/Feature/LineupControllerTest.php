@@ -20,8 +20,8 @@ test('unauthenticated users cannot access lineup index', function () {
 test('authenticated users can access lineup index', function () {
     // Create lineups for the test
     Lineup::factory()->count(3)->create();
-    
-    // Add some artists to DB 
+
+    // Add some artists to DB
     Artist::factory()->count(5)->create();
 
     $this->actingAs($this->user)
@@ -43,7 +43,7 @@ test('unauthenticated users cannot access lineup show', function () {
 test('authenticated users can access lineup show', function () {
     $lineup = Lineup::factory()->create();
     $artist = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
-    
+
     $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);
 
     $this->actingAs($this->user)
@@ -67,15 +67,15 @@ test('authenticated users can access lineup show', function () {
 
 test('lineup show calculates average score correctly', function () {
     $lineup = Lineup::factory()->create();
-    
+
     // Create artists with specific scores
     // We'll mock the scoring service to return predictable scores
     $artist1 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
     $artist2 = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
-    
+
     $lineup->artists()->attach($artist1->id, ['tier' => ArtistTier::Headliner->value]);
     $lineup->artists()->attach($artist2->id, ['tier' => ArtistTier::SubHeadliner->value]);
-    
+
     $this->mock(ArtistScoringService::class, function ($mock) use ($artist1, $artist2) {
         $mock->shouldReceive('calculateScore')
             ->with(Mockery::on(fn ($a) => $a->id === $artist1->id))
@@ -124,7 +124,7 @@ test('authenticated users can create a new lineup', function () {
     ]);
 
     $lineup = Lineup::where('name', 'New Festival 2026')->first();
-    
+
     // Check if the user is attached as owner
     $this->assertDatabaseHas('lineup_user', [
         'lineup_id' => $lineup->id,

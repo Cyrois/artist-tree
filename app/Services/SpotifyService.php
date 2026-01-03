@@ -273,7 +273,7 @@ class SpotifyService
             }
 
             $items = $response->json('items', []);
-            
+
             if (empty($items)) {
                 return [];
             }
@@ -293,9 +293,9 @@ class SpotifyService
                 // Fallback to simplified objects if detailed fetch fails
                 Log::warning('Failed to fetch full album details, falling back to simplified objects', [
                     'artist_id' => $spotifyId,
-                    'ids' => $idsString
+                    'ids' => $idsString,
                 ]);
-                
+
                 return array_map(
                     fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyResponse($album),
                     $items

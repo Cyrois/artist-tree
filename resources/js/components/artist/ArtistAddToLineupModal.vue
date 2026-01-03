@@ -53,7 +53,7 @@ watch(
             isSubmitting.value = false;
             suggestedTier.value = null;
             selectedTier.value = null;
-            
+
             if (props.lineups.length === 1) {
                 handleLineupSelect(props.lineups[0]);
             } else {
@@ -77,11 +77,11 @@ async function handleLineupSelect(lineup: Lineup) {
 
 async function fetchSuggestedTier(lineupId: number) {
     if (!props.artist) return;
-    
+
     isLoadingSuggestion.value = true;
     try {
         const response = await axios.get(`/lineups/${lineupId}/suggest-tier`, {
-            params: { artist_id: props.artist.id }
+            params: { artist_id: props.artist.id },
         });
         suggestedTier.value = response.data.suggested_tier;
         // Auto-select suggested tier if not already selected
