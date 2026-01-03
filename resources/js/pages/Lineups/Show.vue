@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
+import CompareModal from '@/components/lineup/CompareModal.vue';
 import CompareModeBanner from '@/components/lineup/CompareModeBanner.vue';
 import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
 import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
@@ -105,6 +106,7 @@ const allArtists = computed(() => {
 // Mode states
 const stackMode = ref(false);
 const compareMode = ref(false);
+const isCompareModalOpen = ref(false);
 const selectedArtistIds = ref<number[]>([]);
 const isAddingAlternativesTo = ref<string | null>(null); // stack_id
 const stackingTier = ref<TierType | null>(null);
@@ -373,7 +375,7 @@ const breadcrumbs = computed(() =>
                 :selected-artists="selectedArtists"
                 @close="exitCompareMode"
                 @clear="clearSelection"
-                @submit="exitCompareMode"
+                @submit="isCompareModalOpen = true"
             />
 
             <!-- Lineup Header Card -->
@@ -632,6 +634,11 @@ const breadcrumbs = computed(() =>
             v-if="lineupData"
             v-model:open="isDeleteModalOpen"
             :lineup="lineupData"
+        />
+
+        <CompareModal
+            v-model:open="isCompareModalOpen"
+            :artists="selectedArtists"
         />
     </MainLayout>
 </template>
