@@ -266,6 +266,28 @@ function clearSelection() {
     selectedArtistIds.value = [];
 }
 
+function toggleStack() {
+    stackMode.value = !stackMode.value;
+    if (stackMode.value) {
+        compareMode.value = false;
+        selectedArtistIds.value = [];
+    }
+    if (!stackMode.value) {
+        isAddingAlternativesTo.value = null;
+        stackingTier.value = null;
+    }
+}
+
+function toggleCompare() {
+    compareMode.value = !compareMode.value;
+    if (compareMode.value) {
+        stackMode.value = false;
+        isAddingAlternativesTo.value = null;
+        stackingTier.value = null;
+    }
+    if (!compareMode.value) selectedArtistIds.value = [];
+}
+
 function exitCompareMode() {
     compareMode.value = false;
     selectedArtistIds.value = [];
@@ -543,26 +565,8 @@ const breadcrumbs = computed(() =>
                                         : '',
                                 ]"
                                 @add-artist="openAddModal"
-                                @toggle-stack="
-                                    stackMode = !stackMode;
-                                    if (stackMode) {
-                                        compareMode = false;
-                                        selectedArtistIds = [];
-                                    }
-                                    if (!stackMode) {
-                                        isAddingAlternativesTo = null;
-                                        stackingTier = null;
-                                    }
-                                "
-                                @toggle-compare="
-                                    compareMode = !compareMode;
-                                    if (compareMode) {
-                                        stackMode = false;
-                                        isAddingAlternativesTo = null;
-                                        stackingTier = null;
-                                    }
-                                    if (!compareMode) selectedArtistIds = [];
-                                "
+                                @toggle-stack="toggleStack"
+                                @toggle-compare="toggleCompare"
                             />
                         </div>
                     </div>

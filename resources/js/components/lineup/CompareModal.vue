@@ -13,6 +13,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
+import { trans } from 'laravel-vue-i18n';
 import {
     Activity,
     BarChart3,
@@ -46,10 +47,10 @@ function getValue(artist: Artist, key: keyof Artist, multiplier: number = 1) {
 }
 
 // Configuration for rows
-const metrics = [
+const metrics = computed(() => [
     {
         id: 'score',
-        label: 'Artist Score',
+        label: trans('artists.metric_artist_score'),
         icon: Activity,
         getValue: (a: Artist) => a.score || Math.floor(Math.random() * 40) + 60, // Mock score 60-100
         format: (v: number) => Math.round(v),
@@ -57,7 +58,7 @@ const metrics = [
     },
     {
         id: 'listeners',
-        label: 'Monthly Listeners',
+        label: trans('artists.metric_monthly_listeners'),
         icon: Music2,
         getValue: (a: Artist) =>
             a.spotifyListeners || getValue(a, 'spotifyListeners', 1),
@@ -66,7 +67,7 @@ const metrics = [
     },
     {
         id: 'popularity',
-        label: 'Spotify Popularity',
+        label: trans('artists.metric_spotify_popularity'),
         icon: BarChart3,
         getValue: (a: Artist) =>
             a.spotifyPopularity || Math.floor(Math.random() * 40) + 60,
@@ -75,7 +76,7 @@ const metrics = [
     },
     {
         id: 'spotify_followers',
-        label: 'Spotify Followers',
+        label: trans('artists.show_spotify_followers'),
         icon: Users,
         getValue: (a: Artist) =>
             a.spotifyFollowers || getValue(a, 'spotifyFollowers', 0.5),
@@ -84,7 +85,7 @@ const metrics = [
     },
     {
         id: 'youtube_subs',
-        label: 'YouTube Subscribers',
+        label: trans('artists.show_youtube_subscribers'),
         icon: Youtube,
         getValue: (a: Artist) =>
             a.youtubeSubscribers || getValue(a, 'youtubeSubscribers', 0.3),
@@ -93,7 +94,7 @@ const metrics = [
     },
     {
         id: 'youtube_views',
-        label: 'Total YouTube Views',
+        label: trans('artists.metric_total_youtube_views'),
         icon: Youtube,
         getValue: (a: Artist) =>
             a.youtubeViews || getValue(a, 'youtubeViews', 10),
@@ -102,20 +103,20 @@ const metrics = [
     },
     {
         id: 'instagram',
-        label: 'Instagram Followers',
+        label: trans('artists.show_instagram_followers'),
         icon: Instagram,
         getValue: (a: Artist) =>
             a.instagramFollowers || getValue(a, 'instagramFollowers', 0.8),
         format: (v: number) => formatNumber(v),
         type: 'number',
     },
-];
+]);
 
 // Determine highest value for each metric row
 function isHighest(metricId: string, value: number) {
     if (props.artists.length < 2) return false;
     const values = props.artists.map((a) => {
-        const metric = metrics.find((m) => m.id === metricId);
+        const metric = metrics.value.find((m) => m.id === metricId);
         return metric ? metric.getValue(a) : 0;
     });
     return value === Math.max(...values);
@@ -135,10 +136,10 @@ const gridColsStyle = computed(() => {
         >
             <DialogHeader class="px-6 pt-6 pb-2">
                 <DialogTitle class="text-2xl font-bold"
-                    >Artist Comparison</DialogTitle
+                    >{{ $t('lineups.compare_modal_title') }}</DialogTitle
                 >
                 <DialogDescription>
-                    Comparing {{ artists.length }} artists side by side
+                    {{ $t('lineups.compare_modal_subtitle', { count: artists.length }) }}
                 </DialogDescription>
             </DialogHeader>
 
@@ -171,9 +172,7 @@ const gridColsStyle = computed(() => {
                                     variant="secondary"
                                     class="text-[10px] uppercase"
                                 >
-                                    {{
-                                        artist.lineup_tier.replace(/_/g, ' ')
-                                    }}
+                                    {{ $t(`lineups.tier_${artist.lineup_tier}`) }}
                                 </Badge>
                             </div>
                         </div>
@@ -241,7 +240,7 @@ const gridColsStyle = computed(() => {
                                                         >★</span
                                                     >
                                                 </div>
-                                                Highest
+                                                {{ $t('lineups.compare_modal_highest') }}
                                             </span>
                                         </div>
                                     </template>
@@ -310,11 +309,10 @@ const gridColsStyle = computed(() => {
                 <div
                     class="flex items-center gap-2 text-xs text-muted-foreground"
                 >
-                    <span class="text-green-600">★</span> indicates the best
-                    value in each category
+                    <span class="text-green-600">★</span> {{ $t('lineups.compare_modal_legend') }}
                 </div>
                 <Button variant="outline" @click="emit('update:open', false)"
-                    >Close</Button
+                    >{{ $t('common.action_close') }}</Button
                 >
             </DialogFooter>
         </DialogContent>
