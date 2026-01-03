@@ -27,7 +27,7 @@ import { useElementBounding, useWindowSize } from '@vueuse/core';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
 import { Download, Pencil, Settings, Trash2, Users } from 'lucide-vue-next';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface ApiArtist extends Artist {
     lineup_tier: TierType;
@@ -80,15 +80,11 @@ watch(
 // Search Position Logic
 const searchContainerRef = ref<HTMLElement | null>(null);
 const searchComponentRef = ref<HTMLElement | null>(null);
-const mainElement = ref<HTMLElement | null>(null);
-
-onMounted(() => {
-    mainElement.value = document.querySelector('main');
-});
+const pageContentRef = ref<HTMLElement | null>(null);
 
 const { top: searchTop } = useElementBounding(searchContainerRef);
 const { height: searchHeight } = useElementBounding(searchComponentRef);
-const { left: mainLeft, width: mainWidth } = useElementBounding(mainElement);
+const { left: pageLeft, width: pageWidth } = useElementBounding(pageContentRef);
 const { width: windowWidth } = useWindowSize();
 const isLargeScreen = computed(() => windowWidth.value >= 1024); // lg breakpoint
 
@@ -97,7 +93,7 @@ const stickyTopOffset = computed(() => 0);
 
 // Trigger stickiness when the container hits the top (or below the stack banner)
 const isStuck = computed(() => {
-    if (!isLargeScreen.value) return false;
+    if (!isLargeScreen.value || !searchContainerRef.value) return false;
     return searchTop.value <= stickyTopOffset.value;
 });
 
@@ -358,7 +354,7 @@ const breadcrumbs = computed(() =>
         :title="`${lineupData?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
     />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div v-if="lineupData" class="space-y-6">
+        <div v-if="lineupData" ref="pageContentRef" class="space-y-6">
             <!-- Mode Banners -->
             <StackModeBanner
                 :show="stackMode"
@@ -509,8 +505,8 @@ const breadcrumbs = computed(() =>
                             isStuck
                                 ? {
                                       top: `${stickyTopOffset}px`,
-                                      left: `${mainLeft}px`,
-                                      width: `${mainWidth}px`,
+                                      left: `${pageLeft}px`,
+                                      width: `${pageWidth}px`,
                                   }
                                 : {}
                         "
