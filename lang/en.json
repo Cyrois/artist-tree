@@ -353,6 +353,7 @@
     "lineups.tier_view_artist": "View Artist",
     "lineups.tier_remove_from_lineup": "Remove from Lineup",
     "lineups.tier_empty_state": "No artists in this tier yet.",
+    "lineups.tier_artist_count_tooltip": "Number of artists in this tier",
 
     "artists.search_no_results_title": "No results found",
     "artists.search_no_results_description": "Try adjusting your search or filters.",
