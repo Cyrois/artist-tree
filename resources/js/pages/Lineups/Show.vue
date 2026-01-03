@@ -468,6 +468,7 @@ const breadcrumbs = computed(() =>
             <div class="space-y-6">
                 <!-- Artist Search Component -->
                 <ArtistSearch
+                    class="z-30 lg:sticky lg:top-[1em]"
                     :adding-artist-id="addingArtistId"
                     :is-artist-in-lineup="isArtistInLineup"
                     :stack-mode="stackMode"
