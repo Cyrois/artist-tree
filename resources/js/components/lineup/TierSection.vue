@@ -18,6 +18,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { tierConfig } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import { cn } from '@/lib/utils';
@@ -154,14 +160,20 @@ function isSelected(artistId: number) {
                     >
                         {{ config.label }}
                     </span>
-                    <Badge variant="secondary">{{ artists.length }}</Badge>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Badge variant="secondary">
+                                    {{ artists.length }}
+                                </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {{ trans('lineups.tier_artist_count_tooltip') }}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
-                <ScoreBadge
-                    v-if="artists.length > 0"
-                    :score="averageScore"
-                    size="sm"
-                    class="mr-2"
-                />
+                <Badge variant="secondary">{{ artists.length }}</Badge>
             </div>
         </CollapsibleTrigger>
 
@@ -220,36 +232,19 @@ function isSelected(artistId: number) {
 
                         <ArtistAvatar :artist="group.artist" size="sm" />
 
-                        <div class="min-w-0 flex-1">
+                        <div class="min-w-0 flex-1 flex flex-col justify-between h-12">
                             <div class="flex items-center gap-2">
-                                <span class="truncate font-medium">{{
+                                <span class="truncate font-medium leading-none">{{
                                     group.artist.name
                                 }}</span>
                             </div>
-                            <div class="mt-1 flex items-center gap-2">
-                                <div
-                                    v-if="
-                                        group.artist.genre &&
-                                        group.artist.genre.length > 0
-                                    "
-                                    class="flex flex-wrap gap-1"
-                                >
-                                    <Badge
-                                        v-for="genre in group.artist.genre.slice(
-                                            0,
-                                            2,
-                                        )"
-                                        :key="genre"
-                                        variant="secondary"
-                                        class="h-5 px-1.5 py-0 text-[10px] font-normal"
-                                    >
-                                        {{ genre }}
-                                    </Badge>
-                                </div>
+                            <div>
+                                <ScoreBadge
+                                    :score="group.artist.score"
+                                    size="sm"
+                                />
                             </div>
                         </div>
-
-                        <ScoreBadge :score="group.artist.score" size="md" />
 
                         <DropdownMenu v-if="!compareMode && !stackMode">
                             <DropdownMenuTrigger as-child>
@@ -322,17 +317,19 @@ function isSelected(artistId: number) {
                                 :artist="group.stack.primary"
                                 size="sm"
                             />
-                            <div class="min-w-0 flex-1">
+                            <div class="min-w-0 flex-1 flex flex-col justify-between h-12">
                                 <div class="flex items-center gap-2">
-                                    <span class="truncate font-bold">{{
+                                    <span class="truncate font-bold leading-none">{{
                                         group.stack.primary.name
                                     }}</span>
                                 </div>
+                                <div>
+                                    <ScoreBadge
+                                        :score="group.stack.primary.score"
+                                        size="sm"
+                                    />
+                                </div>
                             </div>
-                            <ScoreBadge
-                                :score="group.stack.primary.score"
-                                size="md"
-                            />
 
                             <!-- Inline Stack Action for Stack Mode -->
                             <div v-if="stackMode">
@@ -399,12 +396,12 @@ function isSelected(artistId: number) {
                             class="flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5"
                         >
                             <ArtistAvatar :artist="alt" size="xs" />
-                            <div class="min-w-0 flex-1">
-                                <span class="text-sm font-medium">{{
+                            <div class="min-w-0 flex-1 flex items-center gap-2">
+                                <span class="truncate text-sm font-medium">{{
                                     alt.name
                                 }}</span>
+                                <ScoreBadge :score="alt.score" size="sm" />
                             </div>
-                            <ScoreBadge :score="alt.score" size="sm" />
 
                             <!-- Inline Actions for Stack Mode -->
                             <StackAlternativeActions
