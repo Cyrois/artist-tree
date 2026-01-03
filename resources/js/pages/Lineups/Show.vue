@@ -23,10 +23,11 @@ import { tierOrder } from '@/data/constants';
 import type { Artist, TierType } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import { useElementBounding, useWindowSize } from '@vueuse/core';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
 import { Download, Pencil, Settings, Trash2, Users } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface ApiArtist extends Artist {
     lineup_tier: TierType;
@@ -75,6 +76,30 @@ watch(
     },
     { deep: true },
 );
+
+// Search Position Logic
+const searchContainerRef = ref<HTMLElement | null>(null);
+const searchComponentRef = ref<HTMLElement | null>(null);
+const mainElement = ref<HTMLElement | null>(null);
+
+onMounted(() => {
+    mainElement.value = document.querySelector('main');
+});
+
+const { top: searchTop } = useElementBounding(searchContainerRef);
+const { height: searchHeight } = useElementBounding(searchComponentRef);
+const { left: mainLeft, width: mainWidth } = useElementBounding(mainElement);
+const { width: windowWidth } = useWindowSize();
+const isLargeScreen = computed(() => windowWidth.value >= 1024); // lg breakpoint
+
+// Sticky top offset is always 0 so it slides behind the StackModeBanner (z-100)
+const stickyTopOffset = computed(() => 0);
+
+// Trigger stickiness when the container hits the top (or below the stack banner)
+const isStuck = computed(() => {
+    if (!isLargeScreen.value) return false;
+    return searchTop.value <= stickyTopOffset.value;
+});
 
 // Flatten artists for search/avatar lookup
 const allArtists = computed(() => {
@@ -467,24 +492,64 @@ const breadcrumbs = computed(() =>
             <!-- Lineup Content -->
             <div class="space-y-6">
                 <!-- Artist Search Component -->
-                <ArtistSearch
-                    :adding-artist-id="addingArtistId"
-                    :is-artist-in-lineup="isArtistInLineup"
-                    :stack-mode="stackMode"
-                    :compare-mode="compareMode"
-                    @add-artist="openAddModal"
-                    @toggle-stack="
-                        stackMode = !stackMode;
-                        if (!stackMode) {
-                            isAddingAlternativesTo = null;
-                            stackingTier = null;
-                        }
-                    "
-                    @toggle-compare="
-                        compareMode = !compareMode;
-                        if (!compareMode) selectedArtistIds = [];
-                    "
-                />
+                <div
+                    ref="searchContainerRef"
+                    class="relative z-30"
+                    :style="{ height: isStuck ? `${searchHeight}px` : 'auto' }"
+                >
+                    <div
+                        ref="searchComponentRef"
+                        :class="[
+                            'transition-all duration-300 ease-in-out',
+                            isStuck
+                                ? 'fixed z-50 flex h-16 items-center border-b-2 border-primary/10 bg-background/95 px-6 shadow-md backdrop-blur-md'
+                                : 'relative w-full',
+                        ]"
+                        :style="
+                            isStuck
+                                ? {
+                                      top: `${stickyTopOffset}px`,
+                                      left: `${mainLeft}px`,
+                                      width: `${mainWidth}px`,
+                                  }
+                                : {}
+                        "
+                    >
+                        <div
+                            :class="[
+                                'transition-all duration-300',
+                                isStuck
+                                    ? 'flex h-full w-full items-center'
+                                    : 'w-full',
+                            ]"
+                        >
+                            <ArtistSearch
+                                class="w-full"
+                                :adding-artist-id="addingArtistId"
+                                :is-artist-in-lineup="isArtistInLineup"
+                                :stack-mode="stackMode"
+                                :compare-mode="compareMode"
+                                :class="[
+                                    isStuck
+                                        ? 'border-none bg-transparent p-0 shadow-none'
+                                        : '',
+                                ]"
+                                @add-artist="openAddModal"
+                                @toggle-stack="
+                                    stackMode = !stackMode;
+                                    if (!stackMode) {
+                                        isAddingAlternativesTo = null;
+                                        stackingTier = null;
+                                    }
+                                "
+                                @toggle-compare="
+                                    compareMode = !compareMode;
+                                    if (!compareMode) selectedArtistIds = [];
+                                "
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Mode Banners -->
                 <div
