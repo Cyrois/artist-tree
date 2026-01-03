@@ -153,7 +153,7 @@ function navigateToArtist(artist: SearchResultArtist) {
                         class="flex shrink-0 items-center overflow-hidden whitespace-nowrap"
                     >
                         <div class="mx-2 h-8 w-[1px] bg-border" />
-                        <div class="mr-2 flex hidden gap-2 sm:flex">
+                        <div class="flex hidden gap-2 sm:flex">
                             <Button
                                 variant="outline"
                                 :class="
