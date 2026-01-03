@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
 import AddToLineupModal from '@/components/lineup/AddToLineupModal.vue';
 import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
+import CompareModeBanner from '@/components/lineup/CompareModeBanner.vue';
 import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
 import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
 import RemoveArtistFromLineupModal from '@/components/lineup/RemoveArtistFromLineupModal.vue';
 import StackModeBanner from '@/components/lineup/StackModeBanner.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -116,6 +115,10 @@ const stackingPrimaryArtist = computed(() => {
         (a) =>
             a.stack_id === isAddingAlternativesTo.value && a.is_stack_primary,
     );
+});
+
+const selectedArtists = computed(() => {
+    return allArtists.value.filter((a) => selectedArtistIds.value.includes(a.id));
 });
 
 // Search State
@@ -365,6 +368,13 @@ const breadcrumbs = computed(() =>
                     stackingTier = null;
                 "
             />
+            <CompareModeBanner
+                :show="compareMode"
+                :selected-artists="selectedArtists"
+                @close="exitCompareMode"
+                @clear="clearSelection"
+                @submit="exitCompareMode"
+            />
 
             <!-- Lineup Header Card -->
             <Card class="relative py-0">
@@ -533,6 +543,10 @@ const breadcrumbs = computed(() =>
                                 @add-artist="openAddModal"
                                 @toggle-stack="
                                     stackMode = !stackMode;
+                                    if (stackMode) {
+                                        compareMode = false;
+                                        selectedArtistIds = [];
+                                    }
                                     if (!stackMode) {
                                         isAddingAlternativesTo = null;
                                         stackingTier = null;
@@ -540,49 +554,15 @@ const breadcrumbs = computed(() =>
                                 "
                                 @toggle-compare="
                                     compareMode = !compareMode;
+                                    if (compareMode) {
+                                        stackMode = false;
+                                        isAddingAlternativesTo = null;
+                                        stackingTier = null;
+                                    }
                                     if (!compareMode) selectedArtistIds = [];
                                 "
                             />
                         </div>
-                    </div>
-                </div>
-
-                <!-- Mode Banners -->
-                <div
-                    v-if="compareMode"
-                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral-bg))] p-4"
-                >
-                    <div class="flex items-center gap-4">
-                        <p class="text-sm">
-                            {{ $t('lineups.show_compare_mode_description') }}
-                        </p>
-                        <div class="flex -space-x-2">
-                            <ArtistAvatar
-                                v-for="id in selectedArtistIds"
-                                :key="id"
-                                :artist="allArtists.find((a) => a.id === id)!"
-                                size="sm"
-                                class="border-2 border-background"
-                            />
-                        </div>
-                        <Badge v-if="selectedArtistIds.length > 0"
-                            >{{ selectedArtistIds.length }}/4</Badge
-                        >
-                    </div>
-                    <div class="flex gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            @click="clearSelection"
-                            >{{ $t('lineups.show_compare_clear') }}</Button
-                        >
-                        <Button
-                            size="sm"
-                            :disabled="selectedArtistIds.length < 2"
-                            @click="exitCompareMode"
-                        >
-                            {{ $t('lineups.show_compare_submit') }}
-                        </Button>
                     </div>
                 </div>
 

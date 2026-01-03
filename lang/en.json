@@ -126,6 +126,10 @@
     "lineups.show_stack_remove_alt": "Remove from Stack",
     "lineups.show_stack_remove_short": "Remove",
     "lineups.show_compare_mode_description": "Compare Mode: Select up to 4 artists to compare",
+    "lineups.show_compare_mode_instruction": "Select artists from the lineup below to compare their metrics side-by-side",
+    "lineups.show_compare_mode_done": "Exit compare mode",
+    "lineups.show_compare_add_to": "Add to compare",
+    "lineups.show_compare_remove_from": "Remove from compare",
     "lineups.show_compare_clear": "Clear",
     "lineups.show_compare_submit": "Compare",
 
