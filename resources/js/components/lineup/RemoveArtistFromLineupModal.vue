@@ -6,8 +6,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import { AlertTriangle, Loader2 } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Props {
     open: boolean;
@@ -19,18 +20,25 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['update:open']);
+const emit = defineEmits(['update:open', 'updated']);
 
-const form = useForm({});
+const isRemoving = ref(false);
 
-function handleRemove() {
+async function handleRemove() {
     if (!props.artist) return;
 
-    form.delete(`/lineups/${props.lineupId}/artists/${props.artist.id}`, {
-        onSuccess: () => {
-            emit('update:open', false);
-        },
-    });
+    isRemoving.value = true;
+    try {
+        const response = await axios.delete(
+            `/api/lineups/${props.lineupId}/artists/${props.artist.id}`,
+        );
+        emit('updated', response.data.lineup);
+        emit('update:open', false);
+    } catch (e) {
+        console.error('Failed to remove artist', e);
+    } finally {
+        isRemoving.value = false;
+    }
 }
 </script>
 
@@ -71,11 +79,11 @@ function handleRemove() {
                     <Button
                         type="button"
                         class="h-14 flex-1 border-none bg-destructive text-base font-bold text-white shadow-lg shadow-destructive/20 transition-all hover:bg-destructive/90 active:scale-[0.98]"
-                        :disabled="form.processing"
+                        :disabled="isRemoving"
                         @click="handleRemove"
                     >
                         <Loader2
-                            v-if="form.processing"
+                            v-if="isRemoving"
                             class="mr-2 h-4 w-4 animate-spin"
                         />
                         {{ $t('lineups.remove_artist_confirm') }}

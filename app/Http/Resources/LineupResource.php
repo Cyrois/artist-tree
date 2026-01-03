@@ -25,8 +25,8 @@ class LineupResource extends JsonResource
             'artist_count' => $this->whenCounted('artists'),
             'avg_score' => $this->avg_score,
             // Include first few artists for preview if loaded
-            'preview_artists' => $this->whenLoaded('artists', function() {
-                return $this->artists->take(4)->map(function($artist) {
+            'preview_artists' => $this->whenLoaded('artists', function () {
+                return $this->artists->take(4)->map(function ($artist) {
                     return [
                         'id' => $artist->id,
                         'name' => $artist->name,

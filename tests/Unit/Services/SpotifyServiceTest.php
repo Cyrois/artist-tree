@@ -252,3 +252,36 @@ it('handles missing artist image gracefully', function () {
 
     expect($results[0]->imageUrl)->toBeNull();
 });
+
+it('clears token cache on 401 error', function () {
+    // 1. Initial successful token fetch
+    Http::fake([
+        'https://accounts.spotify.com/api/token' => Http::sequence()
+            ->push(['access_token' => 'expired_token'], 200)
+            ->push(['access_token' => 'fresh_token'], 200),
+        'https://api.spotify.com/v1/search*' => Http::sequence()
+            ->push(['error' => ['status' => 401, 'message' => 'Invalid access token']], 401)
+            ->push(['artists' => ['items' => []]], 200),
+    ]);
+
+    $service = new SpotifyService;
+
+    // First attempt: should fetch 'expired_token', then get 401, which should clear cache
+    try {
+        $service->searchArtists('test');
+    } catch (Exception $e) {
+        // Expected to throw because searchArtists throws on non-successful response
+    }
+
+    expect(Cache::has('spotify_access_token'))->toBeFalse();
+
+    // Second attempt: should fetch 'fresh_token' because cache was cleared
+    $service->searchArtists('test');
+
+    // Sent count: 
+    // 1. POST token (fetching 'expired_token')
+    // 2. GET search (fails 401) -> triggers cache clear
+    // 3. POST token (fetching 'fresh_token')
+    // 4. GET search (success)
+    Http::assertSentCount(4);
+});

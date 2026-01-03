@@ -72,7 +72,10 @@ const hasBreadcrumbs = computed(() => props.breadcrumbs.length > 0);
             <!-- Main content -->
             <main class="flex-1 p-6">
                 <div v-if="$page.props.flash.success" class="mb-6">
-                    <Alert variant="default" class="border-green-500/50 bg-green-500/10 text-green-600 dark:border-green-500/30 dark:text-green-400">
+                    <Alert
+                        variant="default"
+                        class="border-green-500/50 bg-green-500/10 text-green-600 dark:border-green-500/30 dark:text-green-400"
+                    >
                         <CheckCircle class="h-4 w-4" />
                         <AlertTitle>Success</AlertTitle>
                         <AlertDescription>

@@ -14,7 +14,7 @@ class Lineup extends Model
     public function artists()
     {
         return $this->belongsToMany(Artist::class, 'lineup_artists')
-            ->withPivot('tier')
+            ->withPivot(['tier', 'stack_id', 'is_stack_primary'])
             ->withTimestamps();
     }
 

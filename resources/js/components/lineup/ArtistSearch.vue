@@ -33,12 +33,16 @@ interface SearchResultArtist {
 interface Props {
     addingArtistId: string | number | null;
     isArtistInLineup: (artist: SearchResultArtist) => boolean;
+    stackMode: boolean;
+    compareMode: boolean;
 }
 
 defineProps<Props>();
 
 const emit = defineEmits<{
     'add-artist': [artist: SearchResultArtist];
+    'toggle-stack': [];
+    'toggle-compare': [];
 }>();
 
 // Search State
@@ -61,6 +65,7 @@ const performSearch = useDebounceFn(async (query: string) => {
         const response = await fetch(
             `/api/artists/search?q=${encodeURIComponent(query)}`,
             {
+                credentials: 'include',
                 headers: { Accept: 'application/json' },
             },
         );
@@ -151,16 +156,29 @@ function navigateToArtist(artist: SearchResultArtist) {
                         <div class="mr-2 flex hidden gap-2 sm:flex">
                             <Button
                                 variant="outline"
-                                disabled
-                                class="h-9 gap-2"
+                                :class="
+                                    stackMode
+                                        ? 'border-[hsl(var(--stack-purple))] bg-[hsl(var(--stack-purple))] text-white hover:bg-[hsl(var(--stack-purple))]/90 hover:text-white'
+                                        : 'hover:bg-muted'
+                                "
+                                class="h-9 gap-2 transition-all"
+                                @click="emit('toggle-stack')"
                             >
                                 <Layers class="h-4 w-4" />
-                                {{ $t('lineups.show_stack_button') }}
+                                {{
+                                    stackMode
+                                        ? $t('lineups.show_stack_exit')
+                                        : $t('lineups.show_stack_button')
+                                }}
                             </Button>
                             <Button
                                 variant="outline"
-                                disabled
+                                :class="{
+                                    'border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral-bg))]':
+                                        compareMode,
+                                }"
                                 class="h-9 gap-2"
+                                @click="emit('toggle-compare')"
                             >
                                 <Scale class="h-4 w-4" />
                                 {{ $t('lineups.show_compare_button') }}
@@ -220,7 +238,7 @@ function navigateToArtist(artist: SearchResultArtist) {
                         class="flex cursor-pointer items-center justify-between p-3 transition-colors hover:bg-muted/50"
                         @click="
                             !isArtistInLineup(artist) &&
-                                emit('add-artist', artist)
+                            emit('add-artist', artist)
                         "
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-3">

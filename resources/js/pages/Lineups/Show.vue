@@ -5,6 +5,7 @@ import ArtistSearch from '@/components/lineup/ArtistSearch.vue';
 import DeleteLineupModal from '@/components/lineup/DeleteLineupModal.vue';
 import EditLineupModal from '@/components/lineup/EditLineupModal.vue';
 import RemoveArtistFromLineupModal from '@/components/lineup/RemoveArtistFromLineupModal.vue';
+import StackModeBanner from '@/components/lineup/StackModeBanner.vue';
 import TierSection from '@/components/lineup/TierSection.vue';
 import ScoreBadge from '@/components/score/ScoreBadge.vue';
 import { Badge } from '@/components/ui/badge';
@@ -19,30 +20,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { tierOrder } from '@/data/constants';
-import type { TierType } from '@/data/types';
+import type { Artist, TierType } from '@/data/types';
 import MainLayout from '@/layouts/MainLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { trans } from 'laravel-vue-i18n';
-import {
-    Download,
-    MoreHorizontal,
-    Pencil,
-    Trash2,
-    Users,
-} from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Download, Pencil, Settings, Trash2, Users } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
-interface ApiArtist {
-    id: number;
-    spotify_id: string;
-    name: string;
-    genres: string[];
-    image_url: string | null;
-    score: number;
+interface ApiArtist extends Artist {
     lineup_tier: TierType;
-    // Map properties for compatibility with TierSection if needed
-    genre?: string[];
 }
 
 interface SearchResultArtist {
@@ -77,16 +64,38 @@ interface Props {
 const props = defineProps<Props>();
 const { lineup: lineupBreadcrumbs } = useBreadcrumbs();
 
+// Local state for dynamic updates
+const lineupData = ref(props.lineup);
+
+// Sync local state when props change
+watch(
+    () => props.lineup,
+    (newVal) => {
+        lineupData.value = newVal;
+    },
+    { deep: true },
+);
+
 // Flatten artists for search/avatar lookup
 const allArtists = computed(() => {
-    if (!props.lineup) return [];
-    return Object.values(props.lineup.artists).flat();
+    if (!lineupData.value) return [];
+    return Object.values(lineupData.value.artists).flat();
 });
 
 // Mode states
 const stackMode = ref(false);
 const compareMode = ref(false);
 const selectedArtistIds = ref<number[]>([]);
+const isAddingAlternativesTo = ref<string | null>(null); // stack_id
+const stackingTier = ref<TierType | null>(null);
+
+const stackingPrimaryArtist = computed(() => {
+    if (!isAddingAlternativesTo.value) return null;
+    return allArtists.value.find(
+        (a) =>
+            a.stack_id === isAddingAlternativesTo.value && a.is_stack_primary,
+    );
+});
 
 // Search State
 const addingArtistId = ref<string | number | null>(null);
@@ -109,17 +118,17 @@ const artistToRemove = ref<ApiArtist | null>(null);
 
 // Get artists by tier
 function getArtistsByTier(tier: TierType) {
-    if (!props.lineup) return [];
+    if (!lineupData.value) return [];
 
     // Map API structure to component expectations
-    return props.lineup.artists[tier].map((artist) => ({
+    return lineupData.value.artists[tier].map((artist) => ({
         ...artist,
-        image: artist.image_url, // Map image_url for ArtistAvatar
+        image: artist.image_url || undefined, // Map image_url for ArtistAvatar
         genre: artist.genres || [], // Map genres for TierSection
     }));
 }
 
-function handleArtistSelect(artist: ApiArtist) {
+async function handleArtistSelect(artist: Artist) {
     if (compareMode.value) {
         const index = selectedArtistIds.value.indexOf(artist.id);
         if (index === -1 && selectedArtistIds.value.length < 4) {
@@ -127,18 +136,104 @@ function handleArtistSelect(artist: ApiArtist) {
         } else if (index !== -1) {
             selectedArtistIds.value.splice(index, 1);
         }
+    } else if (stackMode.value && isAddingAlternativesTo.value) {
+        // Adding alternative to stack
+        if (artist.stack_id === isAddingAlternativesTo.value) return;
+
+        // Only allow selecting artists in the same tier
+        if (stackingTier.value && artist.lineup_tier !== stackingTier.value)
+            return;
+
+        try {
+            const response = await axios.post(
+                `/api/lineups/${props.id}/stacks`,
+                {
+                    artist_id: artist.id,
+                    stack_id: isAddingAlternativesTo.value,
+                },
+            );
+            lineupData.value = response.data.lineup;
+        } catch (e) {
+            console.error('Failed to update stack', e);
+        }
     }
 }
 
-function handleArtistView(artist: ApiArtist) {
+function handleArtistView(artist: Artist) {
     if (!compareMode.value && !stackMode.value) {
         router.visit(`/artist/${artist.id}`);
     }
 }
 
-function handleArtistRemove(artist: ApiArtist) {
-    artistToRemove.value = artist;
+function handleArtistRemove(artist: Artist) {
+    artistToRemove.value = artist as ApiArtist;
     isRemoveArtistModalOpen.value = true;
+}
+
+async function handleStartStack(artist: Artist) {
+    stackingTier.value = artist.lineup_tier || null;
+
+    if (artist.stack_id) {
+        isAddingAlternativesTo.value = artist.stack_id;
+        stackMode.value = true;
+        return;
+    }
+
+    try {
+        const response = await axios.post(`/api/lineups/${props.id}/stacks`, {
+            artist_id: artist.id,
+        });
+        lineupData.value = response.data.lineup;
+
+        // Find the new stack_id for this artist
+        const updatedArtist = (
+            Object.values(lineupData.value.artists).flat() as Artist[]
+        ).find((a) => a.id === artist.id);
+        if (updatedArtist?.stack_id) {
+            isAddingAlternativesTo.value = updatedArtist.stack_id;
+            stackMode.value = true;
+        }
+    } catch (e) {
+        console.error('Failed to start stack', e);
+    }
+}
+
+async function handlePromoteArtist(artist: Artist) {
+    if (!artist.stack_id) return;
+
+    try {
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/${artist.stack_id}/promote`,
+            {
+                artist_id: artist.id,
+            },
+        );
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to promote artist', e);
+    }
+}
+
+async function handleRemoveFromStack(artist: Artist) {
+    try {
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/artists/${artist.id}/remove`,
+        );
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to remove from stack', e);
+    }
+}
+
+async function handleDissolveStack(stackId: string) {
+    try {
+        const response = await axios.post(
+            `/api/lineups/${props.id}/stacks/${stackId}/dissolve`,
+        );
+        lineupData.value = response.data.lineup;
+    } catch (e) {
+        console.error('Failed to dissolve stack', e);
+    }
 }
 
 function clearSelection() {
@@ -160,12 +255,15 @@ async function openAddModal(artist: SearchResultArtist) {
     // Fetch suggested tier from backend
     try {
         const score = artist.score || artist.spotify_popularity || 0;
-        const response = await axios.get(`/lineups/${props.id}/suggest-tier`, {
-            params: { 
-                artist_id: artist.id,
-                score: score 
-            }
-        });
+        const response = await axios.get(
+            `/api/lineups/${props.id}/suggest-tier`,
+            {
+                params: {
+                    artist_id: artist.id,
+                    score: score,
+                },
+            },
+        );
         suggestedTier.value = response.data.suggested_tier;
     } catch (e) {
         console.error('Failed to get tier suggestion', e);
@@ -191,12 +289,20 @@ async function confirmAddArtist(payload: {
             artistId = selectResponse.data.data.id;
         }
 
-        await axios.post(`/lineups/${props.id}/artists`, {
+        const response = await axios.post(`/api/lineups/${props.id}/artists`, {
             artist_id: artistId,
             tier: tier,
         });
+
+        // If the backend returns the updated lineup, update local state
+        if (response.data.lineup) {
+            lineupData.value = response.data.lineup;
+        } else {
+            // Fallback for safety
+            router.reload({ only: ['lineup'] });
+        }
+
         isAddModalOpen.value = false;
-        router.reload({ only: ['lineup'] });
     } catch (e) {
         console.error('Failed to add artist', e);
     } finally {
@@ -216,7 +322,7 @@ function isArtistInLineup(artist: SearchResultArtist) {
 
 const breadcrumbs = computed(() =>
     lineupBreadcrumbs(
-        props.lineup?.name ?? trans('lineups.show_page_title'),
+        lineupData.value?.name ?? trans('lineups.show_page_title'),
         props.id,
     ),
 );
@@ -224,25 +330,71 @@ const breadcrumbs = computed(() =>
 
 <template>
     <Head
-        :title="`${props.lineup?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
+        :title="`${lineupData?.name ?? $t('lineups.show_page_title')} - Artist-Tree`"
     />
     <MainLayout :breadcrumbs="breadcrumbs">
-        <div v-if="props.lineup" class="space-y-6">
+        <div v-if="lineupData" class="space-y-6">
+            <!-- Mode Banners -->
+            <StackModeBanner
+                :show="stackMode"
+                :primary-artist-name="stackingPrimaryArtist?.name"
+                @close="
+                    stackMode = false;
+                    isAddingAlternativesTo = null;
+                    stackingTier = null;
+                "
+            />
+
             <!-- Lineup Header Card -->
-            <Card class="py-0">
+            <Card class="relative py-0">
                 <CardContent class="p-6">
+                    <!-- Actions -->
+                    <div class="absolute top-6 right-6 z-10">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8"
+                                >
+                                    <Settings class="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    @click="isEditModalOpen = true"
+                                >
+                                    <Pencil class="mr-2 h-4 w-4" />
+                                    {{ $t('common.action_edit') }}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem disabled>
+                                    <Download class="mr-2 h-4 w-4" />
+                                    {{ $t('lineups.show_export_button') }}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    class="text-destructive"
+                                    @click="isDeleteModalOpen = true"
+                                >
+                                    <Trash2 class="mr-2 h-4 w-4" />
+                                    {{ $t('common.action_delete') }}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
                     <div
                         class="flex flex-col justify-between gap-6 md:flex-row"
                     >
                         <!-- Info -->
-                        <div class="flex-1">
+                        <div class="flex-1 pr-10 md:pr-0">
                             <h1 class="text-3xl font-bold">
-                                {{ props.lineup.name }}
+                                {{ lineupData.name }}
                             </h1>
                             <p
                                 class="mt-1 min-h-[1.25rem] text-sm text-muted-foreground"
                             >
-                                {{ lineup.description }}
+                                {{ lineupData.description }}
                             </p>
 
                             <div class="mt-6 flex flex-wrap items-center gap-8">
@@ -264,7 +416,7 @@ const breadcrumbs = computed(() =>
                                         <p
                                             class="text-xl leading-none font-bold"
                                         >
-                                            {{ props.lineup.stats.artist_count }}
+                                            {{ lineupData.stats.artist_count }}
                                         </p>
                                     </div>
                                 </div>
@@ -272,10 +424,10 @@ const breadcrumbs = computed(() =>
                                 <!-- Avg Score -->
                                 <div class="flex items-center gap-3">
                                     <ScoreBadge
-                                        v-if="props.lineup.stats.avg_score"
+                                        v-if="lineupData.stats.avg_score"
                                         :score="
                                             Math.round(
-                                                props.lineup.stats.avg_score,
+                                                lineupData.stats.avg_score,
                                             )
                                         "
                                         size="lg"
@@ -298,50 +450,16 @@ const breadcrumbs = computed(() =>
                                         </p>
                                     </div>
                                 </div>
-
-                                <div
-                                    class="mt-1 self-end text-xs text-muted-foreground"
-                                >
-                                    {{ $t('lineups.card_updated') }}
-                                    {{ lineup.updated_at_human }}
-                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Actions -->
-                        <div class="flex items-start gap-3">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger as-child>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-8 w-8"
-                                    >
-                                        <MoreHorizontal class="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        @click="isEditModalOpen = true"
-                                    >
-                                        <Pencil class="mr-2 h-4 w-4" />
-                                        {{ $t('common.action_edit') }}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem disabled>
-                                        <Download class="mr-2 h-4 w-4" />
-                                        {{ $t('lineups.show_export_button') }}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        class="text-destructive"
-                                        @click="isDeleteModalOpen = true"
-                                    >
-                                        <Trash2 class="mr-2 h-4 w-4" />
-                                        {{ $t('common.action_delete') }}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                    <!-- Updated Timestamp -->
+                    <div
+                        class="mt-8 text-xs text-muted-foreground md:absolute md:right-6 md:bottom-6 md:mt-0"
+                    >
+                        {{ $t('lineups.card_updated') }}
+                        {{ lineupData.updated_at_human }}
                     </div>
                 </CardContent>
             </Card>
@@ -352,26 +470,23 @@ const breadcrumbs = computed(() =>
                 <ArtistSearch
                     :adding-artist-id="addingArtistId"
                     :is-artist-in-lineup="isArtistInLineup"
+                    :stack-mode="stackMode"
+                    :compare-mode="compareMode"
                     @add-artist="openAddModal"
+                    @toggle-stack="
+                        stackMode = !stackMode;
+                        if (!stackMode) {
+                            isAddingAlternativesTo = null;
+                            stackingTier = null;
+                        }
+                    "
+                    @toggle-compare="
+                        compareMode = !compareMode;
+                        if (!compareMode) selectedArtistIds = [];
+                    "
                 />
 
                 <!-- Mode Banners -->
-                <div
-                    v-if="stackMode"
-                    class="flex items-center justify-between rounded-lg border border-[hsl(var(--stack-purple))]/30 bg-[hsl(var(--stack-purple-bg))] p-4"
-                >
-                    <p class="text-sm">
-                        {{ $t('lineups.show_stack_mode_description') }}
-                    </p>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        @click="stackMode = false"
-                    >
-                        {{ $t('lineups.show_stack_mode_done') }}
-                    </Button>
-                </div>
-
                 <div
                     v-if="compareMode"
                     class="flex items-center justify-between rounded-lg border border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral-bg))] p-4"
@@ -418,10 +533,21 @@ const breadcrumbs = computed(() =>
                         :tier="tier"
                         :artists="getArtistsByTier(tier)"
                         :compare-mode="compareMode"
+                        :stack-mode="stackMode"
                         :selected-artist-ids="selectedArtistIds"
+                        :is-adding-alternatives-to="isAddingAlternativesTo"
+                        :stacking-tier="stackingTier"
                         @select-artist="handleArtistSelect"
                         @view-artist="handleArtistView"
                         @remove-artist="handleArtistRemove"
+                        @start-stack="handleStartStack"
+                        @promote-artist="handlePromoteArtist"
+                        @remove-from-stack="handleRemoveFromStack"
+                        @dissolve-stack="handleDissolveStack"
+                        @deselect-stack="
+                            isAddingAlternativesTo = null;
+                            stackingTier = null;
+                        "
                     />
                 </div>
             </div>
@@ -438,32 +564,33 @@ const breadcrumbs = computed(() =>
         </div>
 
         <AddToLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isAddModalOpen"
             :artist="artistToAdd"
-            :lineup-name="props.lineup.name"
+            :lineup-name="lineupData.name"
             :suggested-tier="suggestedTier"
             :is-adding="isAddingToLineup"
             @add="confirmAddArtist"
         />
 
         <RemoveArtistFromLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isRemoveArtistModalOpen"
-            :lineup-id="props.lineup.id"
+            :lineup-id="lineupData.id"
             :artist="artistToRemove"
+            @updated="(data) => (lineupData = data)"
         />
 
         <EditLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isEditModalOpen"
-            :lineup="props.lineup"
+            :lineup="lineupData"
         />
 
         <DeleteLineupModal
-            v-if="props.lineup"
+            v-if="lineupData"
             v-model:open="isDeleteModalOpen"
-            :lineup="props.lineup"
+            :lineup="lineupData"
         />
     </MainLayout>
 </template>

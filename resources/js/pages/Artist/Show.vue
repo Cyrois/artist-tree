@@ -39,6 +39,7 @@ interface ApiArtist {
         youtube_subscribers: number | null;
         instagram_followers: number | null;
         tiktok_followers: number | null;
+        refreshed_at?: string;
     } | null;
     created_at: string;
     updated_at: string;
@@ -105,7 +106,7 @@ const formatNumber = (num: number | null | undefined): string => {
 
 function handleAddToLineupSubmit(data: any) {
     router.post(
-        `/lineups/${data.lineupId}/artists`,
+        `/api/lineups/${data.lineupId}/artists`,
         {
             artist_id: data.artistId,
             tier: data.tier,

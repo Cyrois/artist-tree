@@ -4,7 +4,6 @@ use App\Models\Lineup;
 use App\Models\User;
 
 test('authenticated user can update lineup name and description', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($user->id, ['role' => 'owner']);
@@ -16,7 +15,7 @@ test('authenticated user can update lineup name and description', function () {
         ]);
 
     $response->assertRedirect();
-    
+
     $this->assertDatabaseHas('lineups', [
         'id' => $lineup->id,
         'name' => 'Updated Lineup Name',
@@ -25,7 +24,6 @@ test('authenticated user can update lineup name and description', function () {
 });
 
 test('user cannot update lineup they do not belong to', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
     $lineup = Lineup::factory()->create();
@@ -37,7 +35,7 @@ test('user cannot update lineup they do not belong to', function () {
         ]);
 
     $response->assertForbidden();
-    
+
     $this->assertDatabaseMissing('lineups', [
         'id' => $lineup->id,
         'name' => 'Hacked Lineup Name',
@@ -45,7 +43,6 @@ test('user cannot update lineup they do not belong to', function () {
 });
 
 test('update requires name', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $user = User::factory()->create();
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($user->id, ['role' => 'owner']);
@@ -60,7 +57,6 @@ test('update requires name', function () {
 });
 
 test('unauthenticated user cannot update lineup', function () {
-    $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     $lineup = Lineup::factory()->create();
 
     $response = $this->put(route('lineups.update', $lineup), [

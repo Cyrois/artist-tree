@@ -35,6 +35,19 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     Route::get('/artists/{id}/top-tracks', [ArtistController::class, 'topTracks'])->name('api.artists.top-tracks');
     Route::get('/artists/{id}/albums', [ArtistController::class, 'albums'])->name('api.artists.albums');
     Route::get('/artists/{id}/similar', [ArtistController::class, 'similar'])->name('api.artists.similar');
+
+    // Lineup & Stacking API
+    Route::prefix('lineups/{lineup}')->group(function () {
+        Route::get('/suggest-tier', [\App\Http\Controllers\LineupController::class, 'suggestTier'])->name('api.lineups.suggest-tier');
+        Route::post('/artists', [\App\Http\Controllers\LineupController::class, 'addArtist'])->name('api.lineups.artists.store');
+        Route::delete('/artists/{artist}', [\App\Http\Controllers\LineupController::class, 'removeArtist'])->name('api.lineups.artists.destroy');
+
+        // Stacking
+        Route::post('/stacks', [\App\Http\Controllers\LineupStackController::class, 'store'])->name('api.lineups.stacks.store');
+        Route::post('/stacks/{stack_id}/promote', [\App\Http\Controllers\LineupStackController::class, 'promote'])->name('api.lineups.stacks.promote');
+        Route::post('/stacks/artists/{artist}/remove', [\App\Http\Controllers\LineupStackController::class, 'removeArtist'])->name('api.lineups.stacks.remove-artist');
+        Route::post('/stacks/{stack_id}/dissolve', [\App\Http\Controllers\LineupStackController::class, 'dissolve'])->name('api.lineups.stacks.dissolve');
+    });
 });
 
 // User info endpoint (example)

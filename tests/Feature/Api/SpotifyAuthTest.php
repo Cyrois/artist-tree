@@ -33,12 +33,12 @@ class SpotifyAuthTest extends TestCase
 
         $authUrl = $response->json('auth_url');
         $this->assertStringContainsString('accounts.spotify.com/authorize', $authUrl);
-        
+
         // Verify Scopes
         // Scopes should include: streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state
         // URL encoded spaces are usually + or %20
         $this->assertStringContainsString('scope=', $authUrl);
-        
+
         $scopes = [
             'streaming',
             'user-read-email',
@@ -56,7 +56,7 @@ class SpotifyAuthTest extends TestCase
     {
         // Simulate existing session token
         $token = 'existing_valid_token';
-        
+
         // Mock Spotify /me endpoint to verify token
         Http::fake([
             'https://api.spotify.com/v1/me' => Http::response(['id' => 'spotify_user'], 200),
@@ -70,7 +70,7 @@ class SpotifyAuthTest extends TestCase
             ->assertJson([
                 'access_token' => $token,
             ]);
-        
+
         Http::assertSent(function ($request) use ($token) {
             return $request->url() === 'https://api.spotify.com/v1/me' &&
                    $request->header('Authorization')[0] === "Bearer {$token}";
@@ -80,7 +80,7 @@ class SpotifyAuthTest extends TestCase
     public function test_token_endpoint_clears_invalid_token(): void
     {
         $token = 'invalid_token';
-        
+
         // Mock Spotify /me endpoint to fail (401)
         Http::fake([
             'https://api.spotify.com/v1/me' => Http::response(['error' => 'Invalid token'], 401),
@@ -93,7 +93,7 @@ class SpotifyAuthTest extends TestCase
         // Should return 401 with new auth URL because the token was invalid
         $response->assertStatus(401)
             ->assertJsonStructure(['auth_url']);
-            
+
         // Session should be cleared
         $this->assertNull(session('spotify_access_token'));
     }
@@ -124,7 +124,7 @@ class SpotifyAuthTest extends TestCase
 
         // Should redirect to dashboard (default)
         $response->assertRedirect(route('dashboard'));
-        
+
         // Session should have tokens
         $this->assertEquals($accessToken, session('spotify_access_token'));
         $this->assertEquals($refreshToken, session('spotify_refresh_token'));

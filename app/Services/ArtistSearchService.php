@@ -126,7 +126,15 @@ class ArtistSearchService
             // Filter out Spotify results that don't match the query name (fuzzy match check)
             // This was causing the UI to show related artists without the string contained in their name
             // Spotify API can return related artists (e.g. Drake for "Kendrick")
-            if (stripos($spotifyArtist->name, $query) === false) {
+            $normalizedName = strtolower($spotifyArtist->name);
+            $normalizedQuery = strtolower($query);
+
+            // Strip "the " from start for better matching (The Weeknd vs Weeknd)
+            $comparableName = preg_replace('/^the\s+/i', '', $normalizedName);
+            $comparableQuery = preg_replace('/^the\s+/i', '', $normalizedQuery);
+
+            if (stripos($comparableName, $comparableQuery) === false &&
+                stripos($normalizedName, $normalizedQuery) === false) {
                 continue;
             }
 

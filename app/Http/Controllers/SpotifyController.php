@@ -18,8 +18,8 @@ class SpotifyController extends Controller
     {
         // Use explicit config if set, otherwise generate from route
         $redirectUri = config('services.spotify.redirect_uri');
-        
-        if (!$redirectUri) {
+
+        if (! $redirectUri) {
             // Use route helper to generate full URL
             $redirectUri = route('api.spotify.callback');
         }
@@ -78,10 +78,10 @@ class SpotifyController extends Controller
         }
 
         // Store return URL for redirect after OAuth callback
-        $returnUrl = $request->query('return_url') 
-            ?? $request->header('Referer') 
+        $returnUrl = $request->query('return_url')
+            ?? $request->header('Referer')
             ?? route('dashboard');
-        
+
         // Ensure return URL is within our application domain for security
         $returnUrl = $this->sanitizeReturnUrl($returnUrl);
         $request->session()->put('spotify_oauth_return_url', $returnUrl);
@@ -103,7 +103,7 @@ class SpotifyController extends Controller
     public function clearToken(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         Log::info('Clearing Spotify tokens from session', [
             'user_id' => $user->id ?? null,
         ]);
@@ -130,10 +130,11 @@ class SpotifyController extends Controller
         // Clear the return URL from session
         $request->session()->forget('spotify_oauth_return_url');
 
-        if (!$code) {
+        if (! $code) {
             Log::warning('Spotify OAuth callback missing code', [
                 'query' => $request->query(),
             ]);
+
             return redirect($returnUrl)->with('error', 'Authorization code not provided');
         }
 
@@ -144,6 +145,7 @@ class SpotifyController extends Controller
                 'received_state' => $state,
                 'session_state' => $sessionState,
             ]);
+
             return redirect($returnUrl)->with('error', 'Invalid authentication state. Please try again.');
         }
 
@@ -164,7 +166,7 @@ class SpotifyController extends Controller
                 'client_secret' => $clientSecret,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $errorBody = $response->body();
                 Log::error('Spotify OAuth token exchange failed', [
                     'status' => $response->status(),
@@ -214,7 +216,7 @@ class SpotifyController extends Controller
         $request->session()->put('spotify_oauth_state', $state);
 
         $returnUrl = $request->session()->get('spotify_oauth_return_url', route('dashboard'));
-        
+
         Log::info('Spotify OAuth authorization URL generated', [
             'redirect_uri' => $redirectUri,
             'return_url' => $returnUrl,
@@ -233,25 +235,21 @@ class SpotifyController extends Controller
 
     /**
      * Sanitize and validate return URL to ensure it's within our application.
-     * 
-     * @param string $url
-     * @return string
      */
     private function sanitizeReturnUrl(string $url): string
     {
         // If it's already a route name or relative path, use it as-is
-        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
             return $url;
         }
 
         // If it's a full URL, extract the path
         $parsed = parse_url($url);
         if (isset($parsed['path'])) {
-            return $parsed['path'] . (isset($parsed['query']) ? '?' . $parsed['query'] : '');
+            return $parsed['path'].(isset($parsed['query']) ? '?'.$parsed['query'] : '');
         }
 
         // Default to dashboard if URL is invalid
         return route('dashboard');
     }
 }
-

@@ -140,6 +140,12 @@ class SpotifyService
         return Http::withToken($token)
             ->timeout(10)
             ->retry(3, 1000, function ($exception, $request) {
+                // If we get a 401, clear the token cache so the next attempt gets a fresh one
+                if ($exception instanceof \Illuminate\Http\Client\RequestException && $exception->response->status() === 401) {
+                    Cache::forget(self::TOKEN_CACHE_KEY);
+                    Log::warning('Spotify 401 detected: cleared cached access token');
+                }
+
                 // Retry on network errors and 5xx responses, but not on 4xx
                 if ($exception instanceof \Illuminate\Http\Client\RequestException) {
                     $response = $exception->response;
@@ -273,7 +279,7 @@ class SpotifyService
             }
 
             $items = $response->json('items', []);
-            
+
             if (empty($items)) {
                 return [];
             }
@@ -293,9 +299,9 @@ class SpotifyService
                 // Fallback to simplified objects if detailed fetch fails
                 Log::warning('Failed to fetch full album details, falling back to simplified objects', [
                     'artist_id' => $spotifyId,
-                    'ids' => $idsString
+                    'ids' => $idsString,
                 ]);
-                
+
                 return array_map(
                     fn (array $album) => SpotifyAlbumSimpleDTO::fromSpotifyResponse($album),
                     $items

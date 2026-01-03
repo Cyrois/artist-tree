@@ -16,7 +16,7 @@ class DashboardControllerTest extends TestCase
     public function test_dashboard_loads_correct_number_of_lineups_and_artists()
     {
         $user = User::factory()->create();
-        
+
         // Create 5 lineups
         $lineups = Lineup::factory()->count(5)->create();
         $user->lineups()->attach($lineups);
@@ -31,7 +31,7 @@ class DashboardControllerTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertStatus(200);
-        
+
         // Check lineups limit (3)
         $this->assertCount(3, $response->viewData('page')['props']['lineups']['data']);
 
