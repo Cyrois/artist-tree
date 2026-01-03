@@ -80,7 +80,7 @@ async function fetchSuggestedTier(lineupId: number) {
 
     isLoadingSuggestion.value = true;
     try {
-        const response = await axios.get(`/lineups/${lineupId}/suggest-tier`, {
+        const response = await axios.get(`/api/lineups/${lineupId}/suggest-tier`, {
             params: { artist_id: props.artist.id },
         });
         suggestedTier.value = response.data.suggested_tier;

@@ -20,6 +20,8 @@ class ArtistSpotifyDataTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\Cache::flush();
+
         $this->user = User::factory()->create();
         $this->artist = Artist::factory()->create([
             'name' => 'Test Artist',
@@ -351,8 +353,17 @@ class ArtistSpotifyDataTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data', []);
 
-        // Verify no additional API calls were made
-        Http::assertSentCount(2); // Still just 1 token + 1 search (cached)
+        // Verify no additional API calls were made (still 2)
+        Http::assertSentCount(2);
+
+        // Third request - clear cache, should hit API again
+        \Illuminate\Support\Facades\Cache::flush();
+        
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/artists/{$artistWithoutSpotifyId->id}/top-tracks");
+            
+        // Now it should have called 1 token + 1 search again = 4 total
+        Http::assertSentCount(4);
     }
 
     public function test_albums_limit_parameter_validation(): void

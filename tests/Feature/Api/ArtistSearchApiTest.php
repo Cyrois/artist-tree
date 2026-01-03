@@ -465,3 +465,31 @@ it('requires authentication to refresh artist', function () {
 
     $response->assertStatus(401);
 });
+
+it('handles name normalization like The prefix in hybrid search results', function () {
+    // Mock Spotify to return "The Weeknd"
+    Http::fake([
+        'https://accounts.spotify.com/api/token' => Http::response(['access_token' => 'test'], 200),
+        'https://api.spotify.com/v1/search*' => Http::response([
+            'artists' => [
+                'items' => [
+                    [
+                        'id' => 'weeknd123',
+                        'name' => 'The Weeknd',
+                        'genres' => ['pop'],
+                        'images' => [],
+                        'popularity' => 95,
+                        'followers' => ['total' => 50000000],
+                    ],
+                ],
+            ],
+        ], 200),
+    ]);
+
+    // Search for "Weeknd" (without "The")
+    $response = $this->actingAs($this->user)
+        ->getJson('/api/artists/search?q=Weeknd');
+
+    $response->assertStatus(200)
+        ->assertJsonPath('data.0.name', 'The Weeknd');
+});

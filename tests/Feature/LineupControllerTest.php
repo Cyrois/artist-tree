@@ -178,3 +178,22 @@ test('adding artist requires a tier', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors(['tier']);
 });
+
+test('lineup API endpoints are reachable with correct prefix', function () {
+    $lineup = Lineup::factory()->create();
+    $lineup->users()->attach($this->user->id, ['role' => 'owner']);
+    $artist = Artist::factory()->create();
+
+    // Regression test for the frontend fix: ensure the path includes /api
+    // Using hardcoded strings here specifically to verify the URL structure
+    $this->actingAs($this->user)
+        ->postJson("/api/lineups/{$lineup->id}/artists", [
+            'artist_id' => $artist->id,
+            'tier' => ArtistTier::Headliner->value,
+        ])
+        ->assertSuccessful();
+
+    $this->actingAs($this->user)
+        ->getJson("/api/lineups/{$lineup->id}/suggest-tier?artist_id={$artist->id}")
+        ->assertSuccessful();
+});

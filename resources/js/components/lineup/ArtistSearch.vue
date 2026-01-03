@@ -65,6 +65,7 @@ const performSearch = useDebounceFn(async (query: string) => {
         const response = await fetch(
             `/api/artists/search?q=${encodeURIComponent(query)}`,
             {
+                credentials: 'include',
                 headers: { Accept: 'application/json' },
             },
         );

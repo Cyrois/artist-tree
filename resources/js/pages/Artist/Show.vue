@@ -106,7 +106,7 @@ const formatNumber = (num: number | null | undefined): string => {
 
 function handleAddToLineupSubmit(data: any) {
     router.post(
-        `/lineups/${data.lineupId}/artists`,
+        `/api/lineups/${data.lineupId}/artists`,
         {
             artist_id: data.artistId,
             tier: data.tier,

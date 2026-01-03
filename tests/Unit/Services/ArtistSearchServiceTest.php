@@ -361,3 +361,43 @@ it('filters out Spotify results that do not fuzzy match the query', function () 
         ->and($results->first()->name)->toBe('Kendrick Lamar')
         ->and($results->first()->spotifyId)->toBe('kendrick1');
 });
+
+it('handles common name prefixes like The during search filtering', function () {
+    // 1. Search for "Weeknd", should match "The Weeknd"
+    $this->spotifyService->shouldReceive('searchArtists')
+        ->once()
+        ->with('Weeknd', 20)
+        ->andReturn([
+            new SpotifyArtistDTO(
+                spotifyId: 'weeknd1',
+                name: 'The Weeknd',
+                genres: ['pop'],
+                imageUrl: null,
+                popularity: 95,
+                followers: 50000000,
+            ),
+        ]);
+
+    $results = $this->searchService->search('Weeknd');
+    expect($results)->toHaveCount(1)
+        ->and($results->first()->name)->toBe('The Weeknd');
+
+    // 2. Search for "The Weeknd", should match "The Weeknd" (even if we search with prefix)
+    $this->spotifyService->shouldReceive('searchArtists')
+        ->once()
+        ->with('The Weeknd', 20)
+        ->andReturn([
+            new SpotifyArtistDTO(
+                spotifyId: 'weeknd1',
+                name: 'The Weeknd',
+                genres: ['pop'],
+                imageUrl: null,
+                popularity: 95,
+                followers: 50000000,
+            ),
+        ]);
+
+    $results = $this->searchService->search('The Weeknd');
+    expect($results)->toHaveCount(1)
+        ->and($results->first()->name)->toBe('The Weeknd');
+});
