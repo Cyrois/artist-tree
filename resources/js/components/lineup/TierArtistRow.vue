@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ArtistAvatar from '@/components/artist/ArtistAvatar.vue';
+import CompareActionButton from '@/components/lineup/CompareActionButton.vue';
 import StackActionButton from '@/components/lineup/StackActionButton.vue';
 import StackAlternativeActions from '@/components/lineup/StackAlternativeActions.vue';
 import StackPrimaryActionButton from '@/components/lineup/StackPrimaryActionButton.vue';
@@ -72,9 +73,6 @@ function isSelected(artistId: number) {
                 compareMode || stackMode
                     ? 'cursor-pointer hover:bg-muted/30'
                     : '',
-                compareMode &&
-                    isSelected(group.artist.id) &&
-                    'border-l-4 border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral-bg))]',
                 stackMode &&
                     isAddingAlternativesTo &&
                     'hover:bg-primary/5',
@@ -84,34 +82,6 @@ function isSelected(artistId: number) {
             (compareMode || stackMode) && emit('select-artist', group.artist)
         "
     >
-        <div v-if="compareMode" class="flex-shrink-0">
-            <div
-                :class="
-                    cn(
-                        'flex h-5 w-5 items-center justify-center rounded border-2 transition-colors',
-                        isSelected(group.artist.id)
-                            ? 'border-[hsl(var(--compare-coral))] bg-[hsl(var(--compare-coral))]'
-                            : 'border-muted-foreground/30',
-                    )
-                "
-            >
-                <svg
-                    v-if="isSelected(group.artist.id)"
-                    class="h-3 w-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="3"
-                        d="M5 13l4 4L19 7"
-                    />
-                </svg>
-            </div>
-        </div>
-
         <ArtistAvatar :artist="group.artist" size="sm" />
 
         <div class="min-w-0 flex-1 flex flex-col justify-between h-12">
@@ -239,6 +209,14 @@ function isSelected(artistId: number) {
                 "
             />
         </div>
+
+        <!-- Inline Compare Action for Compare Mode -->
+        <div v-if="compareMode">
+            <CompareActionButton
+                :is-selected="isSelected(group.artist.id)"
+                @click="emit('select-artist', group.artist)"
+            />
+        </div>
     </div>
 
     <!-- Stack Group -->
@@ -276,6 +254,14 @@ function isSelected(artistId: number) {
                     :is-current-stack="isAddingAlternativesTo === group.stack.id"
                     @click="emit('start-stack', group.stack.primary)"
                     @deselect="emit('deselect-stack')"
+                />
+            </div>
+
+            <!-- Inline Compare Action for Compare Mode -->
+            <div v-if="compareMode">
+                <CompareActionButton
+                    :is-selected="isSelected(group.stack.primary.id)"
+                    @click="emit('select-artist', group.stack.primary)"
                 />
             </div>
 
@@ -377,8 +363,10 @@ function isSelected(artistId: number) {
             :class="
                 cn(
                     'group flex items-center gap-4 border-l-4 border-[hsl(var(--stack-purple))]/30 py-3 pr-4 pl-12 transition-colors hover:bg-[hsl(var(--stack-purple))]/5',
+                    compareMode ? 'cursor-pointer hover:bg-muted/30' : '',
                 )
             "
+            @click="compareMode && emit('select-artist', alt)"
         >
             <ArtistAvatar :artist="alt" size="xs" />
             <div class="min-w-0 flex-1 flex items-center gap-2">
@@ -392,6 +380,14 @@ function isSelected(artistId: number) {
                 @promote="emit('promote-artist', alt)"
                 @remove="emit('remove-from-stack', alt)"
             />
+
+            <!-- Inline Compare Action for Compare Mode -->
+            <div v-if="compareMode">
+                <CompareActionButton
+                    :is-selected="isSelected(alt.id)"
+                    @click="emit('select-artist', alt)"
+                />
+            </div>
 
             <div
                 v-if="!compareMode && !stackMode"

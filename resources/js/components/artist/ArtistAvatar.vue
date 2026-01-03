@@ -41,8 +41,8 @@ const sizeClasses = computed(() => {
 <template>
     <Avatar :class="cn('rounded-xl', sizeClasses)" data-slot="artist-avatar">
         <AvatarImage
-            v-if="artist.image"
-            :src="artist.image"
+            v-if="artist.image || artist.image_url"
+            :src="artist.image || artist.image_url!"
             :alt="artist.name"
             class="object-cover"
         />
