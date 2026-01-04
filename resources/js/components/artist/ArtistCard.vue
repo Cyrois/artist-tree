@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { formatNumber } from '@/data/constants';
 import type { Artist } from '@/data/types';
 import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-vue-next';
+import { ChevronRight, Globe } from 'lucide-vue-next';
 import { computed } from 'vue';
 import ArtistAvatar from './ArtistAvatar.vue';
 
@@ -24,7 +24,14 @@ const emit = defineEmits<{
     click: [artist: Artist];
 }>();
 
-const displayGenres = computed(() => props.artist.genre.slice(0, 2));
+const displayGenres = computed(() => {
+    const genres = props.artist.genres || props.artist.genre || [];
+    return genres.slice(0, 2);
+});
+
+const totalGenresCount = computed(() => {
+    return (props.artist.genres || props.artist.genre || []).length;
+});
 </script>
 
 <template>
@@ -62,10 +69,21 @@ const displayGenres = computed(() => props.artist.genre.slice(0, 2));
                         {{ genre }}
                     </Badge>
                     <span
-                        v-if="artist.genre.length > 2"
+                        v-if="totalGenresCount > 2"
                         class="text-xs text-muted-foreground"
                     >
-                        +{{ artist.genre.length - 2 }}
+                        +{{ totalGenresCount - 2 }}
+                    </span>
+                </div>
+
+                <!-- Country & Secondary Info -->
+                <div
+                    v-if="!compact && artist.country"
+                    class="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground"
+                >
+                    <span class="flex items-center gap-1">
+                        <Globe class="h-3 w-3" />
+                        {{ artist.country }}
                     </span>
                 </div>
 

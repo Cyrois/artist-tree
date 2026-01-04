@@ -28,7 +28,7 @@ return new class extends Migration
         Schema::table('artists', function (Blueprint $table) {
             $table->jsonb('genres')->nullable();
             $table->dropForeign(['country_id']);
-            $table->dropColumn(['mbid', 'youtube_channel_id', 'country_id']);
+            $table->dropColumn(['musicbrainz_id', 'youtube_channel_id', 'country_id']);
         });
     }
 };

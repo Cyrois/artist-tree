@@ -20,7 +20,7 @@ class ArtistFactory extends Factory
     public function definition(): array
     {
         return [
-            'mbid' => fake()->unique()->uuid(),
+            'musicbrainz_id' => fake()->unique()->uuid(),
             'spotify_id' => fake()->unique()->uuid(),
             'name' => fake()->firstName().' '.fake()->randomElement(['and the', '&']).' '.fake()->word(),
             'image_url' => fake()->imageUrl(640, 640, 'music', true, 'artist'),

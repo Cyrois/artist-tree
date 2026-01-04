@@ -20,6 +20,7 @@ readonly class ArtistSearchResultDTO
         public ?int $popularity,
         public ?int $followers,
         public bool $existsInDatabase,
+        public ?string $country = null,
         public ?int $score = null,
         public ?int $databaseId = null,
         public string $source = 'spotify', // 'local' or 'spotify'
@@ -31,15 +32,21 @@ readonly class ArtistSearchResultDTO
     public static function fromLocalArtist(Artist $artist): self
     {
         $score = app(\App\Services\ArtistScoringService::class)->calculateScore($artist);
+        
+        // Handle relation if loaded, otherwise fallback to empty
+        $genres = $artist->relationLoaded('genres') 
+            ? $artist->genres->pluck('name')->toArray() 
+            : [];
 
         return new self(
             spotifyId: $artist->spotify_id,
             name: $artist->name,
-            genres: $artist->genres ?? [],
+            genres: $genres,
             imageUrl: $artist->image_url,
             popularity: $artist->metrics?->spotify_popularity,
             followers: $artist->metrics?->spotify_followers,
             existsInDatabase: true,
+            country: $artist->country?->name,
             score: $score,
             databaseId: $artist->id,
             source: 'local',

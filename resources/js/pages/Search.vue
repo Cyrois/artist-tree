@@ -35,6 +35,7 @@ interface ApiArtist {
     spotify_id: string;
     name: string;
     genres: string[];
+    country: string | null;
     image_url: string | null;
     exists_in_database: boolean;
     source: 'local' | 'spotify';
@@ -130,7 +131,7 @@ const filteredArtists = computed(() => {
         instagramFollowers: 0,
         twitterFollowers: 0,
         lastUpdated: '',
-        country: '',
+        country: apiArtist.country || '',
         formedYear: 0,
         label: '',
         bio: '',

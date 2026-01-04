@@ -15,7 +15,7 @@ class Artist extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'mbid',
+        'musicbrainz_id',
         'spotify_id',
         'name',
         'image_url',

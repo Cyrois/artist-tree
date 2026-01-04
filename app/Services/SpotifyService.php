@@ -109,6 +109,46 @@ class SpotifyService
     }
 
     /**
+     * Get multiple artists by Spotify IDs (Max 50).
+     *
+     * @param  array<string>  $spotifyIds
+     * @return array<SpotifyArtistDTO>
+     *
+     * @throws SpotifyApiException
+     */
+    public function getArtists(array $spotifyIds): array
+    {
+        if (empty($spotifyIds)) {
+            return [];
+        }
+
+        if (count($spotifyIds) > 50) {
+            throw new \InvalidArgumentException('Spotify API limit is 50 IDs per request');
+        }
+
+        // We don't cache bulk requests as a whole, but we could individually cache the results?
+        // For hydration, we generally want fresh data anyway.
+
+        $this->checkRateLimit();
+
+        $response = $this->makeAuthenticatedRequest()
+            ->get(self::BASE_URL.'/artists', [
+                'ids' => implode(',', $spotifyIds),
+            ]);
+
+        if (! $response->successful()) {
+            throw SpotifyApiException::fromResponse($response, 'Get artists failed');
+        }
+
+        $artists = $response->json('artists', []);
+
+        return array_filter(array_map(
+            fn (?array $artist) => $artist ? SpotifyArtistDTO::fromSpotifyResponse($artist) : null,
+            $artists
+        ));
+    }
+
+    /**
      * Get OAuth access token (cached).
      *
      * @throws SpotifyApiException

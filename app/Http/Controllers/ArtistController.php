@@ -128,7 +128,7 @@ class ArtistController extends Controller
 
             return response()->json([
                 'message' => __('artists.refresh_success'),
-                'data' => new ArtistResource($refreshedArtist),
+                'data' => new ArtistResource($refreshedArtist->load(['genres', 'country'])),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to refresh artist', [
@@ -149,7 +149,7 @@ class ArtistController extends Controller
         // Check if querying by Spotify ID
         if ($request->has('spotify_id')) {
             $spotifyId = $request->validated('spotify_id');
-            $artist = Artist::where('spotify_id', $spotifyId)->with('metrics')->first();
+            $artist = Artist::where('spotify_id', $spotifyId)->with(['metrics', 'genres', 'country', 'links'])->first();
 
             if (! $artist) {
                 return response()->json([
@@ -163,7 +163,7 @@ class ArtistController extends Controller
         }
 
         // Query by database ID (validation ensures at least one param is provided)
-        $artist = Artist::with('metrics')->find($id);
+        $artist = Artist::with(['metrics', 'genres', 'country', 'links'])->find($id);
 
         if (! $artist) {
             return response()->json([

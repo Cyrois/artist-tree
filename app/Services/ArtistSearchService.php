@@ -7,6 +7,8 @@ use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
+use App\Models\Genre;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -81,7 +83,7 @@ class ArtistSearchService
     {
         return Artist::query()
             ->search($query)
-            ->with('metrics')
+            ->with(['metrics', 'genres', 'country'])
             ->limit($limit)
             ->get();
     }
@@ -204,9 +206,11 @@ class ArtistSearchService
             $artist = Artist::create([
                 'spotify_id' => $spotify->spotifyId,
                 'name' => $spotify->name,
-                'genres' => $spotify->genres,
                 'image_url' => $spotify->imageUrl,
             ]);
+
+            // Sync genres
+            $this->syncGenres($artist, $spotify->genres);
 
             // Create associated metrics
             $artist->metrics()->create([
@@ -215,7 +219,7 @@ class ArtistSearchService
                 'refreshed_at' => now(),
             ]);
 
-            return $artist->load('metrics');
+            return $artist->load(['metrics', 'genres']);
         });
     }
 
@@ -234,9 +238,11 @@ class ArtistSearchService
             // Update artist data
             $artist->update([
                 'name' => $spotifyData->name,
-                'genres' => $spotifyData->genres,
                 'image_url' => $spotifyData->imageUrl,
             ]);
+
+            // Sync genres
+            $this->syncGenres($artist, $spotifyData->genres);
 
             // Update or create metrics
             $artist->metrics()->updateOrCreate(
@@ -248,7 +254,30 @@ class ArtistSearchService
                 ]
             );
 
-            return $artist->fresh(['metrics']);
+            return $artist->fresh(['metrics', 'genres']);
         });
+    }
+
+    /**
+     * Helper to find/create genres and sync to artist.
+     */
+    private function syncGenres(Artist $artist, array $genreNames): void
+    {
+        if (empty($genreNames)) {
+            $artist->genres()->detach();
+            return;
+        }
+
+        $genreIds = [];
+        foreach ($genreNames as $name) {
+            $slug = Str::slug($name);
+            $genre = Genre::firstOrCreate(
+                ['name' => $name],
+                ['slug' => $slug]
+            );
+            $genreIds[] = $genre->id;
+        }
+
+        $artist->genres()->sync($genreIds);
     }
 }

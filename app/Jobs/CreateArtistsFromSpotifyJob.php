@@ -44,17 +44,29 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
         DB::transaction(function () use (&$createdCount, &$alreadyExistCount) {
             foreach ($this->spotifyArtists as $spotifyArtist) {
                 try {
-                    // Atomic check/create
+                    // Atomic check/create without genres first
                     $artist = Artist::firstOrCreate(
                         ['spotify_id' => $spotifyArtist->spotifyId],
                         [
                             'name' => $spotifyArtist->name,
-                            'genres' => $spotifyArtist->genres,
                             'image_url' => $spotifyArtist->imageUrl,
                         ]
                     );
 
                     if ($artist->wasRecentlyCreated) {
+                        // Sync genres
+                        if (!empty($spotifyArtist->genres)) {
+                            $genreIds = [];
+                            foreach ($spotifyArtist->genres as $name) {
+                                $genre = \App\Models\Genre::firstOrCreate(
+                                    ['name' => $name],
+                                    ['slug' => \Illuminate\Support\Str::slug($name)]
+                                );
+                                $genreIds[] = $genre->id;
+                            }
+                            $artist->genres()->sync($genreIds);
+                        }
+
                         // Create associated metrics for new artists
                         $artist->metrics()->create([
                             'spotify_popularity' => $spotifyArtist->popularity,
