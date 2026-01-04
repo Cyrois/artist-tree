@@ -218,11 +218,16 @@ class ImportArtistsFromCsvCommand extends Command
         // Refresh aliases by deleting existing ones and recreating
         $artist->aliases()->delete();
 
+        $records = [];
         foreach ($aliases as $name) {
             if (empty($name)) {
                 continue;
             }
-            $artist->aliases()->create(['name' => $name]);
+            $records[] = ['name' => $name];
+        }
+
+        if (! empty($records)) {
+            $artist->aliases()->createMany($records);
         }
     }
 
@@ -255,6 +260,7 @@ class ImportArtistsFromCsvCommand extends Command
         // Refresh links for this artist to match current CSV state
         $artist->links()->delete();
 
+        $records = [];
         foreach ($platforms as $colName => $platformKey) {
             $urls = $row[$columns[$colName]] ?? null;
             if (! $urls) {
@@ -267,11 +273,15 @@ class ImportArtistsFromCsvCommand extends Command
                     continue;
                 }
 
-                $artist->links()->create([
+                $records[] = [
                     'platform' => $platformKey,
                     'url' => $url,
-                ]);
+                ];
             }
+        }
+
+        if (! empty($records)) {
+            $artist->links()->createMany($records);
         }
     }
 
