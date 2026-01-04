@@ -58,10 +58,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
                         if (!empty($spotifyArtist->genres)) {
                             $genreIds = [];
                             foreach ($spotifyArtist->genres as $name) {
-                                $genre = \App\Models\Genre::firstOrCreate(
-                                    ['name' => $name],
-                                    ['slug' => \Illuminate\Support\Str::slug($name)]
-                                );
+                                $genre = \App\Models\Genre::findOrCreateSmart($name);
                                 $genreIds[] = $genre->id;
                             }
                             $artist->genres()->sync($genreIds);

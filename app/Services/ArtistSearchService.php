@@ -270,11 +270,7 @@ class ArtistSearchService
 
         $genreIds = [];
         foreach ($genreNames as $name) {
-            $slug = Str::slug($name);
-            $genre = Genre::firstOrCreate(
-                ['name' => $name],
-                ['slug' => $slug]
-            );
+            $genre = Genre::findOrCreateSmart($name);
             $genreIds[] = $genre->id;
         }
 
