@@ -63,7 +63,19 @@ Run migrations:
 php artisan migrate
 ```
 
-### 4. Start Development Servers
+### 5. Seed Data (Optional)
+
+You can seed the database with artist data from CSV files and enrich them via Spotify:
+
+```bash
+# Import artists from CSV files
+php artisan artist:import-csv requirements/data/*.csv
+
+# Hydrate imported artists with Spotify metadata and metrics
+php artisan artist:hydrate-spotify
+```
+
+### 6. Start Development Servers
 
 ```bash
 # Terminal 1: Laravel server
