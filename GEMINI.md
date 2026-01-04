@@ -456,13 +456,14 @@ app/
 
 ---
 
-## Security Rules
+## Security & Safety Rules
 
-### API Keys & Credentials
-- **NEVER expose API keys in frontend code or Git**
-- Store in `.env`: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `YOUTUBE_API_KEY`
-- Add to `.env.example` with placeholder values
-- Use `config('services.spotify.client_id')` - never `env()` outside config files
+- **CONFIG CACHE:** Before running tests, you **MUST** run `php artisan config:clear`. Failing to do so may cause tests to run against the production/local database instead of the in-memory test database, resulting in data loss.
+- **API Keys & Credentials:**
+  - **NEVER expose API keys in frontend code or Git**
+  - Store in `.env`: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `YOUTUBE_API_KEY`
+  - Add to `.env.example` with placeholder values
+  - Use `config('services.spotify.client_id')` - never `env()` outside config files
 
 ### Rate Limiting
 - API endpoints: 60 requests/minute per authenticated user
