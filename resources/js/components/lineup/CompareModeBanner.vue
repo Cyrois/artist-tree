@@ -62,7 +62,7 @@ const emit = defineEmits<{
                     <Badge
                         v-if="selectedArtists.length > 0"
                         variant="outline"
-                        class="border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral))]/10 text-[hsl(var(--compare-coral))] font-semibold"
+                        class="border-[hsl(var(--compare-coral))]/30 bg-[hsl(var(--compare-coral))]/10 font-semibold text-[hsl(var(--compare-coral))]"
                     >
                         {{ selectedArtists.length }}/4
                     </Badge>
@@ -79,7 +79,10 @@ const emit = defineEmits<{
                 >
                     {{ $t('lineups.show_compare_clear') }}
                 </Button>
-                <div class="h-4 w-px bg-[hsl(var(--compare-coral))]/20" v-if="selectedArtists.length > 0"></div>
+                <div
+                    class="h-4 w-px bg-[hsl(var(--compare-coral))]/20"
+                    v-if="selectedArtists.length > 0"
+                ></div>
                 <Button
                     variant="outline"
                     size="sm"

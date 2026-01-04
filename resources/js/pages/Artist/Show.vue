@@ -664,22 +664,54 @@ const pageTitle = computed(() =>
                             <table class="w-full text-sm">
                                 <thead class="bg-muted/50">
                                     <tr class="border-b">
-                                        <th class="h-12 px-6 text-left align-middle font-medium text-muted-foreground">Platform</th>
-                                        <th class="h-12 px-6 text-left align-middle font-medium text-muted-foreground">URL</th>
+                                        <th
+                                            class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
+                                        >
+                                            Platform
+                                        </th>
+                                        <th
+                                            class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
+                                        >
+                                            URL
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(link, index) in artist.links" :key="index" class="border-b last:border-0 hover:bg-muted/50">
-                                        <td class="p-6 capitalize">{{ link.platform.replace('_', ' ') }}</td>
+                                    <tr
+                                        v-for="(link, index) in artist.links"
+                                        :key="index"
+                                        class="border-b last:border-0 hover:bg-muted/50"
+                                    >
+                                        <td class="p-6 capitalize">
+                                            {{
+                                                link.platform.replace('_', ' ')
+                                            }}
+                                        </td>
                                         <td class="p-6">
-                                            <a :href="link.url" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-primary hover:underline">
+                                            <a
+                                                :href="link.url"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="flex items-center gap-2 text-primary hover:underline"
+                                            >
                                                 {{ link.url }}
                                                 <ExternalLink class="h-3 w-3" />
                                             </a>
                                         </td>
                                     </tr>
-                                    <tr v-if="!artist.links || artist.links.length === 0">
-                                        <td colspan="2" class="p-6 text-center text-muted-foreground">No external links found for this artist.</td>
+                                    <tr
+                                        v-if="
+                                            !artist.links ||
+                                            artist.links.length === 0
+                                        "
+                                    >
+                                        <td
+                                            colspan="2"
+                                            class="p-6 text-center text-muted-foreground"
+                                        >
+                                            No external links found for this
+                                            artist.
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
