@@ -6,8 +6,8 @@ use App\Models\Artist;
 use App\Models\Genre;
 use App\Services\SpotifyService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UpdateArtistMetadataFromSpotifyCommand extends Command
 {
@@ -59,24 +59,28 @@ class UpdateArtistMetadataFromSpotifyCommand extends Command
 
             try {
                 $spotifyData = $spotifyService->getArtists($spotifyIds);
-                
+
                 // Key by ID for easy lookup
                 $spotifyMap = [];
                 foreach ($spotifyData as $data) {
                     $spotifyMap[$data->spotifyId] = $data;
                 }
 
-                foreach ($artists as $artist) {
-                    $data = $spotifyMap[$artist->spotify_id] ?? null;
-                    
-                    if (!$data) {
-                        // Artist not found in Spotify or API error?
-                        // We could mark them as "checked" to avoid infinite loops, but for now skip.
-                        $bar->advance();
-                        continue;
-                    }
+                DB::transaction(function () use ($artists, $spotifyMap, $bar) {
+                    // Local genre cache for the batch to reduce DB hits
+                    $genreCache = [];
 
-                    DB::transaction(function () use ($artist, $data) {
+                    foreach ($artists as $artist) {
+                        $data = $spotifyMap[$artist->spotify_id] ?? null;
+
+                        if (! $data) {
+                            // Artist not found in Spotify or API error?
+                            // We could mark them as "checked" to avoid infinite loops, but for now skip.
+                            $bar->advance();
+
+                            continue;
+                        }
+
                         // Update basic info
                         $artist->update([
                             'image_url' => $data->imageUrl,
@@ -85,13 +89,20 @@ class UpdateArtistMetadataFromSpotifyCommand extends Command
                         ]);
 
                         // Sync Genres
-                        if (!empty($data->genres)) {
+                        if (! empty($data->genres)) {
                             $genreIds = [];
                             foreach ($data->genres as $name) {
+                                if (isset($genreCache[$name])) {
+                                    $genreIds[] = $genreCache[$name];
+
+                                    continue;
+                                }
+
                                 $genre = Genre::firstOrCreate(
                                     ['name' => $name],
                                     ['slug' => Str::slug($name)]
                                 );
+                                $genreCache[$name] = $genre->id;
                                 $genreIds[] = $genre->id;
                             }
                             $artist->genres()->syncWithoutDetaching($genreIds);
@@ -106,23 +117,23 @@ class UpdateArtistMetadataFromSpotifyCommand extends Command
                                 'refreshed_at' => now(),
                             ]
                         );
-                    });
 
-                    $bar->advance();
-                }
+                        $bar->advance();
+                    }
+                });
 
                 // Respect rate limits - sleep slightly if needed?
                 // The service handles rate limit checks, but a small pause doesn't hurt.
                 usleep(200000); // 200ms
 
             } catch (\Exception $e) {
-                $this->error("Error fetching batch: " . $e->getMessage());
+                $this->error('Error fetching batch: '.$e->getMessage());
             }
         });
 
         $bar->finish();
         $this->newLine();
-        $this->info("Hydration complete.");
+        $this->info('Hydration complete.');
 
         return 0;
     }
