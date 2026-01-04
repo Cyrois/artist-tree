@@ -127,12 +127,11 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
      - Instagram Followers
    - Top Tracks list (top 5)
    - Recent Releases list (top 5)
-   - Similar Artists (compact cards, 3 columns)
-   - External Links section:
+   - Similar Artists (responsive grid, Score-based)
+   - External Links (quick access buttons):
      - Spotify (green branded button)
      - YouTube (red branded button)
      - Instagram (pink branded button)
-     - X/Twitter (black branded button)
 
 2. **Data & Metrics Tab**
    - Detailed metrics grid (8 cards):
@@ -148,9 +147,14 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
    - Score Breakdown (progress bars showing weight contribution)
    - Data freshness footer with "Refresh Data" button
 
+3. **External Links Tab**
+   - Table view of all available external links
+   - Columns: Platform, URL
+   - Supports: Official Homepage, Social Media, Streaming Services, Wikis, etc.
+   - Links open in new tab with external icon indicator
+
 **Removed from Artist Detail:**
 - ~~Tier Suggestion banner~~ (moved to Add to Lineup modal)
-- ~~External links in header~~ (moved to Overview tab bottom)
 
 ---
 
@@ -337,6 +341,21 @@ Artist-Tree is a festival lineup builder and artist discovery platform that help
 
 ---
 
+## CLI Tools (Data Management)
+
+**Purpose:** Manage artist data import and enrichment via command line interface.
+
+**Commands:**
+- `artist:import-csv {files*}`: Imports artist data from CSV files (MusicBrainz export format).
+  - Supports glob patterns (e.g., `data/*.csv`)
+  - Option `--limit=N` for testing
+  
+- `artist:hydrate-spotify`: Enriches local artist records with Spotify data.
+  - Fetches images, genres, popularity, and metrics
+  - Option `--limit=N` to control batch size
+
+---
+
 ## Artist Stacking Feature
 
 **Purpose:** Group alternative artists for the same slot (e.g., "The Weeknd OR Bad Bunny for Sunday headliner")
@@ -497,3 +516,4 @@ artistStacks: {
 | 1.0 | 2025-12-20 | Initial PRD |
 | 1.1 | 2025-12-21 | Added technical architecture details |
 | 2.0 | 2025-12-23 | Major UI/UX updates: Dashboard lineup stats, Search page redesign, Artist detail tabs, Add to Lineup wizard, Artist comparison modal, Stacking feature, Booking pipeline, Full-width tabs layout |
+| 2.1 | 2026-01-04 | Added External Links tab to Artist Detail, CLI data tools (CSV import, Spotify hydration), updated Similar Artists to use score-based grid |
