@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -12,15 +15,45 @@ class Artist extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'mbid',
         'spotify_id',
         'name',
-        'genres',
         'image_url',
+        'youtube_channel_id',
+        'country_id',
     ];
 
-    protected $casts = [
-        'genres' => 'array',
-    ];
+    /**
+     * Get the country associated with the artist.
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Get the genres for this artist.
+     */
+    public function genres(): BelongsToMany
+    {
+        return $this->belongsToMany(Genre::class, 'artist_genre');
+    }
+
+    /**
+     * Get the social/platform links for this artist.
+     */
+    public function links(): HasMany
+    {
+        return $this->hasMany(ArtistLink::class);
+    }
+
+    /**
+     * Get the aliases for this artist.
+     */
+    public function aliases(): HasMany
+    {
+        return $this->hasMany(ArtistAlias::class);
+    }
 
     /**
      * Get the metrics for this artist.
@@ -43,18 +76,19 @@ class Artist extends Model
     }
 
     /**
-     * Scope: Search by name (case-insensitive, cross-DB compatible).
+     * Scope: Search by name or alias (case-insensitive).
      */
     public function scopeSearch($query, string $term)
     {
         $driver = $query->getConnection()->getDriverName();
+        $like = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
 
-        if ($driver === 'pgsql') {
-            return $query->where('name', 'ILIKE', "%{$term}%");
-        }
-
-        // SQLite and MySQL: LIKE is case-insensitive by default
-        return $query->where('name', 'LIKE', "%{$term}%");
+        return $query->where(function ($q) use ($term, $like) {
+            $q->where('artists.name', $like, "%{$term}%")
+              ->orWhereHas('aliases', function ($sub) use ($term, $like) {
+                  $sub->where('name', $like, "%{$term}%");
+              });
+        });
     }
 
     /**
@@ -63,13 +97,5 @@ class Artist extends Model
     public function artistMetric(): HasOne
     {
         return $this->metrics();
-    }
-
-    /**
-     * Scope: Filter by genre.
-     */
-    public function scopeHasGenre($query, string $genre)
-    {
-        return $query->whereJsonContains('genres', $genre);
     }
 }

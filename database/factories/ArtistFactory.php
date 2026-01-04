@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Artist;
+use App\Models\Country;
+use App\Models\Genre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,13 +20,11 @@ class ArtistFactory extends Factory
     public function definition(): array
     {
         return [
+            'mbid' => fake()->unique()->uuid(),
             'spotify_id' => fake()->unique()->uuid(),
             'name' => fake()->firstName().' '.fake()->randomElement(['and the', '&']).' '.fake()->word(),
-            'genres' => fake()->randomElements(
-                ['rock', 'indie', 'electronic', 'pop', 'hip-hop', 'jazz', 'metal', 'folk', 'r&b', 'country', 'alternative', 'punk', 'soul', 'reggae', 'blues'],
-                rand(1, 3)
-            ),
             'image_url' => fake()->imageUrl(640, 640, 'music', true, 'artist'),
+            'country_id' => Country::query()->inRandomOrder()->value('id') ?? Country::factory(),
         ];
     }
 
@@ -38,12 +39,18 @@ class ArtistFactory extends Factory
     }
 
     /**
-     * Artist with specific genres.
+     * Attach genres to the artist.
      */
-    public function withGenres(array $genres): static
+    public function withGenres(array $genreNames = ['rock', 'pop']): static
     {
-        return $this->state(fn (array $attributes) => [
-            'genres' => $genres,
-        ]);
+        return $this->afterCreating(function (Artist $artist) use ($genreNames) {
+            foreach ($genreNames as $name) {
+                $genre = Genre::firstOrCreate(
+                    ['name' => $name],
+                    ['slug' => \Illuminate\Support\Str::slug($name)]
+                );
+                $artist->genres()->attach($genre);
+            }
+        });
     }
 }
