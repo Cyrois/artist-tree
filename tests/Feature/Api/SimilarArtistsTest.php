@@ -21,11 +21,12 @@ class SimilarArtistsTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
-        $this->artist = Artist::factory()->create([
-            'name' => 'Original Artist',
-            'spotify_id' => 'original_id',
-            'genres' => ['rock', 'alternative'],
-        ]);
+        $this->artist = Artist::factory()
+            ->withGenres(['rock', 'alternative'])
+            ->create([
+                'name' => 'Original Artist',
+                'spotify_id' => 'original_id',
+            ]);
     }
 
     public function test_similar_artists_endpoint_returns_data(): void
@@ -93,9 +94,7 @@ class SimilarArtistsTest extends TestCase
 
     public function test_returns_empty_when_no_genres(): void
     {
-        $artistNoGenres = Artist::factory()->create([
-            'genres' => [],
-        ]);
+        $artistNoGenres = Artist::factory()->create();
 
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artistNoGenres->id}/similar");

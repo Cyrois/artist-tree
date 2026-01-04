@@ -260,11 +260,10 @@ class ArtistController extends Controller
      */
     public function similar(int $id, GetSimilarArtistsRequest $request): JsonResponse
     {
-        $artist = Artist::findOrFail($id);
+        $artist = Artist::with('genres')->findOrFail($id);
         $limit = $request->validated('limit', 10);
-        $genres = $artist->genres ?? [];
-
-        if (empty($genres)) {
+        
+        if ($artist->genres->isEmpty()) {
             return response()->json([
                 'data' => [],
                 'message' => __('artists.error_no_genres'),
@@ -273,7 +272,8 @@ class ArtistController extends Controller
 
         try {
             // Search using the first genre for the most relevant results
-            $results = $this->spotifyService->searchArtistsByGenre($genres[0], $limit + 1);
+            $genreName = $artist->genres->first()->name;
+            $results = $this->spotifyService->searchArtistsByGenre($genreName, $limit + 1);
 
             // Need scoring service to calculate scores for results
             $scoringService = app(\App\Services\ArtistScoringService::class);
@@ -299,7 +299,7 @@ class ArtistController extends Controller
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to fetch similar artists', [
                 'artist_id' => $id,
-                'genre' => $genres[0],
+                'genre' => $artist->genres->first()->name,
             ]);
         }
     }

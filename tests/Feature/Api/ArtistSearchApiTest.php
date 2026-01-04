@@ -38,10 +38,10 @@ it('searches artists successfully with local results', function () {
     // Create test artists
     Artist::factory()
         ->has(ArtistMetric::factory())
+        ->withGenres(['rock', 'indie'])
         ->create([
             'name' => 'Arctic Monkeys',
             'spotify_id' => 'arctic123',
-            'genres' => ['rock', 'indie'],
         ]);
 
     // Mock Spotify to return empty
@@ -298,10 +298,10 @@ it('returns 404 when refreshing non-existent artist', function () {
 it('includes spotify_id in search response', function () {
     Artist::factory()
         ->has(ArtistMetric::factory())
+        ->withGenres(['rock'])
         ->create([
             'name' => 'Test Artist',
             'spotify_id' => 'test_spotify_123',
-            'genres' => ['rock'],
         ]);
 
     Http::fake([
@@ -340,10 +340,10 @@ it('gets artist by database ID', function () {
             'spotify_popularity' => 85,
             'spotify_followers' => 100000,
         ]))
+        ->withGenres(['rock', 'indie'])
         ->create([
             'name' => 'Test Artist',
             'spotify_id' => 'spotify123',
-            'genres' => ['rock', 'indie'],
         ]);
 
     $response = $this->actingAs($this->user)
@@ -376,10 +376,10 @@ it('gets artist by Spotify ID', function () {
             'spotify_popularity' => 90,
             'spotify_followers' => 200000,
         ]))
+        ->withGenres(['pop'])
         ->create([
             'name' => 'Another Artist',
             'spotify_id' => 'spotify456',
-            'genres' => ['pop'],
         ]);
 
     $response = $this->actingAs($this->user)
