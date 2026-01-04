@@ -4,8 +4,6 @@ namespace App\Console\Commands;
 
 use App\Enums\SocialPlatform;
 use App\Models\Artist;
-use App\Models\ArtistAlias;
-use App\Models\ArtistLink;
 use App\Models\Country;
 use App\Models\Genre;
 use Illuminate\Console\Command;
@@ -32,6 +30,7 @@ class ImportArtistsFromCsvCommand extends Command
      * Caches for performance optimization.
      */
     private array $countryCache = [];
+
     private array $genreCache = [];
 
     /**
@@ -51,8 +50,9 @@ class ImportArtistsFromCsvCommand extends Command
 
     private function processFile(string $filePath, ?int $limit): void
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             $this->error("File not found: {$filePath}");
+
             return;
         }
 
@@ -67,50 +67,35 @@ class ImportArtistsFromCsvCommand extends Command
         $estimatedLines = $limit ?: (int) (filesize($filePath) / 150);
         $bar = $this->output->createProgressBar($estimatedLines);
         $count = 0;
+        $batchSize = 100;
+        $batchCount = 0;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            if ($limit && $count >= $limit) break;
+        DB::beginTransaction();
 
-            DB::transaction(function () use ($row, $columns) {
-                $musicbrainz_id = $row[$columns['ID']];
-                $name = $row[$columns['Name']];
-                
-                // Extract first valid Spotify ID if multiple exist for metrics tracking
-                $spotifyUrls = explode(';', $row[$columns['Spotify']] ?? '');
-                $spotifyId = null;
-                foreach ($spotifyUrls as $url) {
-                    if ($id = $this->extractSpotifyId(trim($url))) {
-                        $spotifyId = $id;
-                        break;
-                    }
+        try {
+            while (($row = fgetcsv($handle)) !== false) {
+                if ($limit && $count >= $limit) {
+                    break;
                 }
 
-                // 1. Resolve Country (Normalize ISO codes)
-                $countryId = $this->resolveCountry($row[$columns['Country']] ?? null, $row[$columns['Country Code']] ?? null);
+                $this->processRow($row, $columns);
 
-                // 2. Create or Update the Artist record
-                $artist = Artist::updateOrCreate(
-                    ['musicbrainz_id' => $musicbrainz_id],
-                    [
-                        'name' => $name,
-                        'spotify_id' => $spotifyId,
-                        'country_id' => $countryId,
-                        'youtube_channel_id' => $this->getFirstYoutubeId($row[$columns['YouTube']] ?? ''),
-                    ]
-                );
+                $bar->advance();
+                $count++;
+                $batchCount++;
 
-                // 3. Handle Normalized Genres
-                $this->syncGenres($artist, $row[$columns['Genres']] ?? '');
-
-                // 4. Handle Artist Aliases for robust search
-                $this->syncAliases($artist, $row[$columns['Aliases']] ?? '');
-
-                // 5. Handle Social & Streaming Links (Using Enums)
-                $this->syncLinks($artist, $row, $columns);
-            });
-
-            $bar->advance();
-            $count++;
+                if ($batchCount >= $batchSize) {
+                    DB::commit();
+                    DB::beginTransaction();
+                    $batchCount = 0;
+                }
+            }
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $this->newLine();
+            $this->error("Failed at record {$count}. Error: ".$e->getMessage());
+            throw $e;
         }
 
         fclose($handle);
@@ -120,18 +105,63 @@ class ImportArtistsFromCsvCommand extends Command
         $this->newLine();
     }
 
+    private function processRow(array $row, array $columns): void
+    {
+        $musicbrainz_id = $row[$columns['ID']];
+        $name = $row[$columns['Name']];
+
+        // Extract first valid Spotify ID if multiple exist for metrics tracking
+        $spotifyUrls = explode(';', $row[$columns['Spotify']] ?? '');
+        $spotifyId = null;
+        foreach ($spotifyUrls as $url) {
+            if ($id = $this->extractSpotifyId(trim($url))) {
+                $spotifyId = $id;
+                break;
+            }
+        }
+
+        // 1. Resolve Country (Normalize ISO codes)
+        $countryId = $this->resolveCountry($row[$columns['Country']] ?? null, $row[$columns['Country Code']] ?? null);
+
+        // 2. Create or Update the Artist record
+        $artist = Artist::updateOrCreate(
+            ['musicbrainz_id' => $musicbrainz_id],
+            [
+                'name' => $name,
+                'spotify_id' => $spotifyId,
+                'country_id' => $countryId,
+                'youtube_channel_id' => $this->getFirstYoutubeId($row[$columns['YouTube']] ?? ''),
+            ]
+        );
+
+        // 3. Handle Normalized Genres
+        $this->syncGenres($artist, $row[$columns['Genres']] ?? '');
+
+        // 4. Handle Artist Aliases for robust search
+        $this->syncAliases($artist, $row[$columns['Aliases']] ?? '');
+
+        // 5. Handle Social & Streaming Links (Using Enums)
+        $this->syncLinks($artist, $row, $columns);
+    }
+
     /**
      * Resolve country from CSV data and cache the result.
      */
     private function resolveCountry(?string $name, ?string $codes): ?int
     {
-        if (!$codes && !$name) return null;
+        if (! $codes && ! $name) {
+            return null;
+        }
 
         // Take the first country code if multiple exist
         $code = trim(explode(';', $codes)[0]);
-        if (strlen($code) !== 2) return null;
+        if (strlen($code) !== 2) {
+            return null;
+        }
 
-        if (isset($this->countryCache[$code])) return $this->countryCache[$code];
+        if (isset($this->countryCache[$code])) {
+            return $this->countryCache[$code];
+        }
 
         $country = Country::firstOrCreate(
             ['iso2' => strtoupper($code)],
@@ -139,6 +169,7 @@ class ImportArtistsFromCsvCommand extends Command
         );
 
         $this->countryCache[$code] = $country->id;
+
         return $country->id;
     }
 
@@ -147,16 +178,20 @@ class ImportArtistsFromCsvCommand extends Command
      */
     private function syncGenres(Artist $artist, string $genreString): void
     {
-        if (empty($genreString)) return;
+        if (empty($genreString)) {
+            return;
+        }
 
         $genreNames = array_map('trim', explode(';', $genreString));
         $genreIds = [];
 
         foreach ($genreNames as $name) {
-            if (empty($name)) continue;
-            
+            if (empty($name)) {
+                continue;
+            }
+
             $cacheKey = Str::slug($name);
-            if (!isset($this->genreCache[$cacheKey])) {
+            if (! isset($this->genreCache[$cacheKey])) {
                 $genre = Genre::firstOrCreate(
                     ['name' => $name],
                     ['slug' => $cacheKey]
@@ -174,15 +209,19 @@ class ImportArtistsFromCsvCommand extends Command
      */
     private function syncAliases(Artist $artist, string $aliasString): void
     {
-        if (empty($aliasString)) return;
+        if (empty($aliasString)) {
+            return;
+        }
 
         $aliases = array_map('trim', explode(';', $aliasString));
-        
+
         // Refresh aliases by deleting existing ones and recreating
         $artist->aliases()->delete();
-        
+
         foreach ($aliases as $name) {
-            if (empty($name)) continue;
+            if (empty($name)) {
+                continue;
+            }
             $artist->aliases()->create(['name' => $name]);
         }
     }
@@ -218,11 +257,15 @@ class ImportArtistsFromCsvCommand extends Command
 
         foreach ($platforms as $colName => $platformKey) {
             $urls = $row[$columns[$colName]] ?? null;
-            if (!$urls) continue;
+            if (! $urls) {
+                continue;
+            }
 
             foreach (explode(';', $urls) as $url) {
                 $url = trim($url);
-                if (empty($url)) continue;
+                if (empty($url)) {
+                    continue;
+                }
 
                 $artist->links()->create([
                     'platform' => $platformKey,
@@ -242,6 +285,7 @@ class ImportArtistsFromCsvCommand extends Command
                 return $id;
             }
         }
+
         return null;
     }
 
@@ -250,11 +294,14 @@ class ImportArtistsFromCsvCommand extends Command
      */
     private function extractSpotifyId(?string $url): ?string
     {
-        if (!$url) return null;
+        if (! $url) {
+            return null;
+        }
         // Supports: https://open.spotify.com/artist/6eUKZXS0eZJ6t9vj6oXNpZ
         if (preg_match('/artist\/([a-zA-Z0-9]{22})/', $url, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -263,11 +310,14 @@ class ImportArtistsFromCsvCommand extends Command
      */
     private function extractYoutubeId(?string $url): ?string
     {
-        if (!$url) return null;
+        if (! $url) {
+            return null;
+        }
         // Supports: https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ
         if (preg_match('/channel\/([a-zA-Z0-9_-]{24})/', $url, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 }
