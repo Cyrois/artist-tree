@@ -259,7 +259,7 @@ class ArtistSearchService
     }
 
     /**
-     * Helper to find/create genres and sync to artist.
+     * Helper to convert spotify genres into our genre table.
      */
     private function syncGenres(Artist $artist, array $genreNames): void
     {
@@ -274,6 +274,6 @@ class ArtistSearchService
             $genreIds[] = $genre->id;
         }
 
-        $artist->genres()->sync($genreIds);
+        $artist->genres()->sync(array_unique($genreIds));
     }
 }

@@ -66,6 +66,7 @@ class ImportArtistsFromCsvCommand extends Command
         // Estimate line count for progress bar (rough calc: file size / ~150 bytes per line)
         $estimatedLines = $limit ?: (int) (filesize($filePath) / 150);
         $bar = $this->output->createProgressBar($estimatedLines);
+        $bar->setFormat('debug'); // Shows %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%
         $count = 0;
         $batchSize = 100;
         $batchCount = 0;

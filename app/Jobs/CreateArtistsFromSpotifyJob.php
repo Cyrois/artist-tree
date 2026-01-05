@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Models\Artist;
+use App\Models\Genre;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -128,7 +129,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
         // 1. Bulk find exact matches to save queries
         // Note: This relies on database collation for case-sensitivity.
         // findOrCreateSmart is more robust, so this is just a first-pass optimization.
-        $existing = \App\Models\Genre::whereIn('name', $uniqueNames)->get();
+        $existing = Genre::whereIn('name', $uniqueNames)->get();
         foreach ($existing as $genre) {
             $map[$genre->name] = $genre->id;
         }
@@ -136,7 +137,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
         // 2. Resolve remaining using smart logic (handles creation and synonyms)
         foreach ($uniqueNames as $name) {
             if (! isset($map[$name])) {
-                $genre = \App\Models\Genre::findOrCreateSmart($name);
+                $genre = Genre::findOrCreateSmart($name);
                 $map[$name] = $genre->id;
             }
         }
