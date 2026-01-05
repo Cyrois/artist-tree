@@ -19,6 +19,27 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Artist Schema Expansion & Metadata Integration (2026-01-04)
+**Summary:** Expanded the database schema to support rich artist metadata, external links, and normalized entities (Countries/Genres).
+
+- **Database Schema Updates:**
+  - **New Tables:**
+    - `countries`: Standardized country storage with ISO2/ISO3 codes.
+    - `genres`: Normalized genre storage with `synonyms` JSON column for smart matching.
+    - `artist_genre`: Many-to-many pivot table for flexible genre assignment.
+    - `artist_aliases`: Stores alternative names for improved search recall.
+    - `artist_links`: Stores social and streaming links with platform identification.
+    - `artist_link_votes`: Infrastructure for community-verified link accuracy.
+  - **Artist Table Enhancements:**
+    - Added `musicbrainz_id` for reliable external data mapping.
+    - Added `youtube_channel_id` for direct platform integration.
+    - Added `country_id` (FK) to link artists to standardized countries.
+    - **Migration:** Successfully migrated data from the legacy `genres` JSON column to the new `artist_genre` pivot table.
+- **Frontend Integration:**
+  - Updated the Artist Detail page to display Country, Genres, and External Links.
+  - Implemented the "External Links" tab with a table of social/streaming platforms.
+  - Backend now eagerly loads `links`, `country`, and `genres` for the artist view.
+
 ### Smart Genre Matching & Import Optimization (2026-01-04)
 **Summary:** Implemented intelligent genre matching logic and optimized the bulk artist import process to handle large datasets efficiently.
 
