@@ -63,9 +63,11 @@ class Genre extends Model
         $slug = Str::slug($name);
         $normalized = static::normalizeName($name);
 
+        $likeOperator = (new static)->getConnection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+
         // 1. Try exact matches (Slug, Name, or EXACT Raw Synonym)
         $genre = static::where('slug', $slug)
-            ->orWhere('name', 'ILIKE', $name)
+            ->orWhere('name', $likeOperator, $name)
             ->orWhereJsonContains('synonyms', $name) 
             ->first();
 
