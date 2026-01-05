@@ -45,10 +45,7 @@ class ArtistFactory extends Factory
     {
         return $this->afterCreating(function (Artist $artist) use ($genreNames) {
             foreach ($genreNames as $name) {
-                $genre = Genre::firstOrCreate(
-                    ['name' => $name],
-                    ['slug' => \Illuminate\Support\Str::slug($name)]
-                );
+                $genre = Genre::findOrCreateSmart($name);
                 $artist->genres()->attach($genre);
             }
         });

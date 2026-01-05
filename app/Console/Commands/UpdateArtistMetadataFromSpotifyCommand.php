@@ -98,10 +98,7 @@ class UpdateArtistMetadataFromSpotifyCommand extends Command
                                     continue;
                                 }
 
-                                $genre = Genre::firstOrCreate(
-                                    ['name' => $name],
-                                    ['slug' => Str::slug($name)]
-                                );
+                                $genre = Genre::findOrCreateSmart($name);
                                 $genreCache[$name] = $genre->id;
                                 $genreIds[] = $genre->id;
                             }

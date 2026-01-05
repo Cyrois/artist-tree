@@ -191,15 +191,12 @@ class ImportArtistsFromCsvCommand extends Command
                 continue;
             }
 
-            $cacheKey = Str::slug($name);
-            if (! isset($this->genreCache[$cacheKey])) {
-                $genre = Genre::firstOrCreate(
-                    ['name' => $name],
-                    ['slug' => $cacheKey]
-                );
-                $this->genreCache[$cacheKey] = $genre->id;
+            // Using the raw name as cache key for the command session
+            if (! isset($this->genreCache[$name])) {
+                $genre = Genre::findOrCreateSmart($name);
+                $this->genreCache[$name] = $genre->id;
             }
-            $genreIds[] = $this->genreCache[$cacheKey];
+            $genreIds[] = $this->genreCache[$name];
         }
 
         $artist->genres()->sync($genreIds);
