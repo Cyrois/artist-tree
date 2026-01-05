@@ -19,6 +19,26 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Smart Genre Matching & Import Optimization (2026-01-04)
+**Summary:** Implemented intelligent genre matching logic and optimized the bulk artist import process to handle large datasets efficiently.
+
+- **Smart Genre Matching:**
+  - Implemented `Genre::findOrCreateSmart(string $name)` to handle genre variations intelligently.
+  - Added normalization logic: strips non-alphabetic characters and converts to lowercase (e.g., "Hip-Hop" -> "hiphop", "R&B" -> "rnb").
+  - Implemented synonym tracking: fuzzy matches against known synonyms and "learns" new variations by adding them to the database.
+  - Ensures cleaner genre data by reducing duplicates like "Hip Hop", "Hip-Hop", and "hiphop".
+
+- **Bulk Import Optimization:**
+  - Enhanced `ImportArtistsFromCsvCommand` with transaction batching (commits every 100 records) to manage memory and prevent database locks.
+  - Added in-memory caching for Countries and Genres during import to reduce database queries.
+  - Implemented comprehensive link parsing for 15+ social platforms (Spotify, YouTube, Instagram, etc.) using `SocialPlatform` Enum.
+  - Added progress bar with estimated completion time.
+  - Robust handling of artist aliases and MusicBrainz IDs.
+
+- **Job Optimization:**
+  - Optimized `CreateArtistsFromSpotifyJob` to handle batched insertions, significantly reducing overhead when processing search results.
+  - Improved `ArtistSearchService` to leverage the new smart genre matching when syncing artist genres from Spotify.
+
 ### Artist Stacking Feature (2026-01-02)
 **Summary:** Implemented the "Artist Stacking" feature, allowing users to group alternative artists for the same slot in a lineup.
 - **Backend:**
