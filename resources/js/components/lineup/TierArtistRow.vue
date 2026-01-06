@@ -20,8 +20,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { Artist } from '@/data/types';
-import type { GroupedArtist } from '@/types/lineup';
 import { cn } from '@/lib/utils';
+import type { GroupedArtist } from '@/types/lineup';
 import { trans } from 'laravel-vue-i18n';
 import {
     ArrowUpCircle,
@@ -73,9 +73,7 @@ function isSelected(artistId: number) {
                 compareMode || stackMode
                     ? 'cursor-pointer hover:bg-muted/30'
                     : '',
-                stackMode &&
-                    isAddingAlternativesTo &&
-                    'hover:bg-primary/5',
+                stackMode && isAddingAlternativesTo && 'hover:bg-primary/5',
             )
         "
         @click="
@@ -84,9 +82,9 @@ function isSelected(artistId: number) {
     >
         <ArtistAvatar :artist="group.artist" size="sm" />
 
-        <div class="min-w-0 flex-1 flex flex-col justify-between h-12">
+        <div class="flex h-12 min-w-0 flex-1 flex-col justify-between">
             <div class="flex items-center gap-2">
-                <span class="truncate font-medium leading-none">{{
+                <span class="truncate leading-none font-medium">{{
                     group.artist.name
                 }}</span>
             </div>
@@ -182,7 +180,9 @@ function isSelected(artistId: number) {
                                 variant="ghost"
                                 size="icon"
                                 class="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                @click.stop="emit('remove-artist', group.artist)"
+                                @click.stop="
+                                    emit('remove-artist', group.artist)
+                                "
                             >
                                 <Trash2 class="h-4 w-4" />
                                 <span class="sr-only">{{
@@ -191,7 +191,9 @@ function isSelected(artistId: number) {
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>{{ trans('lineups.tier_remove_from_lineup') }}</p>
+                            <p>
+                                {{ trans('lineups.tier_remove_from_lineup') }}
+                            </p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -233,13 +235,13 @@ function isSelected(artistId: number) {
             "
             @click="
                 (compareMode || stackMode) &&
-                    emit('select-artist', group.stack.primary)
+                emit('select-artist', group.stack.primary)
             "
         >
             <ArtistAvatar :artist="group.stack.primary" size="sm" />
-            <div class="min-w-0 flex-1 flex flex-col justify-between h-12">
+            <div class="flex h-12 min-w-0 flex-1 flex-col justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="truncate font-bold leading-none">{{
+                    <span class="truncate leading-none font-bold">{{
                         group.stack.primary.name
                     }}</span>
                 </div>
@@ -251,7 +253,9 @@ function isSelected(artistId: number) {
             <!-- Inline Stack Action for Stack Mode -->
             <div v-if="stackMode">
                 <StackPrimaryActionButton
-                    :is-current-stack="isAddingAlternativesTo === group.stack.id"
+                    :is-current-stack="
+                        isAddingAlternativesTo === group.stack.id
+                    "
                     @click="emit('start-stack', group.stack.primary)"
                     @deselect="emit('deselect-stack')"
                 />
@@ -265,10 +269,7 @@ function isSelected(artistId: number) {
                 />
             </div>
 
-            <div
-                v-if="!compareMode && !stackMode"
-                class="flex items-center"
-            >
+            <div v-if="!compareMode && !stackMode" class="flex items-center">
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button
@@ -369,7 +370,7 @@ function isSelected(artistId: number) {
             @click="compareMode && emit('select-artist', alt)"
         >
             <ArtistAvatar :artist="alt" size="xs" />
-            <div class="min-w-0 flex-1 flex items-center gap-2">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
                 <span class="truncate text-sm font-medium">{{ alt.name }}</span>
                 <ScoreBadge :score="alt.score" size="sm" />
             </div>
@@ -389,10 +390,7 @@ function isSelected(artistId: number) {
                 />
             </div>
 
-            <div
-                v-if="!compareMode && !stackMode"
-                class="flex items-center"
-            >
+            <div v-if="!compareMode && !stackMode" class="flex items-center">
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button

@@ -156,9 +156,14 @@ php artisan make:test Services/ArtistScoringServiceTest --pest --unit
 
 ### 2. Run Tests
 
+**IMPORTANT SAFETY RULE:** Before running any tests, you **MUST** execute `php artisan config:clear`. This prevents stale configuration from pointing to your main database (Postgres) instead of the testing database (memory SQLite) defined in `phpunit.xml`.
+
 **Run minimal tests first:**
 
 ```bash
+# Mandatory first step
+php artisan config:clear
+
 # Run specific test file
 php artisan test tests/Feature/Lineups/CreateLineupTest.php
 

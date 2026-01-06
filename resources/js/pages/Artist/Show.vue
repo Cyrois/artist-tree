@@ -13,6 +13,8 @@ import {
     AlertCircle,
     ArrowLeft,
     ArrowRightLeft,
+    ExternalLink,
+    Globe,
     Instagram,
     Loader2,
     Music,
@@ -30,8 +32,10 @@ interface ApiArtist {
     spotify_id: string;
     name: string;
     genres: string[];
+    country: string | null;
     image_url: string | null;
     score: number;
+    links: { platform: string; url: string }[];
     metrics: {
         spotify_monthly_listeners: number | null;
         spotify_popularity: number | null;
@@ -64,7 +68,7 @@ const { artist: artistBreadcrumbs } = useBreadcrumbs();
 const artist = ref<ApiArtist | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref<'overview' | 'data'>('overview');
+const activeTab = ref<'overview' | 'data' | 'links'>('overview');
 const showAddToLineupModal = ref(false);
 
 // Fetch artist details on mount
@@ -237,6 +241,13 @@ const pageTitle = computed(() =>
                                     class="mt-4 flex items-center gap-4 text-sm text-muted-foreground"
                                 >
                                     <div
+                                        v-if="artist.country"
+                                        class="flex items-center gap-1"
+                                    >
+                                        <Globe class="h-4 w-4" />
+                                        <span>{{ artist.country }}</span>
+                                    </div>
+                                    <div
                                         v-if="artist.spotify_id"
                                         class="flex items-center gap-1"
                                     >
@@ -296,6 +307,17 @@ const pageTitle = computed(() =>
                         "
                     >
                         {{ $t('artists.show_tab_data') }}
+                    </button>
+                    <button
+                        @click="activeTab = 'links'"
+                        class="border-b-2 pb-2 text-sm font-medium transition-colors"
+                        :class="
+                            activeTab === 'links'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        "
+                    >
+                        External Links
                     </button>
                 </div>
             </div>
@@ -629,6 +651,73 @@ const pageTitle = computed(() =>
                         {{ $t('artists.show_refresh_data_button') }}
                     </Button>
                 </div>
+            </div>
+
+            <!-- External Links Tab -->
+            <div v-else-if="activeTab === 'links'" class="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>External Links</CardTitle>
+                    </CardHeader>
+                    <CardContent class="p-0">
+                        <div class="border-t">
+                            <table class="w-full text-sm">
+                                <thead class="bg-muted/50">
+                                    <tr class="border-b">
+                                        <th
+                                            class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
+                                        >
+                                            Platform
+                                        </th>
+                                        <th
+                                            class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
+                                        >
+                                            URL
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="(link, index) in artist.links"
+                                        :key="index"
+                                        class="border-b last:border-0 hover:bg-muted/50"
+                                    >
+                                        <td class="p-6 capitalize">
+                                            {{
+                                                link.platform.replace('_', ' ')
+                                            }}
+                                        </td>
+                                        <td class="p-6">
+                                            <a
+                                                :href="link.url"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="flex items-center gap-2 text-primary hover:underline"
+                                            >
+                                                {{ link.url }}
+                                                <ExternalLink class="h-3 w-3" />
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr
+                                        v-if="
+                                            !artist.links ||
+                                            artist.links.length === 0
+                                        "
+                                    >
+                                        <td
+                                            colspan="2"
+                                            class="p-6 text-center text-muted-foreground"
+                                        >
+                                            No external links found for this
+                                            artist.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
 

@@ -120,7 +120,9 @@ const stackingPrimaryArtist = computed(() => {
 });
 
 const selectedArtists = computed(() => {
-    return allArtists.value.filter((a) => selectedArtistIds.value.includes(a.id));
+    return allArtists.value.filter((a) =>
+        selectedArtistIds.value.includes(a.id),
+    );
 });
 
 // Search State

@@ -25,9 +25,14 @@ class ArtistResource extends JsonResource
             'id' => $this->id,
             'spotify_id' => $this->spotify_id,
             'name' => $this->name,
-            'genres' => $this->genres,
+            'genres' => $this->genres->pluck('name')->toArray(),
+            'country' => $this->country?->name,
             'image_url' => $this->image_url,
             'score' => $scoringService->calculateScore($this->resource),
+            'links' => $this->links->map(fn ($link) => [
+                'platform' => $link->platform->value,
+                'url' => $link->url,
+            ]),
 
             // Include metrics if loaded
             'metrics' => $this->when($this->relationLoaded('metrics') && $this->metrics, function () {

@@ -23,6 +23,7 @@ class ArtistSearchResultResource extends JsonResource
             'spotify_id' => $this->spotifyId,
             'name' => $this->name,
             'genres' => $this->genres,
+            'country' => $this->country,
             'image_url' => $this->imageUrl,
             'spotify_popularity' => $this->popularity,
             'exists_in_database' => $this->existsInDatabase,

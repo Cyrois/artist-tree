@@ -154,7 +154,7 @@ it('creates new artist from Spotify data', function () {
     expect($artist)->toBeInstanceOf(Artist::class)
         ->and($artist->spotify_id)->toBe('new123')
         ->and($artist->name)->toBe('New Artist')
-        ->and($artist->genres)->toBe(['pop', 'electronic'])
+        ->and($artist->genres->pluck('name')->toArray())->toBe(['pop', 'electronic'])
         ->and($artist->metrics)->not->toBeNull()
         ->and($artist->metrics->spotify_popularity)->toBe(65)
         ->and($artist->metrics->spotify_followers)->toBe(75000);
@@ -203,7 +203,7 @@ it('refreshes stale artist data from Spotify', function () {
     $refreshedArtist = $this->searchService->refreshArtistFromSpotify($artist);
 
     expect($refreshedArtist->name)->toBe('Updated Name')
-        ->and($refreshedArtist->genres)->toBe(['new genre'])
+        ->and($refreshedArtist->genres->pluck('name')->toArray())->toBe(['new genre'])
         ->and($refreshedArtist->metrics->spotify_popularity)->toBe(90)
         ->and($refreshedArtist->metrics->spotify_followers)->toBe(1000000)
         ->and($refreshedArtist->metrics->isStale())->toBeFalse();

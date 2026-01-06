@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Models\Artist;
+use App\Models\Genre;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -37,24 +38,37 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
             return;
         }
 
+        // 1. Optimize Genre Resolution: Deduplicate and bulk fetch
+        $genreMap = $this->resolveGenres();
+
         $createdCount = 0;
         $alreadyExistCount = 0;
 
         // Create artists with metrics in transaction
-        DB::transaction(function () use (&$createdCount, &$alreadyExistCount) {
+        DB::transaction(function () use ($genreMap, &$createdCount, &$alreadyExistCount) {
             foreach ($this->spotifyArtists as $spotifyArtist) {
                 try {
-                    // Atomic check/create
+                    // Atomic check/create without genres first
                     $artist = Artist::firstOrCreate(
                         ['spotify_id' => $spotifyArtist->spotifyId],
                         [
                             'name' => $spotifyArtist->name,
-                            'genres' => $spotifyArtist->genres,
                             'image_url' => $spotifyArtist->imageUrl,
                         ]
                     );
 
                     if ($artist->wasRecentlyCreated) {
+                        // Sync genres using pre-resolved map
+                        if (! empty($spotifyArtist->genres)) {
+                            $genreIds = [];
+                            foreach ($spotifyArtist->genres as $name) {
+                                if (isset($genreMap[$name])) {
+                                    $genreIds[] = $genreMap[$name];
+                                }
+                            }
+                            $artist->genres()->sync($genreIds);
+                        }
+
                         // Create associated metrics for new artists
                         $artist->metrics()->create([
                             'spotify_popularity' => $spotifyArtist->popularity,
@@ -87,5 +101,47 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
             'already_exist' => $alreadyExistCount,
             'total_submitted' => count($this->spotifyArtists),
         ]);
+    }
+
+    /**
+     * Resolve genre IDs for all artists in the batch efficiently.
+     *
+     * @return array<string, int> Map of genre name to ID
+     */
+    private function resolveGenres(): array
+    {
+        $allGenreNames = [];
+        foreach ($this->spotifyArtists as $dto) {
+            if (! empty($dto->genres)) {
+                foreach ($dto->genres as $name) {
+                    $allGenreNames[] = $name;
+                }
+            }
+        }
+
+        if (empty($allGenreNames)) {
+            return [];
+        }
+
+        $uniqueNames = array_unique($allGenreNames);
+        $map = [];
+
+        // 1. Bulk find exact matches to save queries
+        // Note: This relies on database collation for case-sensitivity.
+        // findOrCreateSmart is more robust, so this is just a first-pass optimization.
+        $existing = Genre::whereIn('name', $uniqueNames)->get();
+        foreach ($existing as $genre) {
+            $map[$genre->name] = $genre->id;
+        }
+
+        // 2. Resolve remaining using smart logic (handles creation and synonyms)
+        foreach ($uniqueNames as $name) {
+            if (! isset($map[$name])) {
+                $genre = Genre::findOrCreateSmart($name);
+                $map[$name] = $genre->id;
+            }
+        }
+
+        return $map;
     }
 }

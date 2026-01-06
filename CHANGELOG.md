@@ -19,6 +19,47 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Smart Genre Matching & Import Optimization (2026-01-04)
+**Summary:** Implemented intelligent genre matching logic and optimized the bulk artist import process to handle large datasets efficiently.
+
+- **Smart Genre Matching:**
+  - Implemented `Genre::findOrCreateSmart(string $name)` to handle genre variations intelligently.
+  - Added normalization logic: strips non-alphabetic characters and converts to lowercase (e.g., "Hip-Hop" -> "hiphop", "R&B" -> "rnb").
+  - Implemented synonym tracking: fuzzy matches against known synonyms and "learns" new variations by adding them to the database.
+  - Ensures cleaner genre data by reducing duplicates like "Hip Hop", "Hip-Hop", and "hiphop".
+
+- **Bulk Import Optimization:**
+  - Enhanced `ImportArtistsFromCsvCommand` with transaction batching (commits every 100 records) to manage memory and prevent database locks.
+  - Added in-memory caching for Countries and Genres during import to reduce database queries.
+  - Implemented comprehensive link parsing for 15+ social platforms (Spotify, YouTube, Instagram, etc.) using `SocialPlatform` Enum.
+  - Added progress bar with estimated completion time.
+  - Robust handling of artist aliases and MusicBrainz IDs.
+
+- **Job Optimization:**
+  - Optimized `CreateArtistsFromSpotifyJob` to handle batched insertions, significantly reducing overhead when processing search results.
+  - Improved `ArtistSearchService` to leverage the new smart genre matching when syncing artist genres from Spotify.
+
+### Artist Schema Expansion & Metadata Integration (2026-01-04)
+**Summary:** Expanded the database schema to support rich artist metadata, external links, and normalized entities (Countries/Genres).
+
+- **Database Schema Updates:**
+  - **New Tables:**
+    - `countries`: Standardized country storage with ISO2/ISO3 codes.
+    - `genres`: Normalized genre storage with `synonyms` JSON column for smart matching.
+    - `artist_genre`: Many-to-many pivot table for flexible genre assignment.
+    - `artist_aliases`: Stores alternative names for improved search recall.
+    - `artist_links`: Stores social and streaming links with platform identification.
+    - `artist_link_votes`: Infrastructure for community-verified link accuracy.
+  - **Artist Table Enhancements:**
+    - Added `musicbrainz_id` for reliable external data mapping.
+    - Added `youtube_channel_id` for direct platform integration.
+    - Added `country_id` (FK) to link artists to standardized countries.
+    - **Migration:** Successfully migrated data from the legacy `genres` JSON column to the new `artist_genre` pivot table.
+- **Frontend Integration:**
+  - Updated the Artist Detail page to display Country, Genres, and External Links.
+  - Implemented the "External Links" tab with a table of social/streaming platforms.
+  - Backend now eagerly loads `links`, `country`, and `genres` for the artist view.
+
 ### Artist Stacking Feature (2026-01-02)
 **Summary:** Implemented the "Artist Stacking" feature, allowing users to group alternative artists for the same slot in a lineup.
 - **Backend:**

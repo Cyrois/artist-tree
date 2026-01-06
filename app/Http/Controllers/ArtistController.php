@@ -128,7 +128,7 @@ class ArtistController extends Controller
 
             return response()->json([
                 'message' => __('artists.refresh_success'),
-                'data' => new ArtistResource($refreshedArtist),
+                'data' => new ArtistResource($refreshedArtist->load(['genres', 'country'])),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to refresh artist', [
@@ -149,7 +149,7 @@ class ArtistController extends Controller
         // Check if querying by Spotify ID
         if ($request->has('spotify_id')) {
             $spotifyId = $request->validated('spotify_id');
-            $artist = Artist::where('spotify_id', $spotifyId)->with('metrics')->first();
+            $artist = Artist::where('spotify_id', $spotifyId)->with(['metrics', 'genres', 'country', 'links'])->first();
 
             if (! $artist) {
                 return response()->json([
@@ -163,7 +163,7 @@ class ArtistController extends Controller
         }
 
         // Query by database ID (validation ensures at least one param is provided)
-        $artist = Artist::with('metrics')->find($id);
+        $artist = Artist::with(['metrics', 'genres', 'country', 'links'])->find($id);
 
         if (! $artist) {
             return response()->json([
@@ -260,11 +260,10 @@ class ArtistController extends Controller
      */
     public function similar(int $id, GetSimilarArtistsRequest $request): JsonResponse
     {
-        $artist = Artist::findOrFail($id);
+        $artist = Artist::with('genres')->findOrFail($id);
         $limit = $request->validated('limit', 10);
-        $genres = $artist->genres ?? [];
-
-        if (empty($genres)) {
+        
+        if ($artist->genres->isEmpty()) {
             return response()->json([
                 'data' => [],
                 'message' => __('artists.error_no_genres'),
@@ -273,7 +272,8 @@ class ArtistController extends Controller
 
         try {
             // Search using the first genre for the most relevant results
-            $results = $this->spotifyService->searchArtistsByGenre($genres[0], $limit + 1);
+            $genreName = $artist->genres->first()->name;
+            $results = $this->spotifyService->searchArtistsByGenre($genreName, $limit + 1);
 
             // Need scoring service to calculate scores for results
             $scoringService = app(\App\Services\ArtistScoringService::class);
@@ -299,7 +299,7 @@ class ArtistController extends Controller
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to fetch similar artists', [
                 'artist_id' => $id,
-                'genre' => $genres[0],
+                'genre' => $artist->genres->first()->name,
             ]);
         }
     }

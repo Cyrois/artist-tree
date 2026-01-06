@@ -135,15 +135,21 @@ const gridColsStyle = computed(() => {
             class="flex max-h-[85vh] max-w-[95vw] flex-col p-0 md:max-w-6xl"
         >
             <DialogHeader class="px-6 pt-6 pb-2">
-                <DialogTitle class="text-2xl font-bold"
-                    >{{ $t('lineups.compare_modal_title') }}</DialogTitle
-                >
+                <DialogTitle class="text-2xl font-bold">{{
+                    $t('lineups.compare_modal_title')
+                }}</DialogTitle>
                 <DialogDescription>
-                    {{ $t('lineups.compare_modal_subtitle', { count: artists.length }) }}
+                    {{
+                        $t('lineups.compare_modal_subtitle', {
+                            count: artists.length,
+                        })
+                    }}
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="scrollbar-hide flex-1 overflow-x-auto overflow-y-auto p-6">
+            <div
+                class="scrollbar-hide flex-1 overflow-x-auto overflow-y-auto p-6"
+            >
                 <div class="min-w-[800px] space-y-6">
                     <!-- Header Row -->
                     <div class="grid gap-4" :style="gridColsStyle">
@@ -172,7 +178,9 @@ const gridColsStyle = computed(() => {
                                     variant="secondary"
                                     class="text-[10px] uppercase"
                                 >
-                                    {{ $t(`lineups.tier_${artist.lineup_tier}`) }}
+                                    {{
+                                        $t(`lineups.tier_${artist.lineup_tier}`)
+                                    }}
                                 </Badge>
                             </div>
                         </div>
@@ -240,7 +248,11 @@ const gridColsStyle = computed(() => {
                                                         >★</span
                                                     >
                                                 </div>
-                                                {{ $t('lineups.compare_modal_highest') }}
+                                                {{
+                                                    $t(
+                                                        'lineups.compare_modal_highest',
+                                                    )
+                                                }}
                                             </span>
                                         </div>
                                     </template>
@@ -309,11 +321,12 @@ const gridColsStyle = computed(() => {
                 <div
                     class="flex items-center gap-2 text-xs text-muted-foreground"
                 >
-                    <span class="text-green-600">★</span> {{ $t('lineups.compare_modal_legend') }}
+                    <span class="text-green-600">★</span>
+                    {{ $t('lineups.compare_modal_legend') }}
                 </div>
-                <Button variant="outline" @click="emit('update:open', false)"
-                    >{{ $t('common.action_close') }}</Button
-                >
+                <Button variant="outline" @click="emit('update:open', false)">{{
+                    $t('common.action_close')
+                }}</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

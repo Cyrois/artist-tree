@@ -37,7 +37,7 @@ test('it creates artists from Spotify data', function () {
     $artist1 = Artist::where('spotify_id', 'spotify123')->first();
     expect($artist1)->not->toBeNull();
     expect($artist1->name)->toBe('Test Artist 1');
-    expect($artist1->genres)->toBe(['rock', 'indie']);
+    expect($artist1->genres->pluck('name')->toArray())->toBe(['rock', 'indie']);
     expect($artist1->image_url)->toBe('https://example.com/image1.jpg');
 
     // Verify metrics were created
@@ -188,5 +188,5 @@ test('it handles artists with empty genres', function () {
 
     $artist = Artist::where('spotify_id', 'spotify_no_genres')->first();
     expect($artist)->not->toBeNull();
-    expect($artist->genres)->toBe([]);
+    expect($artist->genres->pluck('name')->toArray())->toBe([]);
 });
