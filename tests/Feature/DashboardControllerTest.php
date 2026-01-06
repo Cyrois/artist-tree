@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase;
 
     public function test_dashboard_loads_correct_number_of_lineups_and_artists()
     {
@@ -27,6 +27,7 @@ class DashboardControllerTest extends TestCase
         foreach ($artists as $artist) {
             $targetLineup->artists()->attach($artist->id, ['tier' => ArtistTier::Undercard->value]);
         }
+        $targetLineup->touch(); // Ensure this lineup is the most recent
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
