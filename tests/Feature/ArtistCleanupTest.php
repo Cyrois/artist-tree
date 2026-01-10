@@ -7,12 +7,23 @@ use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
 use App\DataTransferObjects\SpotifyArtistDTO;
-use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
 
 class ArtistCleanupTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Queue::fake();
+
+        // Ensure tables exist for in-memory SQLite database
+        if (config('database.default') === 'sqlite' && config('database.connections.sqlite.database') === ':memory:') {
+            $this->artisan('migrate');
+        }
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();
@@ -21,10 +32,13 @@ class ArtistCleanupTest extends TestCase
 
     public function test_soft_deleted_artist_is_excluded_from_search_results()
     {
-        // 1. Create a soft-deleted artist
-        $spotifyId = 'deleted_artist_' . uniqid();
+        // 1. Create a soft-deleted artist with unique name and ID
+        $suffix = uniqid();
+        $name = 'Deleted Artist ' . $suffix;
+        $spotifyId = 'deleted_artist_' . $suffix;
+        
         $artist = Artist::create([
-            'name' => 'Deleted Artist',
+            'name' => $name,
             'spotify_id' => $spotifyId,
             'image_url' => 'http://example.com/img.jpg',
         ]);
@@ -37,7 +51,7 @@ class ArtistCleanupTest extends TestCase
             ->andReturn([
                 new SpotifyArtistDTO(
                     spotifyId: $spotifyId,
-                    name: 'Deleted Artist',
+                    name: $name,
                     imageUrl: 'http://example.com/img.jpg',
                     popularity: 50,
                     followers: 1000,
@@ -47,7 +61,7 @@ class ArtistCleanupTest extends TestCase
 
         // 3. Search
         $service = new ArtistSearchService($mockSpotify);
-        $results = $service->search('Deleted Artist');
+        $results = $service->search($name);
 
         // 4. Assert
         $this->assertTrue($results->isEmpty(), 'Soft deleted artist should not appear in search results.');
@@ -56,9 +70,12 @@ class ArtistCleanupTest extends TestCase
     public function test_verify_job_deletes_empty_artist()
     {
         // 1. Create active artist
-        $spotifyId = 'empty_artist_' . uniqid();
+        $suffix = uniqid();
+        $name = 'Empty Artist ' . $suffix;
+        $spotifyId = 'empty_artist_' . $suffix;
+        
         $artist = Artist::create([
-            'name' => 'Empty Artist',
+            'name' => $name,
             'spotify_id' => $spotifyId,
             'image_url' => 'http://example.com/img.jpg',
         ]);
@@ -70,7 +87,7 @@ class ArtistCleanupTest extends TestCase
             ->once()
             ->andReturn([]);
 
-        // 3. Run Job
+        // 3. Run Job (manually handling it bypasses the queue fake but uses our mock)
         $job = new VerifyArtistContentJob($artist);
         $job->handle($mockSpotify);
 
