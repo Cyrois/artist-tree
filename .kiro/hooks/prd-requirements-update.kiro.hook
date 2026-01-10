@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "PRD Requirements Update",
+  "description": "Monitors changes to the prd.md file and updates it to reflect new major requirements when they are modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "requirements/prd.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "I've detected changes to the PRD file. Please review the modifications and update the prd.md file to ensure all major requirements are properly reflected and documented. Focus on maintaining consistency, clarity, and completeness of the requirements specification."
+  }
+}
