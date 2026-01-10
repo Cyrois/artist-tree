@@ -6,17 +6,13 @@ This implementation plan breaks down the YouTube integration feature into discre
 
 ## Tasks
 
-- [ ] 1. Database Migration for YouTube Analytics
+- [x] 1. Database Migration for YouTube Analytics
   - Create migration to add YouTube analytics columns to artist_metrics table
   - Add columns: youtube_refreshed_at, youtube_avg_views, youtube_avg_likes, youtube_avg_comments, youtube_videos_analyzed, youtube_analytics_refreshed_at
   - Ensure columns are added in correct order after youtube_subscribers
   - _Requirements: Database Schema Updates_
 
-- [ ] 1.1 Write property test for database migration
-  - **Property 1: Database Schema Consistency**
-  - **Validates: Requirements Database Schema**
-
-- [ ] 1.1 Write property test for database migration
+- [x] 1.1 Write property test for database migration
   - **Property 1: Database Schema Consistency**
   - **Validates: Requirements Database Schema**
 
