@@ -19,6 +19,23 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Artist Cleanup & Verification (2026-01-10)
+**Summary:** Implemented background verification to automatically soft-delete artists that have no content (tracks) on Spotify, ensuring search results remain clean and relevant.
+
+- **Database:**
+  - Added `deleted_reason` column to `artists` table to track why an artist was soft-deleted.
+  - Created `ArtistDeleteReason` Enum with cases: `NO_SONGS`, `SPOTIFY_404`, `DUPLICATE`, `MANUAL`.
+- **Backend:**
+  - Created `VerifyArtistContentJob` that checks an artist's top tracks via Spotify API.
+    - If no tracks are found, artist is soft-deleted with reason `NO_SONGS`.
+    - If Spotify returns 404, artist is soft-deleted with reason `SPOTIFY_404`.
+  - Updated `ArtistSearchService` to:
+    - Automatically filter out soft-deleted artists from search results (even if returned by Spotify).
+    - Dispatch verification jobs for all *active* local artists found in search results.
+  - Updated `CreateArtistsFromSpotifyJob` to immediately dispatch verification for newly created artists.
+- **Testing:**
+  - Added feature tests in `tests/Feature/ArtistCleanupTest.php` to verify cleanup logic, reason assignment, and search filtering.
+
 ### Smart Genre Matching & Import Optimization (2026-01-04)
 **Summary:** Implemented intelligent genre matching logic and optimized the bulk artist import process to handle large datasets efficiently.
 

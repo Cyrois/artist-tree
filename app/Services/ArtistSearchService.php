@@ -6,6 +6,7 @@ use App\DataTransferObjects\ArtistSearchResultDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
+use App\Jobs\VerifyArtistContentJob;
 use App\Models\Artist;
 use App\Models\Genre;
 use Illuminate\Support\Str;
@@ -113,11 +114,30 @@ class ArtistSearchService
             if ($artist->spotify_id) {
                 $merged->push(ArtistSearchResultDTO::fromLocalArtist($artist));
                 $seenSpotifyIds[$artist->spotify_id] = true;
+
+                // Verify content for local results
+                VerifyArtistContentJob::dispatch($artist);
             }
         }
 
         // Track Spotify artists that don't exist in local database
         $missingArtists = [];
+
+        // Bulk check for existing artists (including soft-deleted)
+        $spotifyIdsToCheck = [];
+        foreach ($spotifyResults as $spotifyArtist) {
+            if (!isset($seenSpotifyIds[$spotifyArtist->spotifyId])) {
+                $spotifyIdsToCheck[] = $spotifyArtist->spotifyId;
+            }
+        }
+
+        $existingArtistsMap = [];
+        if (!empty($spotifyIdsToCheck)) {
+            $existingArtistsMap = Artist::withTrashed()
+                ->whereIn('spotify_id', $spotifyIdsToCheck)
+                ->get()
+                ->keyBy('spotify_id');
+        }
 
         // Add Spotify results that aren't already in local database
         foreach ($spotifyResults as $spotifyArtist) {
@@ -141,7 +161,12 @@ class ArtistSearchService
             }
 
             // Check if this Spotify artist exists in our database
-            $localArtist = Artist::where('spotify_id', $spotifyArtist->spotifyId)->first();
+            $localArtist = $existingArtistsMap->get($spotifyArtist->spotifyId);
+
+            // If it was deleted, ignore it completely (do not show, do not re-import)
+            if ($localArtist && $localArtist->trashed()) {
+                continue;
+            }
 
             $merged->push(ArtistSearchResultDTO::fromSpotifyArtist($spotifyArtist, $localArtist));
             $seenSpotifyIds[$spotifyArtist->spotifyId] = true;
@@ -149,6 +174,9 @@ class ArtistSearchService
             // Track artists that need to be created
             if (! $localArtist) {
                 $missingArtists[] = $spotifyArtist;
+            } else {
+                // It exists locally and is not trashed, so verify it
+                VerifyArtistContentJob::dispatch($localArtist);
             }
         }
 
