@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Queue;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Queue::fake();
     // Mock SpotifyService
     $this->spotifyService = Mockery::mock(SpotifyService::class);
     $this->searchService = new ArtistSearchService($this->spotifyService);
@@ -234,8 +235,6 @@ it('respects search limit', function () {
 });
 
 it('dispatches job to create missing artists from Spotify', function () {
-    Queue::fake();
-
     // Create one local artist
     Artist::factory()
         ->has(ArtistMetric::factory())
@@ -287,8 +286,6 @@ it('dispatches job to create missing artists from Spotify', function () {
 });
 
 it('does not dispatch job when all Spotify results exist locally', function () {
-    Queue::fake();
-
     // Create local artists
     Artist::factory()
         ->has(ArtistMetric::factory())

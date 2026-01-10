@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ArtistDeleteReason;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,11 @@ class Artist extends Model
         'image_url',
         'youtube_channel_id',
         'country_id',
+        'deleted_reason',
+    ];
+
+    protected $casts = [
+        'deleted_reason' => ArtistDeleteReason::class,
     ];
 
     /**
