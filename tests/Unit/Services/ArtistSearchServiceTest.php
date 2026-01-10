@@ -6,10 +6,10 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Queue;
 
-uses(RefreshDatabase::class);
+uses(DatabaseTransactions::class);
 
 beforeEach(function () {
     Queue::fake();

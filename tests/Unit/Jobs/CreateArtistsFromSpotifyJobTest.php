@@ -3,11 +3,11 @@
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
-uses(RefreshDatabase::class);
+uses(DatabaseTransactions::class);
 
 beforeEach(function () {
     Queue::fake();
