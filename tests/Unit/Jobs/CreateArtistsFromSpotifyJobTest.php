@@ -5,8 +5,13 @@ use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Queue::fake();
+});
 
 test('it creates artists from Spotify data', function () {
     $spotifyArtists = [
