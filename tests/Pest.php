@@ -12,7 +12,6 @@
 */
 
 pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->beforeEach(function () {
         $this->withoutMiddleware([
             \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
@@ -21,7 +20,6 @@ pest()->extend(Tests\TestCase::class)
     ->in('Feature');
 
 pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Browser');
 
 pest()->extend(Tests\TestCase::class)

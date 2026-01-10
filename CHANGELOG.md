@@ -35,6 +35,18 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
   - Updated `CreateArtistsFromSpotifyJob` to immediately dispatch verification for newly created artists.
 - **Testing:**
   - Added feature tests in `tests/Feature/ArtistCleanupTest.php` to verify cleanup logic, reason assignment, and search filtering.
+  
+### Bulk Artist Import & Conflict Resolution (2026-01-05)
+**Summary:** Successfully executed a massive bulk import of ~2.7 million artists and implemented an intelligent conflict resolution strategy for duplicate Spotify IDs.
+
+- **Bulk Data Import:**
+  - Imported ~2.7 million artist records from MusicBrainz/Spotify dump CSVs.
+  - Process handled in background with high-performance batching to ensure data integrity.
+- **Conflict Resolution:**
+  - Implemented `ReconcileArtistConflictsCommand` to identify and merge duplicate artists.
+  - Resolved ~1,500 "safe" conflicts (high name similarity) by merging them as aliases.
+  - Resolved ~340 "ambiguous" conflicts (low similarity) by validating against the official Spotify API source of truth.
+  - Ensure single source of truth: Artists with shared Spotify IDs are now correctly merged or renamed based on authoritative Spotify data.
 
 ### Smart Genre Matching & Import Optimization (2026-01-04)
 **Summary:** Implemented intelligent genre matching logic and optimized the bulk artist import process to handle large datasets efficiently.
