@@ -157,57 +157,52 @@ class ArtistController extends Controller
     /**
      * Get artist by database ID or Spotify ID.
      *
-     * GET /api/artists/{id} - Get by database ID
-     * GET /api/artists?spotify_id=abc123 - Get by Spotify ID
+     * GET /api/artists/{id} - Get by database ID (prioritized)
+     * GET /api/artists?spotify_id=abc123 - Get by Spotify ID (fallback)
      */
     public function show(ShowArtistRequest $request, ?int $id = null): JsonResponse
     {
-        // Check if querying by Spotify ID
-        if ($request->has('spotify_id')) {
+        $relations = ['metrics', 'genres', 'country', 'links'];
+
+        // Prioritize database ID over Spotify ID
+        if ($id) {
+            $artist = Artist::with($relations)->find($id);
+
+            if (! $artist) {
+                return response()->json([
+                    'message' => __('artists.error_not_found_id', ['id' => $id]),
+                ], 404);
+            }
+        } else {
+            // Fallback to Spotify ID lookup
             $spotifyId = $request->validated('spotify_id');
-            $artist = Artist::where('spotify_id', $spotifyId)->with(['metrics', 'genres', 'country', 'links'])->first();
+            $artist = Artist::where('spotify_id', $spotifyId)->with($relations)->first();
 
             if (! $artist) {
                 return response()->json([
                     'message' => __('artists.error_not_found_spotify', ['id' => $spotifyId]),
                 ], 404);
             }
-
-            // Refresh Spotify data if stale
-            if ($artist->spotify_id && $artist->hasStaleMetrics()) {
-                try {
-                    $artist = $this->searchService->refreshArtistFromSpotify($artist);
-                } catch (SpotifyApiException|\Exception $e) {
-                    Log::warning('Failed to refresh Spotify data in show', [
-                        'artist_id' => $artist->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            // Refresh YouTube data if needed
-            $this->youtubeRefreshService->refreshIfNeeded($artist);
-
-            return response()->json([
-                'data' => new ArtistResource($artist->fresh(['metrics', 'genres', 'country', 'links'])),
-            ], 200);
         }
 
-        // Query by database ID (validation ensures at least one param is provided)
-        $artist = Artist::with(['metrics', 'genres', 'country', 'links'])->find($id);
+        $artist = $this->refreshArtistDataIfNeeded($artist);
 
-        if (! $artist) {
-            return response()->json([
-                'message' => __('artists.error_not_found_id', ['id' => $id]),
-            ], 404);
-        }
+        return response()->json([
+            'data' => new ArtistResource($artist->fresh($relations)),
+        ], 200);
+    }
 
+    /**
+     * Refresh artist data from external sources if needed.
+     */
+    private function refreshArtistDataIfNeeded(Artist $artist): Artist
+    {
         // Refresh Spotify data if stale
         if ($artist->spotify_id && $artist->hasStaleMetrics()) {
             try {
                 $artist = $this->searchService->refreshArtistFromSpotify($artist);
             } catch (SpotifyApiException|\Exception $e) {
-                Log::warning('Failed to refresh Spotify data in show', [
+                Log::warning('Failed to refresh Spotify data', [
                     'artist_id' => $artist->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -217,9 +212,7 @@ class ArtistController extends Controller
         // Refresh YouTube data if needed
         $this->youtubeRefreshService->refreshIfNeeded($artist);
 
-        return response()->json([
-            'data' => new ArtistResource($artist->fresh(['metrics', 'genres', 'country', 'links'])),
-        ], 200);
+        return $artist;
     }
 
     /**

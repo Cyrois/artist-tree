@@ -127,6 +127,12 @@ class YouTubeService
             // Process API results
             foreach ($channels as $channelData) {
                 $channelId = $channelData['id'];
+                
+                Log::debug('YouTube getMultipleChannelMetrics: raw channel data', [
+                    'channel_id' => $channelId,
+                    'raw_data' => $channelData,
+                ]);
+                
                 $dto = YouTubeChannelDTO::fromYouTubeResponse($channelData);
                 
                 // Cache the result
@@ -191,7 +197,20 @@ class YouTubeService
                 // First, get the uploads playlist ID
                 $channelData = $this->getChannelMetrics($channelId);
                 
+                Log::debug('YouTube getChannelVideos: channel data', [
+                    'channel_id' => $channelId,
+                    'channel_data' => $channelData ? [
+                        'subscriberCount' => $channelData->subscriberCount,
+                        'uploadsPlaylistId' => $channelData->uploadsPlaylistId,
+                    ] : null,
+                ]);
+                
                 if (!$channelData || !$channelData->uploadsPlaylistId) {
+                    Log::debug('YouTube getChannelVideos: no uploads playlist ID', [
+                        'channel_id' => $channelId,
+                        'has_channel_data' => $channelData !== null,
+                        'uploads_playlist_id' => $channelData?->uploadsPlaylistId,
+                    ]);
                     return [];
                 }
 
@@ -203,6 +222,13 @@ class YouTubeService
                 ], 1);
 
                 $items = $data['items'] ?? [];
+                
+                Log::debug('YouTube getChannelVideos: playlist items', [
+                    'channel_id' => $channelId,
+                    'playlist_id' => $channelData->uploadsPlaylistId,
+                    'items_count' => count($items),
+                    'limit' => $limit,
+                ]);
                 
                 return array_map(
                     fn($item) => $item['contentDetails']['videoId'],
