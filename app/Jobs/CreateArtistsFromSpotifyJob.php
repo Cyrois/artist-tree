@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Models\Artist;
 use App\Models\Genre;
+use App\Services\YouTubeJobDispatchService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(YouTubeJobDispatchService $youtubeJobDispatchService): void
     {
         if (empty($this->spotifyArtists)) {
             return;
@@ -43,9 +44,10 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
 
         $createdCount = 0;
         $alreadyExistCount = 0;
+        $artistsWithYouTube = []; // Track artists that need YouTube data fetching
 
         // Create artists with metrics in transaction
-        DB::transaction(function () use ($genreMap, &$createdCount, &$alreadyExistCount) {
+        DB::transaction(function () use ($genreMap, &$createdCount, &$alreadyExistCount, &$artistsWithYouTube) {
             foreach ($this->spotifyArtists as $spotifyArtist) {
                 try {
                     // Atomic check/create without genres first
@@ -87,6 +89,11 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
                         // Verify the artist has content (tracks)
                         // This will soft-delete the artist if they have no tracks
                         VerifyArtistContentJob::dispatch($artist);
+
+                        // Track artists with YouTube channel IDs for batch processing
+                        if ($artist->youtube_channel_id) {
+                            $artistsWithYouTube[] = $artist->id;
+                        }
                     } else {
                         $alreadyExistCount++;
                     }
@@ -100,10 +107,21 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
             }
         });
 
+        // Dispatch priority-based YouTube data fetching jobs for artists with YouTube channel IDs
+        if (!empty($artistsWithYouTube)) {
+            $youtubeJobDispatchService->dispatchPriorityJobs($artistsWithYouTube);
+            
+            Log::info('CreateArtistsFromSpotifyJob: Dispatched priority YouTube jobs', [
+                'artist_count' => count($artistsWithYouTube),
+                'artist_ids' => $artistsWithYouTube,
+            ]);
+        }
+
         Log::info('CreateArtistsFromSpotifyJob: Job completed', [
             'created_count' => $createdCount,
             'already_exist' => $alreadyExistCount,
             'total_submitted' => count($this->spotifyArtists),
+            'youtube_jobs_dispatched' => count($artistsWithYouTube),
         ]);
     }
 

@@ -12,11 +12,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        $this->call([
-            UserSeeder::class,
-            LineupSeeder::class,
-        ]);
+        // Use different seeders based on environment
+        if (app()->environment('testing')) {
+            $this->call([
+                TestingSeeder::class,
+            ]);
+        } else {
+            $this->call([
+                CountrySeeder::class,
+                UserSeeder::class,
+                LineupSeeder::class,
+            ]);
+        }
     }
 }

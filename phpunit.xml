@@ -29,7 +29,5 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
-        <env name="SPOTIFY_CLIENT_ID" value="test_client_id"/>
-        <env name="SPOTIFY_CLIENT_SECRET" value="test_client_secret"/>
     </php>
 </phpunit>

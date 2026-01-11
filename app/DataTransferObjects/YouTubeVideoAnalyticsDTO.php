@@ -51,15 +51,23 @@ readonly class YouTubeVideoAnalyticsDTO
         $totalComments = 0;
         $videoIds = [];
 
-        foreach ($videos as $video) {
-            $statistics = $video['statistics'] ?? [];
-            
-            // Only include videos with available statistics
-            if (isset($statistics['viewCount'])) {
-                $totalViews += (int) $statistics['viewCount'];
-                $totalLikes += (int) ($statistics['likeCount'] ?? 0);
-                $totalComments += (int) ($statistics['commentCount'] ?? 0);
-                $videoIds[] = $video['id'];
+        foreach ($videos as $videoId => $videoData) {
+            // Handle both full API response format and simplified format from getVideoAnalytics
+            if (isset($videoData['statistics'])) {
+                // Full API response format
+                $statistics = $videoData['statistics'];
+                if (isset($statistics['viewCount'])) {
+                    $totalViews += (int) $statistics['viewCount'];
+                    $totalLikes += (int) ($statistics['likeCount'] ?? 0);
+                    $totalComments += (int) ($statistics['commentCount'] ?? 0);
+                    $videoIds[] = $videoData['id'];
+                }
+            } elseif (isset($videoData['viewCount'])) {
+                // Simplified format from getVideoAnalytics
+                $totalViews += (int) $videoData['viewCount'];
+                $totalLikes += (int) ($videoData['likeCount'] ?? 0);
+                $totalComments += (int) ($videoData['commentCount'] ?? 0);
+                $videoIds[] = $videoId;
             }
         }
 

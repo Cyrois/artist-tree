@@ -1,10 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 /**
  * Feature: youtube-integration, Property 1: Database Schema Consistency

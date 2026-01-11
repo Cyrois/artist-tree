@@ -14,7 +14,9 @@ use App\Http\Resources\ArtistResource;
 use App\Http\Resources\ArtistSearchResultResource;
 use App\Models\Artist;
 use App\Services\ArtistSearchService;
+use App\Services\ArtistYouTubeRefreshService;
 use App\Services\SpotifyService;
+use App\Services\YouTubeJobDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
@@ -27,11 +29,11 @@ class ArtistController extends Controller
     public function __construct(
         private ArtistSearchService $searchService,
         private SpotifyService $spotifyService,
+        private ArtistYouTubeRefreshService $youtubeRefreshService,
+        private YouTubeJobDispatchService $youtubeJobDispatchService,
     ) {}
 
     /**
-     * Handle Spotify API errors with standardized response.
-     *
      * @param  SpotifyApiException|\Exception  $e  The exception to handle
      * @param  string  $context  Description of what operation failed (for logging)
      * @param  array<string, mixed>  $logData  Additional data to include in logs
@@ -91,13 +93,19 @@ class ArtistController extends Controller
                 if ($artist->spotify_id && $artist->hasStaleMetrics()) {
                     $artist = $this->searchService->refreshArtistFromSpotify($artist);
                 }
+
+                // Refresh YouTube data if needed
+                $this->youtubeRefreshService->refreshIfNeeded($artist);
             } else {
                 $artist = $this->searchService->getOrCreateFromSpotify($spotifyId);
+                
+                // Refresh YouTube data if needed
+                $this->youtubeRefreshService->refreshIfNeeded($artist);
             }
 
             return response()->json([
                 'message' => __('artists.select_success'),
-                'data' => new ArtistResource($artist->load('metrics')),
+                'data' => new ArtistResource($artist->fresh('metrics')),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to select artist', [
@@ -126,9 +134,17 @@ class ArtistController extends Controller
         try {
             $refreshedArtist = $this->searchService->refreshArtistFromSpotify($artist);
 
+            // Also refresh YouTube data if channel ID exists
+            $this->youtubeRefreshService->forceRefresh($refreshedArtist);
+
+            // Dispatch priority-based YouTube job for background processing
+            if ($refreshedArtist->youtube_channel_id) {
+                $this->youtubeJobDispatchService->dispatchPriorityJobs([$refreshedArtist->id]);
+            }
+
             return response()->json([
                 'message' => __('artists.refresh_success'),
-                'data' => new ArtistResource($refreshedArtist->load(['genres', 'country'])),
+                'data' => new ArtistResource($refreshedArtist->fresh(['metrics', 'genres', 'country'])),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to refresh artist', [
@@ -157,8 +173,23 @@ class ArtistController extends Controller
                 ], 404);
             }
 
+            // Refresh Spotify data if stale
+            if ($artist->spotify_id && $artist->hasStaleMetrics()) {
+                try {
+                    $artist = $this->searchService->refreshArtistFromSpotify($artist);
+                } catch (SpotifyApiException|\Exception $e) {
+                    Log::warning('Failed to refresh Spotify data in show', [
+                        'artist_id' => $artist->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Refresh YouTube data if needed
+            $this->youtubeRefreshService->refreshIfNeeded($artist);
+
             return response()->json([
-                'data' => new ArtistResource($artist),
+                'data' => new ArtistResource($artist->fresh(['metrics', 'genres', 'country', 'links'])),
             ], 200);
         }
 
@@ -171,8 +202,23 @@ class ArtistController extends Controller
             ], 404);
         }
 
+        // Refresh Spotify data if stale
+        if ($artist->spotify_id && $artist->hasStaleMetrics()) {
+            try {
+                $artist = $this->searchService->refreshArtistFromSpotify($artist);
+            } catch (SpotifyApiException|\Exception $e) {
+                Log::warning('Failed to refresh Spotify data in show', [
+                    'artist_id' => $artist->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Refresh YouTube data if needed
+        $this->youtubeRefreshService->refreshIfNeeded($artist);
+
         return response()->json([
-            'data' => new ArtistResource($artist),
+            'data' => new ArtistResource($artist->fresh(['metrics', 'genres', 'country', 'links'])),
         ], 200);
     }
 

@@ -3,10 +3,8 @@
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 
-uses(RefreshDatabase::class);
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->user = User::factory()->create();

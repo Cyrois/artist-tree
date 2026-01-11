@@ -4,13 +4,12 @@ namespace Tests\Feature\Api;
 
 use App\Models\Artist;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class SimilarArtistsTest extends TestCase
 {
-    use RefreshDatabase;
 
     private User $user;
 

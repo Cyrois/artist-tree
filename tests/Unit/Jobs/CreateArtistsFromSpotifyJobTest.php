@@ -3,11 +3,10 @@
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use App\Services\YouTubeJobDispatchService;
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
-
-uses(DatabaseTransactions::class);
 
 beforeEach(function () {
     Queue::fake();
@@ -33,8 +32,9 @@ test('it creates artists from Spotify data', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 
     // Verify artists were created
     expect(Artist::count())->toBe(2);
@@ -87,8 +87,9 @@ test('it is idempotent and does not create duplicates', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 
     // Verify only one new artist was created
     expect(Artist::count())->toBe(2);
@@ -105,8 +106,9 @@ test('it is idempotent and does not create duplicates', function () {
 });
 
 test('it handles empty array gracefully', function () {
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob([]);
-    $job->handle();
+    $job->handle($youtubeService);
 
     expect(Artist::count())->toBe(0);
 });
@@ -123,8 +125,9 @@ test('it creates artist with metrics in transaction', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 
     $artist = Artist::where('spotify_id', 'spotify789')->first();
     expect($artist)->not->toBeNull();
@@ -138,6 +141,7 @@ test('it logs creation information', function () {
         'created_count' => 1,
         'already_exist' => 0,
         'total_submitted' => 1,
+        'youtube_jobs_dispatched' => 0,
     ]);
 
     $spotifyArtists = [
@@ -151,8 +155,9 @@ test('it logs creation information', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 });
 
 test('it handles artists with null image URL', function () {
@@ -167,8 +172,9 @@ test('it handles artists with null image URL', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 
     $artist = Artist::where('spotify_id', 'spotify_no_image')->first();
     expect($artist)->not->toBeNull();
@@ -188,8 +194,9 @@ test('it handles artists with empty genres', function () {
         ),
     ];
 
+    $youtubeService = app(YouTubeJobDispatchService::class);
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
-    $job->handle();
+    $job->handle($youtubeService);
 
     $artist = Artist::where('spotify_id', 'spotify_no_genres')->first();
     expect($artist)->not->toBeNull();

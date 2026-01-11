@@ -3,12 +3,11 @@
 namespace Tests\Unit;
 
 use App\Models\Genre;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use Tests\TestCase;
 
 class GenreSmartLogicTest extends TestCase
 {
-    use RefreshDatabase;
 
     /**
      * Test that different variations of the same genre map to the same record
