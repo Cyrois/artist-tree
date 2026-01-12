@@ -124,7 +124,7 @@ class ArtistSearchService
                 VerifyArtistContentJob::dispatch($artist);
 
                 // Track artists that need YouTube refresh for batch processing
-                if ($artist->youtube_channel_id && (!$artist->metrics || $artist->metrics->needsYouTubeRefresh())) {
+                if ($artist->shouldRefreshYouTube()) {
                     $artistsNeedingYouTube[] = $artist->id;
                 }
             }
@@ -188,7 +188,7 @@ class ArtistSearchService
                 VerifyArtistContentJob::dispatch($localArtist);
 
                 // Track artists that need YouTube refresh for batch processing
-                if ($localArtist->youtube_channel_id && (!$localArtist->metrics || $localArtist->metrics->needsYouTubeRefresh())) {
+                if ($localArtist->shouldRefreshYouTube()) {
                     $artistsNeedingYouTube[] = $localArtist->id;
                 }
             }
