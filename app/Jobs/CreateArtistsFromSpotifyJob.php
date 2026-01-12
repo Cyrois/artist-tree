@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Accepts array of SpotifyArtistDTO objects and creates missing artists
  * in the database. Job is idempotent - checks by spotify_id before creating.
+ *
+ * NOTE: YouTube data fetching is excluded from this job because new artists 
+ * from Spotify do not yet have a youtube_channel_id. YouTube resolution
+ * should be handled by a separate discovery process.
  */
 class CreateArtistsFromSpotifyJob implements ShouldQueue
 {
@@ -33,7 +37,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(YouTubeJobDispatchService $youtubeJobDispatchService): void
+    public function handle(): void
     {
         if (empty($this->spotifyArtists)) {
             return;
@@ -44,10 +48,9 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
 
         $createdCount = 0;
         $alreadyExistCount = 0;
-        $artistsWithYouTube = []; // Track artists that need YouTube data fetching
 
         // Create artists with metrics in transaction
-        DB::transaction(function () use ($genreMap, &$createdCount, &$alreadyExistCount, &$artistsWithYouTube) {
+        DB::transaction(function () use ($genreMap, &$createdCount, &$alreadyExistCount) {
             foreach ($this->spotifyArtists as $spotifyArtist) {
                 try {
                     // Atomic check/create without genres first
@@ -89,11 +92,6 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
                         // Verify the artist has content (tracks)
                         // This will soft-delete the artist if they have no tracks
                         VerifyArtistContentJob::dispatch($artist);
-
-                        // Track artists with YouTube channel IDs for batch processing
-                        if ($artist->youtube_channel_id) {
-                            $artistsWithYouTube[] = $artist->id;
-                        }
                     } else {
                         $alreadyExistCount++;
                     }
@@ -107,21 +105,10 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
             }
         });
 
-        // Dispatch priority-based YouTube data fetching jobs for artists with YouTube channel IDs
-        if (!empty($artistsWithYouTube)) {
-            $youtubeJobDispatchService->dispatchPriorityJobs($artistsWithYouTube);
-            
-            Log::info('CreateArtistsFromSpotifyJob: Dispatched priority YouTube jobs', [
-                'artist_count' => count($artistsWithYouTube),
-                'artist_ids' => $artistsWithYouTube,
-            ]);
-        }
-
         Log::info('CreateArtistsFromSpotifyJob: Job completed', [
             'created_count' => $createdCount,
             'already_exist' => $alreadyExistCount,
             'total_submitted' => count($this->spotifyArtists),
-            'youtube_jobs_dispatched' => count($artistsWithYouTube),
         ]);
     }
 

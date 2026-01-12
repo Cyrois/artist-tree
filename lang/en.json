@@ -394,6 +394,7 @@
     "artists.error_not_found_spotify": "Artist not found with Spotify ID: :id",
     "artists.error_not_found_id": "Artist not found with ID: :id",
     "artists.error_no_genres": "No genres found for this artist to find similar artists.",
+    "artists.error_missing_identifier": "An artist ID or Spotify ID must be provided.",
 
     "common.status_unknown": "Unknown",
     "common.error_unexpected": "An unexpected error occurred. Please try again later.",

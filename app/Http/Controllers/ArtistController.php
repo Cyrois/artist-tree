@@ -76,6 +76,7 @@ class ArtistController extends Controller
 
     /**
      * Select an artist (refreshes data from Spotify if available).
+     * This method is called when a user selects an artist from the artist search or lineup page.
      *
      * POST /api/artists/select
      * Body: { "artist_id": 123 } OR { "spotify_id": "..." }
@@ -105,7 +106,7 @@ class ArtistController extends Controller
 
             return response()->json([
                 'message' => __('artists.select_success'),
-                'data' => new ArtistResource($artist->fresh('metrics')),
+                'data' => new ArtistResource($artist->load('metrics')),
             ], 200);
         } catch (SpotifyApiException|\Exception $e) {
             return $this->handleSpotifyError($e, 'Failed to select artist', [
@@ -117,6 +118,7 @@ class ArtistController extends Controller
 
     /**
      * Refresh an artist's data from Spotify.
+     * TODO: This method should be an async call that either informs the UI that the calls are done or waits for the response from the third parties
      *
      * POST /api/artists/{id}/refresh
      */
@@ -176,6 +178,13 @@ class ArtistController extends Controller
         } else {
             // Fallback to Spotify ID lookup
             $spotifyId = $request->validated('spotify_id');
+
+            if (! $spotifyId) {
+                return response()->json([
+                    'message' => __('artists.error_missing_identifier'),
+                ], 400);
+            }
+
             $artist = Artist::where('spotify_id', $spotifyId)->with($relations)->first();
 
             if (! $artist) {

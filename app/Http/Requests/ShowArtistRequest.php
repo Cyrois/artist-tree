@@ -25,6 +25,11 @@ class ShowArtistRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => [
+                'sometimes',
+                'nullable',
+                'integer',
+            ],
             'spotify_id' => [
                 'required_without:id',
                 'string',
