@@ -16,6 +16,11 @@ use Illuminate\Support\Collection;
  *
  * Processes artists in batches to optimize quota usage and implements
  * idempotent processing with comprehensive error handling.
+ *
+ * NOTE: This job does not perform staleness checks (e.g., checking if metrics
+ * were updated in the last 24h). It is the responsibility of the caller
+ * (e.g., YouTubeJobDispatchService or ArtistSearchService) to ensure that
+ * this job is only dispatched for artists that actually need a refresh.
  */
 class FetchYouTubeDataJob implements ShouldQueue
 {

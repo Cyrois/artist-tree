@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Models\Artist;
 use App\Models\Genre;
-use App\Services\YouTubeJobDispatchService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
