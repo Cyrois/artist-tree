@@ -31,55 +31,20 @@ class ArtistYouTubeRefreshService
             return false;
         }
 
-        try {
-            // Force refresh basic channel metrics
-            $channelData = $this->youtubeService->getChannelMetrics($artist->youtube_channel_id);
+        $basicSuccess = $this->refreshBasicMetrics($artist);
+        
+        if ($basicSuccess) {
+            $this->refreshAnalytics($artist);
             
-            if ($channelData) {
-                $updateData = [
-                    'youtube_subscribers' => $channelData->subscriberCount,
-                    'youtube_refreshed_at' => now(),
-                ];
-
-                // Also refresh video analytics
-                $analyticsData = $this->youtubeService->calculateVideoAnalytics($artist->youtube_channel_id);
-                
-                if ($analyticsData) {
-                    $updateData = array_merge($updateData, [
-                        'youtube_avg_views' => (int) $analyticsData->averageViews,
-                        'youtube_avg_likes' => (int) $analyticsData->averageLikes,
-                        'youtube_avg_comments' => (int) $analyticsData->averageComments,
-                        'youtube_videos_analyzed' => $analyticsData->videosAnalyzed,
-                        'youtube_analytics_refreshed_at' => now(),
-                    ]);
-                }
-
-                // Ensure metrics exist before updating
-                if (!$artist->metrics) {
-                    $artist->metrics()->create($updateData);
-                } else {
-                    $artist->metrics->update($updateData);
-                }
-
-                Log::info('YouTube data force refreshed successfully', [
-                    'artist_id' => $artist->id,
-                    'youtube_channel_id' => $artist->youtube_channel_id,
-                    'subscribers' => $channelData->subscriberCount,
-                    'has_analytics' => $analyticsData !== null,
-                ]);
-
-                return true;
-            }
-
-            return false;
-        } catch (YouTubeApiException|\Exception $e) {
-            $this->handleYouTubeError($e, 'Failed to force refresh YouTube data', [
+            Log::info('YouTube data force refreshed successfully', [
                 'artist_id' => $artist->id,
                 'youtube_channel_id' => $artist->youtube_channel_id,
             ]);
-
-            return false;
+            
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -105,58 +70,21 @@ class ArtistYouTubeRefreshService
             return false;
         }
 
-        try {
-            $refreshed = false;
+        $attempted = false;
 
-            // Refresh basic channel metrics if stale
-            if ($artist->metrics->isYouTubeStale()) {
-                $channelData = $this->youtubeService->getChannelMetrics($artist->youtube_channel_id);
-                
-                if ($channelData) {
-                    $artist->metrics->update([
-                        'youtube_subscribers' => $channelData->subscriberCount,
-                        'youtube_refreshed_at' => now(),
-                    ]);
-                    $refreshed = true;
-
-                    Log::debug('YouTube basic metrics refreshed', [
-                        'artist_id' => $artist->id,
-                        'subscribers' => $channelData->subscriberCount,
-                    ]);
-                }
-            }
-
-            // Refresh video analytics if stale
-            if ($artist->metrics->isYouTubeAnalyticsStale()) {
-                $analyticsData = $this->youtubeService->calculateVideoAnalytics($artist->youtube_channel_id);
-                
-                if ($analyticsData) {
-                    $artist->metrics->update([
-                        'youtube_avg_views' => (int) $analyticsData->averageViews,
-                        'youtube_avg_likes' => (int) $analyticsData->averageLikes,
-                        'youtube_avg_comments' => (int) $analyticsData->averageComments,
-                        'youtube_videos_analyzed' => $analyticsData->videosAnalyzed,
-                        'youtube_analytics_refreshed_at' => now(),
-                    ]);
-                    $refreshed = true;
-
-                    Log::debug('YouTube analytics refreshed', [
-                        'artist_id' => $artist->id,
-                        'videos_analyzed' => $analyticsData->videosAnalyzed,
-                        'avg_views' => $analyticsData->averageViews,
-                    ]);
-                }
-            }
-
-            return $refreshed;
-        } catch (YouTubeApiException|\Exception $e) {
-            $this->handleYouTubeError($e, 'Failed to refresh YouTube data conditionally', [
-                'artist_id' => $artist->id,
-                'youtube_channel_id' => $artist->youtube_channel_id,
-            ]);
-
-            return true; // Return true because we attempted refresh
+        // Refresh basic channel metrics if stale
+        if ($artist->metrics->isYouTubeStale()) {
+            $this->refreshBasicMetrics($artist);
+            $attempted = true;
         }
+
+        // Refresh video analytics if stale
+        if ($artist->metrics->isYouTubeAnalyticsStale()) {
+            $this->refreshAnalytics($artist);
+            $attempted = true;
+        }
+
+        return $attempted;
     }
 
     /**
@@ -181,12 +109,8 @@ class ArtistYouTubeRefreshService
                     'youtube_refreshed_at' => now(),
                 ];
 
-                // Ensure metrics exist before updating
-                if (!$artist->metrics) {
-                    $artist->metrics()->create($updateData);
-                } else {
-                    $artist->metrics->update($updateData);
-                }
+                // Update existing metrics or create new ones
+                $artist->metrics()->updateOrCreate([], $updateData);
 
                 Log::debug('YouTube basic metrics refreshed', [
                     'artist_id' => $artist->id,
@@ -232,15 +156,11 @@ class ArtistYouTubeRefreshService
                     'youtube_analytics_refreshed_at' => now(),
                 ];
 
-                // Ensure metrics exist before updating
-                if (!$artist->metrics) {
-                    // Create with basic structure if doesn't exist
-                    $artist->metrics()->create(array_merge($updateData, [
-                        'refreshed_at' => now(),
-                    ]));
-                } else {
-                    $artist->metrics->update($updateData);
-                }
+                // Update existing metrics or create new ones
+                // If creating, also set the general refreshed_at timestamp
+                $artist->metrics()->updateOrCreate([], array_merge($updateData, [
+                    'refreshed_at' => $artist->metrics?->refreshed_at ?? now()
+                ]));
 
                 Log::debug('YouTube analytics refreshed', [
                     'artist_id' => $artist->id,
