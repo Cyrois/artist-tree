@@ -90,9 +90,9 @@ onMounted(async () => {
 
         if (!response.ok) {
             if (response.status === 404) {
-                throw new Error('Artist not found');
+                throw new Error(trans('artists.error_artist_not_found'));
             }
-            throw new Error(`Failed to load artist: ${response.statusText}`);
+            throw new Error(trans('artists.error_load_with_status', { status: response.statusText }));
         }
 
         const data = await response.json();
@@ -108,7 +108,7 @@ onMounted(async () => {
 });
 
 const formatNumber = (num: number | null | undefined): string => {
-    if (num === null || num === undefined || num === 0) return 'N/A';
+    if (num === null || num === undefined || num === 0) return trans('common.na');
     if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -130,7 +130,7 @@ const refreshArtistData = async () => {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to refresh artist data: ${response.statusText}`);
+            throw new Error(trans('artists.error_refresh_failed', { status: response.statusText }));
         }
 
         const data = await response.json();
@@ -167,8 +167,8 @@ const breadcrumbs = computed(() =>
 
 const pageTitle = computed(() =>
     artist.value
-        ? `${artist.value.name} - Artist-Tree`
-        : `${trans('artists.show_page_title')} - Artist-Tree`,
+        ? trans('artists.document_title', { name: artist.value.name })
+        : trans('artists.document_title_default'),
 );
 </script>
 <template>
@@ -352,7 +352,7 @@ const pageTitle = computed(() =>
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                         "
                     >
-                        External Links
+                        {{ $t('artists.show_tab_links') }}
                     </button>
                 </div>
             </div>
@@ -469,7 +469,7 @@ const pageTitle = computed(() =>
                                 rel="noopener noreferrer"
                             >
                                 <Music class="h-4 w-4" />
-                                Spotify
+                                {{ $t('common.spotify') }}
                             </a>
                         </Button>
                         <Button
@@ -478,7 +478,7 @@ const pageTitle = computed(() =>
                             class="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                             <Youtube class="h-4 w-4" />
-                            YouTube
+                            {{ $t('common.youtube') }}
                         </Button>
                         <Button
                             variant="outline"
@@ -486,7 +486,7 @@ const pageTitle = computed(() =>
                             class="gap-2 text-pink-600 hover:bg-pink-50 hover:text-pink-700"
                         >
                             <Instagram class="h-4 w-4" />
-                            Instagram
+                            {{ $t('common.instagram') }}
                         </Button>
                     </div>
                 </div>
@@ -579,7 +579,7 @@ const pageTitle = computed(() =>
 
                 <!-- YouTube Video Analytics Section -->
                 <div v-if="artist.metrics && artist.metrics.youtube_subscribers !== null">
-                    <h3 class="mb-4 text-lg font-semibold">YouTube Video Analytics</h3>
+                    <h3 class="mb-4 text-lg font-semibold">{{ $t('artists.analytics_title') }}</h3>
                     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <Card>
                             <CardContent class="space-y-2 p-4">
@@ -587,13 +587,13 @@ const pageTitle = computed(() =>
                                     class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                                 >
                                     <Youtube class="h-4 w-4" />
-                                    <span>Average Views</span>
+                                    <span>{{ $t('artists.analytics_avg_views') }}</span>
                                 </div>
                                 <p class="text-2xl font-bold">
                                     {{
                                         artist.metrics?.youtube_avg_views !== null
                                             ? formatNumber(artist.metrics.youtube_avg_views)
-                                            : 'N/A'
+                                            : $t('common.na')
                                     }}
                                 </p>
                             </CardContent>
@@ -604,13 +604,13 @@ const pageTitle = computed(() =>
                                     class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                                 >
                                     <Youtube class="h-4 w-4" />
-                                    <span>Average Likes</span>
+                                    <span>{{ $t('artists.analytics_avg_likes') }}</span>
                                 </div>
                                 <p class="text-2xl font-bold">
                                     {{
                                         artist.metrics?.youtube_avg_likes !== null
                                             ? formatNumber(artist.metrics.youtube_avg_likes)
-                                            : 'N/A'
+                                            : $t('common.na')
                                     }}
                                 </p>
                             </CardContent>
@@ -621,13 +621,13 @@ const pageTitle = computed(() =>
                                     class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                                 >
                                     <Youtube class="h-4 w-4" />
-                                    <span>Average Comments</span>
+                                    <span>{{ $t('artists.analytics_avg_comments') }}</span>
                                 </div>
                                 <p class="text-2xl font-bold">
                                     {{
                                         artist.metrics?.youtube_avg_comments !== null
                                             ? formatNumber(artist.metrics.youtube_avg_comments)
-                                            : 'N/A'
+                                            : $t('common.na')
                                     }}
                                 </p>
                             </CardContent>
@@ -638,13 +638,13 @@ const pageTitle = computed(() =>
                                     class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                                 >
                                     <Youtube class="h-4 w-4" />
-                                    <span>Videos Analyzed</span>
+                                    <span>{{ $t('artists.analytics_videos_analyzed') }}</span>
                                 </div>
                                 <p class="text-2xl font-bold">
                                     {{
                                         artist.metrics?.youtube_videos_analyzed !== null
                                             ? artist.metrics.youtube_videos_analyzed
-                                            : 'N/A'
+                                            : $t('common.na')
                                     }}
                                 </p>
                             </CardContent>
@@ -750,7 +750,7 @@ const pageTitle = computed(() =>
                         >
                             <RefreshCw class="h-4 w-4" />
                             <div>
-                                <p class="font-medium">Spotify Data</p>
+                                <p class="font-medium">{{ $t('artists.source_spotify') }}</p>
                                 <p>{{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</p>
                             </div>
                         </div>
@@ -760,7 +760,7 @@ const pageTitle = computed(() =>
                         >
                             <Youtube class="h-4 w-4" />
                             <div>
-                                <p class="font-medium">YouTube Basic</p>
+                                <p class="font-medium">{{ $t('artists.source_youtube_basic') }}</p>
                                 <p>{{ new Date(artist.metrics.youtube_refreshed_at).toLocaleString() }}</p>
                             </div>
                         </div>
@@ -770,7 +770,7 @@ const pageTitle = computed(() =>
                         >
                             <Youtube class="h-4 w-4" />
                             <div>
-                                <p class="font-medium">YouTube Analytics</p>
+                                <p class="font-medium">{{ $t('artists.source_youtube_analytics') }}</p>
                                 <p>{{ new Date(artist.metrics.youtube_analytics_refreshed_at).toLocaleString() }}</p>
                             </div>
                         </div>
@@ -786,7 +786,7 @@ const pageTitle = computed(() =>
                             @click="refreshArtistData"
                         >
                             <RefreshCw class="h-3 w-3" :class="{ 'animate-spin': isRefreshing }" />
-                            {{ isRefreshing ? 'Refreshing...' : $t('artists.show_refresh_data_button') }}
+                            {{ isRefreshing ? $t('common.status_refreshing') : $t('artists.show_refresh_data_button') }}
                         </Button>
                     </div>
                 </div>
@@ -796,7 +796,7 @@ const pageTitle = computed(() =>
             <div v-else-if="activeTab === 'links'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>External Links</CardTitle>
+                        <CardTitle>{{ $t('artists.show_external_links') }}</CardTitle>
                     </CardHeader>
                     <CardContent class="p-0">
                         <div class="border-t">
@@ -806,12 +806,12 @@ const pageTitle = computed(() =>
                                         <th
                                             class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
                                         >
-                                            Platform
+                                            {{ $t('artists.links_platform') }}
                                         </th>
                                         <th
                                             class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
                                         >
-                                            URL
+                                            {{ $t('artists.links_url') }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -848,8 +848,7 @@ const pageTitle = computed(() =>
                                             colspan="2"
                                             class="p-6 text-center text-muted-foreground"
                                         >
-                                            No external links found for this
-                                            artist.
+                                            {{ $t('artists.links_empty') }}
                                         </td>
                                     </tr>
                                 </tbody>
