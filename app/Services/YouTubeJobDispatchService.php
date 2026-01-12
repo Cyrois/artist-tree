@@ -24,6 +24,10 @@ class YouTubeJobDispatchService
     private const MEDIUM_PRIORITY_BATCH_SIZE = 15;
     private const LOW_PRIORITY_BATCH_SIZE = 10;
 
+    public function __construct(
+        private readonly YouTubeService $youtubeService
+    ) {}
+
     /**
      * Dispatch YouTube jobs for artists with priority-based processing.
      *
@@ -33,32 +37,19 @@ class YouTubeJobDispatchService
      */
     public function dispatchPriorityJobs(array $artistIds, bool $respectQuota = true): array
     {
+        $stats = $this->initializeStats(count($artistIds));
+
         if (empty($artistIds)) {
-            return [
-                'high_priority' => 0,
-                'medium_priority' => 0,
-                'low_priority' => 0,
-                'total_jobs' => 0,
-                'total_artists' => 0,
-            ];
+            return $stats;
         }
 
         // Check quota availability if requested
-        if ($respectQuota) {
-            $youtubeService = app(YouTubeService::class);
-            if (!$youtubeService->checkQuotaAvailability()) {
-                Log::warning('YouTubeJobDispatchService: Quota exhausted, skipping job dispatch', [
-                    'artist_count' => count($artistIds),
-                ]);
-                return [
-                    'high_priority' => 0,
-                    'medium_priority' => 0,
-                    'low_priority' => 0,
-                    'total_jobs' => 0,
-                    'total_artists' => 0,
-                    'quota_exhausted' => true,
-                ];
-            }
+        if ($respectQuota && !$this->youtubeService->checkQuotaAvailability()) {
+            Log::warning('YouTubeJobDispatchService: Quota exhausted, skipping job dispatch', [
+                'artist_count' => count($artistIds),
+            ]);
+            $stats['quota_exhausted'] = true;
+            return $stats;
         }
 
         // Fetch artists with YouTube channel IDs and metrics
@@ -71,25 +62,13 @@ class YouTubeJobDispatchService
             Log::info('YouTubeJobDispatchService: No artists with YouTube channel IDs found', [
                 'requested_count' => count($artistIds),
             ]);
-            return [
-                'high_priority' => 0,
-                'medium_priority' => 0,
-                'low_priority' => 0,
-                'total_jobs' => 0,
-                'total_artists' => 0,
-            ];
+            return $stats;
         }
+
+        $stats['total_artists'] = $artists->count();
 
         // Categorize artists by priority
         $priorityGroups = $this->categorizeArtistsByPriority($artists);
-
-        $stats = [
-            'high_priority' => 0,
-            'medium_priority' => 0,
-            'low_priority' => 0,
-            'total_jobs' => 0,
-            'total_artists' => $artists->count(),
-        ];
 
         // Dispatch high priority jobs first
         if ($priorityGroups['high']->isNotEmpty()) {
@@ -127,6 +106,24 @@ class YouTubeJobDispatchService
         Log::info('YouTubeJobDispatchService: Priority jobs dispatched', $stats);
 
         return $stats;
+    }
+
+    /**
+     * Initialize a standard statistics response array.
+     *
+     * @param int $totalArtists
+     * @return array
+     */
+    private function initializeStats(int $totalArtists = 0): array
+    {
+        return [
+            'high_priority' => 0,
+            'medium_priority' => 0,
+            'low_priority' => 0,
+            'total_jobs' => 0,
+            'total_artists' => $totalArtists,
+            'quota_exhausted' => false,
+        ];
     }
 
     /**
