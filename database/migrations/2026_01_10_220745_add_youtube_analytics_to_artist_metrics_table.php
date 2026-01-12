@@ -16,11 +16,15 @@ return new class extends Migration
             // Add YouTube analytics columns
             // Note: PostgreSQL doesn't support AFTER clause, so columns will be added at the end
             $table->timestamp('youtube_refreshed_at')->nullable();
+            $table->timestamp('youtube_analytics_refreshed_at')->nullable();
+
+            // Move existing youtube_subscribers column (Note: physical reordering depends on DB driver)
+            $table->unsignedBigInteger('youtube_subscribers')->nullable()->after('youtube_analytics_refreshed_at')->change();
+
             $table->unsignedBigInteger('youtube_avg_views')->nullable();
             $table->unsignedBigInteger('youtube_avg_likes')->nullable();
             $table->unsignedBigInteger('youtube_avg_comments')->nullable();
             $table->unsignedInteger('youtube_videos_analyzed')->nullable();
-            $table->timestamp('youtube_analytics_refreshed_at')->nullable();
         });
     }
 
