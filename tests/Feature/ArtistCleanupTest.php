@@ -60,7 +60,8 @@ class ArtistCleanupTest extends TestCase
             ]);
 
         // 3. Search
-        $service = new ArtistSearchService($mockSpotify);
+        $mockYouTube = Mockery::mock(\App\Services\YouTubeJobDispatchService::class);
+        $service = new ArtistSearchService($mockSpotify, $mockYouTube);
         $results = $service->search($name);
 
         // 4. Assert

@@ -5,11 +5,9 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\Lineup;
 use App\Services\LineupService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->lineupService = new LineupService();

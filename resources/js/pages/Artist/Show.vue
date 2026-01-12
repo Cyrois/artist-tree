@@ -41,9 +41,15 @@ interface ApiArtist {
         spotify_popularity: number | null;
         spotify_followers: number | null;
         youtube_subscribers: number | null;
+        youtube_avg_views: number | null;
+        youtube_avg_likes: number | null;
+        youtube_avg_comments: number | null;
+        youtube_videos_analyzed: number | null;
         instagram_followers: number | null;
         tiktok_followers: number | null;
         refreshed_at?: string;
+        youtube_refreshed_at?: string;
+        youtube_analytics_refreshed_at?: string;
     } | null;
     created_at: string;
     updated_at: string;
@@ -70,6 +76,7 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const activeTab = ref<'overview' | 'data' | 'links'>('overview');
 const showAddToLineupModal = ref(false);
+const isRefreshing = ref(false);
 
 // Fetch artist details on mount
 onMounted(async () => {
@@ -83,9 +90,9 @@ onMounted(async () => {
 
         if (!response.ok) {
             if (response.status === 404) {
-                throw new Error('Artist not found');
+                throw new Error(trans('artists.error_artist_not_found'));
             }
-            throw new Error(`Failed to load artist: ${response.statusText}`);
+            throw new Error(trans('artists.error_load_with_status', { status: response.statusText }));
         }
 
         const data = await response.json();
@@ -101,11 +108,39 @@ onMounted(async () => {
 });
 
 const formatNumber = (num: number | null | undefined): string => {
-    if (num === null || num === undefined || num === 0) return '-';
+    if (num === null || num === undefined || num === 0) return trans('common.na');
     if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
+};
+
+const refreshArtistData = async () => {
+    if (!artist.value || isRefreshing.value) return;
+    
+    isRefreshing.value = true;
+    try {
+        const response = await fetch(`/api/artists/${artist.value.id}/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(trans('artists.error_refresh_failed', { status: response.statusText }));
+        }
+
+        const data = await response.json();
+        artist.value = data.data;
+    } catch (err) {
+        console.error('Failed to refresh artist data:', err);
+        // Could show a toast notification here
+    } finally {
+        isRefreshing.value = false;
+    }
 };
 
 function handleAddToLineupSubmit(data: any) {
@@ -132,8 +167,8 @@ const breadcrumbs = computed(() =>
 
 const pageTitle = computed(() =>
     artist.value
-        ? `${artist.value.name} - Artist-Tree`
-        : `${trans('artists.show_page_title')} - Artist-Tree`,
+        ? trans('artists.document_title', { name: artist.value.name })
+        : trans('artists.document_title_default'),
 );
 </script>
 <template>
@@ -317,7 +352,7 @@ const pageTitle = computed(() =>
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                         "
                     >
-                        External Links
+                        {{ $t('artists.show_tab_links') }}
                     </button>
                 </div>
             </div>
@@ -342,15 +377,13 @@ const pageTitle = computed(() =>
                             >
                                 {{ $t('artists.metric_spotify_popularity') }}
                             </p>
-                            <div class="mt-1">
-                                <p class="mt-1 text-2xl font-bold">
-                                    {{
-                                        formatNumber(
-                                            artist.metrics?.spotify_popularity,
-                                        )
-                                    }}
-                                </p>
-                            </div>
+                            <p class="mt-1 text-2xl font-bold">
+                                {{
+                                    formatNumber(
+                                        artist.metrics?.spotify_popularity,
+                                    )
+                                }}
+                            </p>
                         </CardContent>
                     </Card>
                     <Card class="py-0">
@@ -436,7 +469,7 @@ const pageTitle = computed(() =>
                                 rel="noopener noreferrer"
                             >
                                 <Music class="h-4 w-4" />
-                                Spotify
+                                {{ $t('common.spotify') }}
                             </a>
                         </Button>
                         <Button
@@ -445,7 +478,7 @@ const pageTitle = computed(() =>
                             class="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                             <Youtube class="h-4 w-4" />
-                            YouTube
+                            {{ $t('common.youtube') }}
                         </Button>
                         <Button
                             variant="outline"
@@ -453,7 +486,7 @@ const pageTitle = computed(() =>
                             class="gap-2 text-pink-600 hover:bg-pink-50 hover:text-pink-700"
                         >
                             <Instagram class="h-4 w-4" />
-                            Instagram
+                            {{ $t('common.instagram') }}
                         </Button>
                     </div>
                 </div>
@@ -495,13 +528,14 @@ const pageTitle = computed(() =>
                             <div>
                                 <ScoreBadge
                                     v-if="
-                                        artist.metrics?.spotify_popularity !==
-                                        null
+                                        artist.metrics && 
+                                        artist.metrics.spotify_popularity !== null &&
+                                        artist.metrics.spotify_popularity !== undefined
                                     "
-                                    :score="artist.metrics!.spotify_popularity"
+                                    :score="artist.metrics.spotify_popularity"
                                     size="md"
                                 />
-                                <p v-else class="text-2xl font-bold">-</p>
+                                <p v-else class="text-2xl font-bold">N/A</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -543,6 +577,81 @@ const pageTitle = computed(() =>
                     </Card>
                 </div>
 
+                <!-- YouTube Video Analytics Section -->
+                <div v-if="artist.metrics && artist.metrics.youtube_subscribers !== null">
+                    <h3 class="mb-4 text-lg font-semibold">{{ $t('artists.analytics_title') }}</h3>
+                    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <Card>
+                            <CardContent class="space-y-2 p-4">
+                                <div
+                                    class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                                >
+                                    <Youtube class="h-4 w-4" />
+                                    <span>{{ $t('artists.analytics_avg_views') }}</span>
+                                </div>
+                                <p class="text-2xl font-bold">
+                                    {{
+                                        artist.metrics?.youtube_avg_views !== null
+                                            ? formatNumber(artist.metrics.youtube_avg_views)
+                                            : $t('common.na')
+                                    }}
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardContent class="space-y-2 p-4">
+                                <div
+                                    class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                                >
+                                    <Youtube class="h-4 w-4" />
+                                    <span>{{ $t('artists.analytics_avg_likes') }}</span>
+                                </div>
+                                <p class="text-2xl font-bold">
+                                    {{
+                                        artist.metrics?.youtube_avg_likes !== null
+                                            ? formatNumber(artist.metrics.youtube_avg_likes)
+                                            : $t('common.na')
+                                    }}
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardContent class="space-y-2 p-4">
+                                <div
+                                    class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                                >
+                                    <Youtube class="h-4 w-4" />
+                                    <span>{{ $t('artists.analytics_avg_comments') }}</span>
+                                </div>
+                                <p class="text-2xl font-bold">
+                                    {{
+                                        artist.metrics?.youtube_avg_comments !== null
+                                            ? formatNumber(artist.metrics.youtube_avg_comments)
+                                            : $t('common.na')
+                                    }}
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardContent class="space-y-2 p-4">
+                                <div
+                                    class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                                >
+                                    <Youtube class="h-4 w-4" />
+                                    <span>{{ $t('artists.analytics_videos_analyzed') }}</span>
+                                </div>
+                                <p class="text-2xl font-bold">
+                                    {{
+                                        artist.metrics?.youtube_videos_analyzed !== null
+                                            ? artist.metrics.youtube_videos_analyzed
+                                            : $t('common.na')
+                                    }}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
                 <!-- Charts Area (Placeholder for now, but using real data if possible) -->
                 <div class="grid gap-6 md:grid-cols-3">
                     <Card class="md:col-span-2">
@@ -581,7 +690,7 @@ const pageTitle = computed(() =>
                                             Math.round(
                                                 (Math.log10(
                                                     (artist.metrics
-                                                        .spotify_followers ||
+                                                        ?.spotify_followers ||
                                                         0) + 1,
                                                 ) /
                                                     Math.log10(100000000)) *
@@ -597,7 +706,7 @@ const pageTitle = computed(() =>
                                     <div
                                         class="h-full bg-primary"
                                         :style="{
-                                            width: `${(Math.log10((artist.metrics.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100}%`,
+                                            width: `${(Math.log10((artist.metrics?.spotify_followers || 0) + 1) / Math.log10(100000000)) * 100}%`,
                                         }"
                                     ></div>
                                 </div>
@@ -609,7 +718,7 @@ const pageTitle = computed(() =>
                                     }}</span>
                                     <span class="font-medium"
                                         >{{
-                                            artist.metrics.spotify_popularity
+                                            artist.metrics?.spotify_popularity || 0
                                         }}
                                         / 100</span
                                     >
@@ -620,7 +729,7 @@ const pageTitle = computed(() =>
                                     <div
                                         class="h-full bg-primary"
                                         :style="{
-                                            width: `${artist.metrics.spotify_popularity}%`,
+                                            width: `${artist.metrics?.spotify_popularity || 0}%`,
                                         }"
                                     ></div>
                                 </div>
@@ -630,26 +739,56 @@ const pageTitle = computed(() =>
                 </div>
 
                 <div
-                    v-if="artist.metrics?.refreshed_at"
-                    class="flex items-center justify-between rounded-lg border bg-muted/30 p-4"
+                    v-if="artist.metrics && (artist.metrics.refreshed_at || artist.metrics.youtube_refreshed_at || artist.metrics.youtube_analytics_refreshed_at)"
+                    class="space-y-4"
                 >
-                    <div
-                        class="flex items-center gap-2 text-sm text-muted-foreground"
-                    >
-                        <RefreshCw class="h-4 w-4" />
-                        <span
-                            >{{ $t('artists.show_data_last_updated') }}
-                            {{
-                                new Date(
-                                    artist.metrics.refreshed_at,
-                                ).toLocaleString()
-                            }}</span
+                    <!-- Refresh timestamps -->
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <div
+                            v-if="artist.metrics.refreshed_at"
+                            class="flex items-center gap-2 text-sm text-muted-foreground"
                         >
+                            <RefreshCw class="h-4 w-4" />
+                            <div>
+                                <p class="font-medium">{{ $t('artists.source_spotify') }}</p>
+                                <p>{{ new Date(artist.metrics.refreshed_at).toLocaleString() }}</p>
+                            </div>
+                        </div>
+                        <div
+                            v-if="artist.metrics.youtube_refreshed_at"
+                            class="flex items-center gap-2 text-sm text-muted-foreground"
+                        >
+                            <Youtube class="h-4 w-4" />
+                            <div>
+                                <p class="font-medium">{{ $t('artists.source_youtube_basic') }}</p>
+                                <p>{{ new Date(artist.metrics.youtube_refreshed_at).toLocaleString() }}</p>
+                            </div>
+                        </div>
+                        <div
+                            v-if="artist.metrics.youtube_analytics_refreshed_at"
+                            class="flex items-center gap-2 text-sm text-muted-foreground"
+                        >
+                            <Youtube class="h-4 w-4" />
+                            <div>
+                                <p class="font-medium">{{ $t('artists.source_youtube_analytics') }}</p>
+                                <p>{{ new Date(artist.metrics.youtube_analytics_refreshed_at).toLocaleString() }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <Button variant="outline" size="sm" class="gap-2" disabled>
-                        <RefreshCw class="h-3 w-3" />
-                        {{ $t('artists.show_refresh_data_button') }}
-                    </Button>
+                    
+                    <!-- Refresh button -->
+                    <div class="flex justify-end">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            class="gap-2" 
+                            :disabled="isRefreshing"
+                            @click="refreshArtistData"
+                        >
+                            <RefreshCw class="h-3 w-3" :class="{ 'animate-spin': isRefreshing }" />
+                            {{ isRefreshing ? $t('common.status_refreshing') : $t('artists.show_refresh_data_button') }}
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -657,7 +796,7 @@ const pageTitle = computed(() =>
             <div v-else-if="activeTab === 'links'" class="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>External Links</CardTitle>
+                        <CardTitle>{{ $t('artists.show_external_links') }}</CardTitle>
                     </CardHeader>
                     <CardContent class="p-0">
                         <div class="border-t">
@@ -667,12 +806,12 @@ const pageTitle = computed(() =>
                                         <th
                                             class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
                                         >
-                                            Platform
+                                            {{ $t('artists.links_platform') }}
                                         </th>
                                         <th
                                             class="h-12 px-6 text-left align-middle font-medium text-muted-foreground"
                                         >
-                                            URL
+                                            {{ $t('artists.links_url') }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -709,8 +848,7 @@ const pageTitle = computed(() =>
                                             colspan="2"
                                             class="p-6 text-center text-muted-foreground"
                                         >
-                                            No external links found for this
-                                            artist.
+                                            {{ $t('artists.links_empty') }}
                                         </td>
                                     </tr>
                                 </tbody>

@@ -3,13 +3,11 @@
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Services\LineupStackService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\UpdateLineupTimestamp;
 use Illuminate\Support\Facades\Queue;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->stackService = new LineupStackService();

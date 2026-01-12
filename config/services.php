@@ -43,6 +43,10 @@ return [
 
     'youtube' => [
         'api_key' => env('YOUTUBE_API_KEY'),
+        'base_url' => env('YOUTUBE_API_BASE_URL', 'https://www.googleapis.com/youtube/v3'),
+        'quota_limit' => env('YOUTUBE_QUOTA_LIMIT', 10000),
+        'cache_ttl' => env('YOUTUBE_CACHE_TTL', 86400), // 24 hours
+        'video_analytics_cache_ttl' => env('YOUTUBE_VIDEO_ANALYTICS_CACHE_TTL', 604800), // 7 days
     ],
 
 ];

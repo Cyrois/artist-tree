@@ -6,7 +6,9 @@ use App\DataTransferObjects\ArtistSearchResultDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
+use App\Jobs\FetchYouTubeDataJob;
 use App\Jobs\VerifyArtistContentJob;
+use App\Services\YouTubeJobDispatchService;
 use App\Models\Artist;
 use App\Models\Genre;
 use Illuminate\Support\Str;
@@ -24,6 +26,7 @@ class ArtistSearchService
 {
     public function __construct(
         private SpotifyService $spotifyService,
+        private YouTubeJobDispatchService $youtubeJobDispatchService,
     ) {}
 
     /**
@@ -108,6 +111,8 @@ class ArtistSearchService
     ): Collection {
         $merged = collect();
         $seenSpotifyIds = [];
+        $missingArtists = [];
+        $artistsNeedingYouTube = []; // Track artists that need YouTube refresh
 
         // Add local results first (highest priority)
         foreach ($localResults as $artist) {
@@ -117,11 +122,15 @@ class ArtistSearchService
 
                 // Verify content for local results
                 VerifyArtistContentJob::dispatch($artist);
+
+                // Track artists that need YouTube refresh for batch processing
+                if ($artist->shouldRefreshYouTube()) {
+                    $artistsNeedingYouTube[] = $artist->id;
+                }
             }
         }
 
         // Track Spotify artists that don't exist in local database
-        $missingArtists = [];
 
         // Bulk check for existing artists (including soft-deleted)
         $spotifyIdsToCheck = [];
@@ -177,6 +186,11 @@ class ArtistSearchService
             } else {
                 // It exists locally and is not trashed, so verify it
                 VerifyArtistContentJob::dispatch($localArtist);
+
+                // Track artists that need YouTube refresh for batch processing
+                if ($localArtist->shouldRefreshYouTube()) {
+                    $artistsNeedingYouTube[] = $localArtist->id;
+                }
             }
         }
 
@@ -187,6 +201,11 @@ class ArtistSearchService
             Log::info('Dispatched CreateArtistsFromSpotifyJob', [
                 'artists_count' => count($missingArtists),
             ]);
+        }
+
+        // Dispatch priority-based YouTube jobs for artists needing refresh
+        if (!empty($artistsNeedingYouTube)) {
+            $this->youtubeJobDispatchService->dispatchPriorityJobs($artistsNeedingYouTube);
         }
 
         // Limit final results

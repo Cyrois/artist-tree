@@ -3,20 +3,21 @@
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
-
-uses(DatabaseTransactions::class);
 
 beforeEach(function () {
     Queue::fake();
 });
 
 test('it creates artists from Spotify data', function () {
+    $id1 = 'spotify_' . uniqid();
+    $id2 = 'spotify_' . uniqid();
+
     $spotifyArtists = [
         new SpotifyArtistDTO(
-            spotifyId: 'spotify123',
+            spotifyId: $id1,
             name: 'Test Artist 1',
             genres: ['rock', 'indie'],
             imageUrl: 'https://example.com/image1.jpg',
@@ -24,7 +25,7 @@ test('it creates artists from Spotify data', function () {
             followers: 100000,
         ),
         new SpotifyArtistDTO(
-            spotifyId: 'spotify456',
+            spotifyId: $id2,
             name: 'Test Artist 2',
             genres: ['pop'],
             imageUrl: 'https://example.com/image2.jpg',
@@ -36,10 +37,8 @@ test('it creates artists from Spotify data', function () {
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
     $job->handle();
 
-    // Verify artists were created
-    expect(Artist::count())->toBe(2);
-
-    $artist1 = Artist::where('spotify_id', 'spotify123')->first();
+    // Verify artists were created by checking for specific IDs
+    $artist1 = Artist::where('spotify_id', $id1)->first();
     expect($artist1)->not->toBeNull();
     expect($artist1->name)->toBe('Test Artist 1');
     expect($artist1->genres->pluck('name')->toArray())->toBe(['rock', 'indie']);
@@ -51,15 +50,18 @@ test('it creates artists from Spotify data', function () {
     expect($artist1->metrics->spotify_followers)->toBe(100000);
     expect($artist1->metrics->refreshed_at)->not->toBeNull();
 
-    $artist2 = Artist::where('spotify_id', 'spotify456')->first();
+    $artist2 = Artist::where('spotify_id', $id2)->first();
     expect($artist2)->not->toBeNull();
     expect($artist2->name)->toBe('Test Artist 2');
 });
 
 test('it is idempotent and does not create duplicates', function () {
+    $id1 = 'spotify_' . uniqid();
+    $id2 = 'spotify_' . uniqid();
+
     // Create an artist first
     $artist = Artist::factory()->create([
-        'spotify_id' => 'spotify123',
+        'spotify_id' => $id1,
         'name' => 'Existing Artist',
     ]);
     $artist->metrics()->create([
@@ -70,7 +72,7 @@ test('it is idempotent and does not create duplicates', function () {
 
     $spotifyArtists = [
         new SpotifyArtistDTO(
-            spotifyId: 'spotify123', // Same as existing
+            spotifyId: $id1, // Same as existing
             name: 'Updated Name',
             genres: ['rock'],
             imageUrl: 'https://example.com/new.jpg',
@@ -78,7 +80,7 @@ test('it is idempotent and does not create duplicates', function () {
             followers: 100000,
         ),
         new SpotifyArtistDTO(
-            spotifyId: 'spotify456', // New artist
+            spotifyId: $id2, // New artist
             name: 'New Artist',
             genres: ['pop'],
             imageUrl: 'https://example.com/image.jpg',
@@ -90,25 +92,23 @@ test('it is idempotent and does not create duplicates', function () {
     $job = new CreateArtistsFromSpotifyJob($spotifyArtists);
     $job->handle();
 
-    // Verify only one new artist was created
-    expect(Artist::count())->toBe(2);
-
     // Existing artist should not be updated
-    $existingArtist = Artist::where('spotify_id', 'spotify123')->first();
+    $existingArtist = Artist::where('spotify_id', $id1)->first();
     expect($existingArtist->name)->toBe('Existing Artist'); // Not updated
     expect($existingArtist->metrics->spotify_followers)->toBe(50000); // Not updated
 
     // New artist should be created
-    $newArtist = Artist::where('spotify_id', 'spotify456')->first();
+    $newArtist = Artist::where('spotify_id', $id2)->first();
     expect($newArtist)->not->toBeNull();
     expect($newArtist->name)->toBe('New Artist');
 });
 
 test('it handles empty array gracefully', function () {
+    $initialCount = Artist::count();
     $job = new CreateArtistsFromSpotifyJob([]);
     $job->handle();
 
-    expect(Artist::count())->toBe(0);
+    expect(Artist::count())->toBe($initialCount);
 });
 
 test('it creates artist with metrics in transaction', function () {

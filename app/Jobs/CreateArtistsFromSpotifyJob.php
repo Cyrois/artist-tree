@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Accepts array of SpotifyArtistDTO objects and creates missing artists
  * in the database. Job is idempotent - checks by spotify_id before creating.
+ *
+ * NOTE: YouTube data fetching is excluded from this job because new artists 
+ * from Spotify do not yet have a youtube_channel_id. YouTube resolution
+ * should be handled by a separate discovery process.
  */
 class CreateArtistsFromSpotifyJob implements ShouldQueue
 {

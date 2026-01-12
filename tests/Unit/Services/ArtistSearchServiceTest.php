@@ -6,16 +6,16 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Facades\Queue;
+use App\Services\YouTubeJobDispatchService;
 
-uses(DatabaseTransactions::class);
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     Queue::fake();
-    // Mock SpotifyService
+    // Mock SpotifyService and YouTubeJobDispatchService
     $this->spotifyService = Mockery::mock(SpotifyService::class);
-    $this->searchService = new ArtistSearchService($this->spotifyService);
+    $this->youtubeJobDispatchService = Mockery::mock(YouTubeJobDispatchService::class);
+    $this->searchService = new ArtistSearchService($this->spotifyService, $this->youtubeJobDispatchService);
 });
 
 it('returns empty collection for empty query', function () {

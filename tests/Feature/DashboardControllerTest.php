@@ -6,12 +6,12 @@ use App\Enums\ArtistTier;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
-    // use RefreshDatabase;
+    // 
 
     public function test_dashboard_loads_correct_number_of_lineups_and_artists()
     {

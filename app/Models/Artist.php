@@ -82,6 +82,26 @@ class Artist extends Model
     }
 
     /**
+     * Check if the artist should receive a YouTube data refresh.
+     *
+     * Returns true if:
+     * 1. The artist has a YouTube channel ID
+     * 2. AND (Metrics record is missing OR YouTube metrics are stale)
+     */
+    public function shouldRefreshYouTube(): bool
+    {
+        if (! $this->youtube_channel_id) {
+            return false;
+        }
+
+        if (! $this->metrics) {
+            return true;
+        }
+
+        return $this->metrics->needsYouTubeRefresh();
+    }
+
+    /**
      * Scope: Search by name or alias (case-insensitive).
      */
     public function scopeSearch($query, string $term)
