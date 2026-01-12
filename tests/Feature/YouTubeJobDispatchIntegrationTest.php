@@ -13,13 +13,29 @@ use Illuminate\Support\Facades\Queue;
 beforeEach(function () {
     Queue::fake();
     
-    // Mock Spotify OAuth token request
+    // Mock Spotify OAuth token request and search endpoint
     Http::fake([
         'accounts.spotify.com/api/token' => Http::response([
             'access_token' => 'fake_access_token',
             'token_type' => 'Bearer',
             'expires_in' => 3600,
         ]),
+        'api.spotify.com/v1/search*' => Http::response([
+            'artists' => [
+                'items' => [
+                    [
+                        'id' => 'spotify123',
+                        'name' => 'Test Artist',
+                        'genres' => ['rock'],
+                        'images' => [['url' => 'https://example.com/image.jpg']],
+                        'popularity' => 80,
+                        'followers' => ['total' => 100000],
+                    ]
+                ]
+            ]
+        ]),
+        // Keep other specific mocks if they are added later or needed
+        '*' => Http::response(), // Fallback for other requests to prevent actual HTTP calls if not matched above, though specific matches take precedence.
     ]);
 });
 
@@ -100,32 +116,24 @@ describe('YouTube Job Dispatch Integration', function () {
             'refreshed_at' => now(),
         ]);
 
-        // Mock Spotify API response
-        Http::fake([
-            'api.spotify.com/v1/artists/test123' => Http::response([
-                'id' => 'test123',
-                'name' => 'Test Artist',
-                'popularity' => 75,
-                'followers' => ['total' => 55000],
-                'genres' => ['rock'],
-                'images' => [['url' => 'https://example.com/image.jpg']],
-            ]),
-        ]);
+        // Mock the SpotifyService directly instead of HTTP calls
+        $this->mock(\App\Services\SpotifyService::class, function ($mock) {
+            $mock->shouldReceive('getArtist')
+                ->with('test123')
+                ->andReturn(new \App\DataTransferObjects\SpotifyArtistDTO(
+                    spotifyId: 'test123',
+                    name: 'Test Artist',
+                    genres: ['rock'],
+                    imageUrl: 'https://example.com/image.jpg',
+                    popularity: 75,
+                    followers: 55000
+                ));
+        });
 
-        // Mock YouTube API response
-        Http::fake([
-            'www.googleapis.com/youtube/v3/channels*' => Http::response([
-                'items' => [
-                    [
-                        'id' => 'UC_test_refresh',
-                        'statistics' => [
-                            'subscriberCount' => '30000',
-                            'videoCount' => '100',
-                        ],
-                    ],
-                ],
-            ]),
-        ]);
+        // Mock YouTube service for the job dispatch
+        $this->mock(\App\Services\YouTubeService::class, function ($mock) {
+            $mock->shouldReceive('checkQuotaAvailability')->andReturn(true);
+        });
 
         $response = $this->postJson("/api/artists/{$artist->id}/refresh");
 
@@ -257,5 +265,66 @@ describe('YouTube Job Dispatch Integration', function () {
             ->and($stats['total_jobs'])->toBe(1);
 
         Queue::assertPushed(FetchYouTubeDataJob::class, 1);
+    });
+
+    /**
+     * Test that artists with YouTube channel ID but no metrics are included in YouTube job dispatch
+     */
+    it('includes artists with YouTube channel but no metrics in job dispatch', function () {
+        // Create an artist with YouTube channel ID but no metrics
+        $artist = Artist::factory()->create([
+            'name' => 'Test Artist',
+            'spotify_id' => 'spotify123',
+            'youtube_channel_id' => 'UCTestChannel',
+        ]);
+
+        // Ensure no metrics exist
+        expect($artist->metrics)->toBeNull();
+
+        // Mock Spotify search to return this artist (or generic response)
+        // Since we are testing search integration, we rely on searchLocal finding the artist
+        
+        $searchService = app(ArtistSearchService::class);
+        
+        // Search for the artist (this should trigger YouTube job dispatch)
+        $results = $searchService->search('Test Artist', 10);
+
+        // Verify the artist was found
+        expect($results)->toHaveCount(1);
+        expect($results->first()->databaseId)->toBe($artist->id);
+
+        // Verify that YouTube job dispatch was called for this artist
+        // The search service calls dispatchPriorityJobs which we can verify via Queue
+        Queue::assertPushed(FetchYouTubeDataJob::class, function ($job) use ($artist) {
+            // Check if the job contains our artist ID
+            $r = new ReflectionProperty($job, 'artistIds');
+            $r->setAccessible(true);
+            $ids = $r->getValue($job);
+            return in_array($artist->id, $ids);
+        });
+    });
+
+    /**
+     * Test that artists without YouTube channel ID are not included in YouTube job dispatch
+     */
+    it('excludes artists without YouTube channel from job dispatch', function () {
+        // Create an artist without YouTube channel ID
+        $artist = Artist::factory()->create([
+            'name' => 'Test Artist No YouTube',
+            'spotify_id' => 'spotify456',
+            'youtube_channel_id' => null,
+        ]);
+
+        $searchService = app(ArtistSearchService::class);
+        
+        // Search for the artist
+        $results = $searchService->search('Test Artist No YouTube', 10);
+
+        // Verify the artist was found
+        expect($results)->toHaveCount(1);
+        expect($results->first()->databaseId)->toBe($artist->id);
+
+        // Verify that NO YouTube job was dispatched
+        Queue::assertNotPushed(FetchYouTubeDataJob::class);
     });
 });

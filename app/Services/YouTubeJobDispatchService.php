@@ -62,6 +62,7 @@ class YouTubeJobDispatchService
             Log::info('YouTubeJobDispatchService: No artists with YouTube channel IDs found', [
                 'requested_count' => count($artistIds),
             ]);
+            $stats['total_artists'] = 0;
             return $stats;
         }
 

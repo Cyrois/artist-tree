@@ -101,8 +101,14 @@ it('maintains schema consistency across multiple migration runs', function () {
     // Get columns after re-migration
     $finalColumns = Schema::getColumnListing('artist_metrics');
     
-    // Schema should be identical
-    expect($finalColumns)->toBe($initialColumns, 'Schema should be consistent across migration runs');
+    // Schema should contain the same columns (order may vary)
+    expect(count($finalColumns))->toBe(count($initialColumns), 'Column count should be consistent');
+    
+    // Verify all initial columns still exist
+    foreach ($initialColumns as $column) {
+        expect(in_array($column, $finalColumns))
+            ->toBeTrue("Column {$column} should exist after re-migration");
+    }
     
     // Verify all YouTube analytics columns still exist
     $youtubeColumns = [

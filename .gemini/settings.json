@@ -1,17 +1,4 @@
 {
   "mcpServers": {
-    "context7": {
-      "httpUrl": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-afac38a6-243f-4127-b708-369de13c7298",
-        "Accept": "application/json, text/event-stream"
-      }
-    },
-     "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
-    }
   }
 }
