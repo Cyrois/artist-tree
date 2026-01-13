@@ -124,4 +124,32 @@ class Artist extends Model
     {
         return $this->metrics();
     }
+
+    /**
+     * Get the YouTube link for this artist.
+     */
+    public function youtubeLink(): ?ArtistLink
+    {
+        return $this->links()
+            ->where('platform', \App\Enums\SocialPlatform::YOUTUBE)
+            ->first();
+    }
+
+    /**
+     * Check if this artist needs VEVO detection check.
+     */
+    public function needsVevoCheck(): bool
+    {
+        if (!$this->youtube_channel_id) {
+            return false;
+        }
+
+        $youtubeLink = $this->youtubeLink();
+        
+        if (!$youtubeLink) {
+            return true;
+        }
+
+        return $youtubeLink->needsVevoCheck();
+    }
 }

@@ -6,16 +6,23 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
+use App\Services\VEVOChannelDetectionService;
 use App\Services\YouTubeJobDispatchService;
 
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     Queue::fake();
-    // Mock SpotifyService and YouTubeJobDispatchService
+    // Mock SpotifyService, YouTubeJobDispatchService, and VEVOChannelDetectionService
     $this->spotifyService = Mockery::mock(SpotifyService::class);
     $this->youtubeJobDispatchService = Mockery::mock(YouTubeJobDispatchService::class);
-    $this->searchService = new ArtistSearchService($this->spotifyService, $this->youtubeJobDispatchService);
+    $this->vevoDetectionService = Mockery::mock(VEVOChannelDetectionService::class);
+    $this->vevoDetectionService->shouldReceive('shouldCheckArtist')->andReturn(false);
+    $this->searchService = new ArtistSearchService(
+        $this->spotifyService,
+        $this->youtubeJobDispatchService,
+        $this->vevoDetectionService
+    );
 });
 
 it('returns empty collection for empty query', function () {

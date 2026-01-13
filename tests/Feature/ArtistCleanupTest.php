@@ -61,7 +61,9 @@ class ArtistCleanupTest extends TestCase
 
         // 3. Search
         $mockYouTube = Mockery::mock(\App\Services\YouTubeJobDispatchService::class);
-        $service = new ArtistSearchService($mockSpotify, $mockYouTube);
+        $mockVevo = Mockery::mock(\App\Services\VEVOChannelDetectionService::class);
+        $mockVevo->shouldReceive('shouldCheckArtist')->andReturn(false);
+        $service = new ArtistSearchService($mockSpotify, $mockYouTube, $mockVevo);
         $results = $service->search($name);
 
         // 4. Assert
