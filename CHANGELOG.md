@@ -19,6 +19,45 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### YouTube Integration & Test Architecture (2026-01-12)
+**Summary:** Implemented comprehensive YouTube data integration to fetch analytics (views, likes, comments) and overhauled the testing architecture to support persistent database environments (PostgreSQL).
+
+- **YouTube Integration:**
+  - **Services:**
+    - `YouTubeService`: Core integration with YouTube Data API v3 (Channels, Videos, Search).
+    - `ArtistYouTubeRefreshService`: Orchestrates data fetching and metric updates.
+    - `YouTubeJobDispatchService`: Manages async job dispatching with rate limit awareness.
+  - **Jobs:**
+    - `FetchYouTubeDataJob`: Asynchronous job to fetch channel stats and analyze recent videos.
+  - **Data Structure:**
+    - Created `YouTubeChannelDTO` and `YouTubeVideoAnalyticsDTO` for structured data handling.
+    - Added `YouTubeApiException` for granular error handling.
+  - **Database Schema:**
+    - Expanded `artist_metrics` table with new analytics columns:
+      - `youtube_avg_views`, `youtube_avg_likes`, `youtube_avg_comments`
+      - `youtube_videos_analyzed` (count of videos used for averages)
+      - `youtube_refreshed_at`, `youtube_analytics_refreshed_at`
+  - **Frontend:**
+    - Updated `Artist/Show.vue` to display YouTube metrics.
+    - Externalized hardcoded strings to `lang/en.json` (i18n).
+
+- **Test Architecture Overhaul:**
+  - **Persistent Database:** Removed `RefreshDatabase` trait from all tests to support running against a persistent PostgreSQL instance (essential for Laravel Cloud compatibility).
+  - **Configuration:**
+    - Created `TEST_DATABASE_SETUP.md` documentation.
+    - Updated `tests/TestCase.php` to manage transaction-based isolation manually where needed.
+    - Updated `phpunit.xml` and `.env.testing`.
+  - **New Test Suites:**
+    - `YouTubeComprehensiveIntegrationTest`: End-to-end verification of YouTube flows.
+    - `YouTubePerformanceOptimizationTest`: Verifies caching and efficient querying.
+    - `YouTubeJobDispatchIntegrationTest`: Tests async job handling.
+    - Extensive unit tests for all new services and DTOs.
+
+- **Refactoring & Cleanup:**
+  - **Separation of Concerns:** Refactored `CreateArtistsFromSpotifyJob` to strictly handle Spotify data. Removed mixed responsibility for YouTube logic.
+  - **DRY Refactoring:** Consolidated repeated logic in `ArtistController` and services.
+  - **Code Quality:** Added comprehensive comments and type hinting across the new modules.
+
 ### Artist Cleanup & Verification (2026-01-10)
 **Summary:** Implemented background verification to automatically soft-delete artists that have no content (tracks) on Spotify, ensuring search results remain clean and relevant.
 
