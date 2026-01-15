@@ -13,13 +13,8 @@ use Illuminate\Support\Facades\Log;
  */
 class YouTubeChannelRankingAlgorithm
 {
-    /**
-     * Percentage threshold for considering subscriber counts "similar" (10%).
-     */
-    private const SIMILAR_SUBSCRIBER_THRESHOLD = 0.1;
 
     private int $minimumSubscriberThreshold;
-    private float $verifiedBonus;
     private float $recentActivityBonus;
     private float $officialBonus;
 
@@ -30,7 +25,6 @@ class YouTubeChannelRankingAlgorithm
         $activityPercent = (int) config('artist-tree.vevo_detection.activity_bonus_percent', 10);
         $officialPercent = (int) config('artist-tree.vevo_detection.official_bonus_percent', 15);
         
-        $this->verifiedBonus = 1 + ($verifiedPercent / 100);
         $this->recentActivityBonus = 1 + ($activityPercent / 100);
         $this->officialBonus = 1 + ($officialPercent / 100);
     }
@@ -54,12 +48,6 @@ class YouTubeChannelRankingAlgorithm
             $scoreA = $this->calculateChannelScore($a);
             $scoreB = $this->calculateChannelScore($b);
 
-            // If scores are equal, prefer verified channel
-            if (abs($scoreA - $scoreB) < 0.01) {
-                if ($a->isVerified !== $b->isVerified) {
-                    return $b->isVerified ? 1 : -1;
-                }
-            }
 
             return $scoreB <=> $scoreA;
         });
@@ -83,10 +71,6 @@ class YouTubeChannelRankingAlgorithm
         // Base score from subscriber count
         $score = (float) $channel->subscriberCount;
 
-        // Bonus for verified channels
-        if ($channel->isVerified) {
-            $score *= $this->verifiedBonus;
-        }
 
         // Bonus for recent activity
         if ($channel->hasRecentActivity || $channel->hasActiveContent()) {
@@ -144,57 +128,13 @@ class YouTubeChannelRankingAlgorithm
             'channel_id' => $best->channelId,
             'title' => $best->title,
             'subscriber_count' => $best->subscriberCount,
-            'is_verified' => $best->isVerified,
             'score' => $this->calculateChannelScore($best),
         ]);
 
         return $best;
     }
 
-    /**
-     * Check if two channels have similar subscriber counts.
-     *
-     * @param YouTubeChannelDTO $channelA First channel
-     * @param YouTubeChannelDTO $channelB Second channel
-     * @return bool True if subscriber counts are within threshold
-     */
-    public function haveSimilarSubscriberCounts(YouTubeChannelDTO $channelA, YouTubeChannelDTO $channelB): bool
-    {
-        $maxCount = max($channelA->subscriberCount, $channelB->subscriberCount);
-        
-        if ($maxCount === 0) {
-            return true;
-        }
 
-        $difference = abs($channelA->subscriberCount - $channelB->subscriberCount);
-        $percentageDifference = $difference / $maxCount;
-
-        return $percentageDifference <= self::SIMILAR_SUBSCRIBER_THRESHOLD;
-    }
-
-    /**
-     * Apply tie-breaking logic when channels have similar scores.
-     * Verified channels win ties.
-     *
-     * @param YouTubeChannelDTO $channelA First channel
-     * @param YouTubeChannelDTO $channelB Second channel
-     * @return YouTubeChannelDTO The winning channel
-     */
-    public function breakTie(YouTubeChannelDTO $channelA, YouTubeChannelDTO $channelB): YouTubeChannelDTO
-    {
-        // If subscriber counts are similar, prefer verified channel
-        if ($this->haveSimilarSubscriberCounts($channelA, $channelB)) {
-            if ($channelA->isVerified && !$channelB->isVerified) {
-                return $channelA;
-            }
-            if ($channelB->isVerified && !$channelA->isVerified) {
-                return $channelB;
-            }
-        }
-
-        // Otherwise, prefer higher subscriber count
-        return $channelA->subscriberCount >= $channelB->subscriberCount ? $channelA : $channelB;
-    }
 
     /**
      * Validate that a replacement channel is significantly better than the original.

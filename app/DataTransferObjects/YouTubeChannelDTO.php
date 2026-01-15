@@ -18,7 +18,6 @@ readonly class YouTubeChannelDTO
         public ?YouTubeVideoAnalyticsDTO $videoAnalytics = null,
         public ?string $title = null,
         public ?string $description = null,
-        public bool $isVerified = false,
         public bool $hasRecentActivity = false,
         public ?\DateTimeInterface $lastUploadDate = null,
     ) {}
@@ -42,7 +41,6 @@ readonly class YouTubeChannelDTO
             uploadsPlaylistId: $relatedPlaylists['uploads'] ?? null,
             title: $snippet['title'] ?? null,
             description: $snippet['description'] ?? null,
-            isVerified: self::determineVerificationStatus($status, $snippet),
         );
     }
 
@@ -64,25 +62,6 @@ readonly class YouTubeChannelDTO
         );
     }
 
-    /**
-     * Determine if channel is verified based on API response.
-     * Note: YouTube API doesn't directly expose verification status,
-     * so we use heuristics based on available data.
-     */
-    private static function determineVerificationStatus(array $status, array $snippet): bool
-    {
-        // Check for official artist channel indicator
-        if (isset($status['isLinked']) && $status['isLinked']) {
-            return true;
-        }
-        
-        // Check for custom URL (usually indicates verified/established channel)
-        if (!empty($snippet['customUrl'])) {
-            return true;
-        }
-        
-        return false;
-    }
 
     /**
      * Create a copy with updated subscriber count and video count.
@@ -98,7 +77,6 @@ readonly class YouTubeChannelDTO
             videoAnalytics: $this->videoAnalytics,
             title: $this->title,
             description: $this->description,
-            isVerified: $this->isVerified,
             hasRecentActivity: $this->hasRecentActivity,
             lastUploadDate: $this->lastUploadDate,
         );
@@ -118,7 +96,6 @@ readonly class YouTubeChannelDTO
             videoAnalytics: $this->videoAnalytics,
             title: $this->title,
             description: $this->description,
-            isVerified: $this->isVerified,
             hasRecentActivity: $hasRecentActivity,
             lastUploadDate: $lastUploadDate,
         );
@@ -138,7 +115,6 @@ readonly class YouTubeChannelDTO
             videoAnalytics: $this->videoAnalytics,
             title: $title ?? $this->title,
             description: $description ?? $this->description,
-            isVerified: $this->isVerified,
             hasRecentActivity: $this->hasRecentActivity,
             lastUploadDate: $this->lastUploadDate,
         );
@@ -185,7 +161,6 @@ readonly class YouTubeChannelDTO
             'video_analytics' => $this->videoAnalytics?->toArray(),
             'title' => $this->title,
             'description' => $this->description,
-            'is_verified' => $this->isVerified,
             'has_recent_activity' => $this->hasRecentActivity,
             'last_upload_date' => $this->lastUploadDate?->format('Y-m-d H:i:s'),
         ];

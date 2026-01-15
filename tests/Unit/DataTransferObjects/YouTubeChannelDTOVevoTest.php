@@ -169,7 +169,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
             expect($dto->videoCount)->toBe(100);
             expect($dto->title)->toBe('Test Artist');
             expect($dto->description)->toBe('Official channel for Test Artist');
-            expect($dto->isVerified)->toBeTrue();
         });
         
         it('creates DTO from search response', function () {
@@ -248,7 +247,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
                 uploadsPlaylistId: 'UUtest123',
                 title: 'Test Channel',
                 description: 'Test description',
-                isVerified: true,
                 hasRecentActivity: true,
                 lastUploadDate: $lastUpload,
             );
@@ -260,7 +258,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
             expect($array['video_count'])->toBe(100);
             expect($array['title'])->toBe('Test Channel');
             expect($array['description'])->toBe('Test description');
-            expect($array['is_verified'])->toBeTrue();
             expect($array['has_recent_activity'])->toBeTrue();
             expect($array['last_upload_date'])->toBe($lastUpload->format('Y-m-d H:i:s'));
         });
