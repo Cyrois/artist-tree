@@ -239,12 +239,11 @@ class YouTubeChannelSearchService
 
             // Enrich DTO with snippet data from search results
             $snippet = $snippetMap[$channelId] ?? [];
-            $enrichedDto = $dto->withSearchSnippet(
-                title: $snippet['title'] ?? null,
-                description: $snippet['description'] ?? null,
-            );
+            
+            $dto->title = $snippet['title'] ?? $dto->title;
+            $dto->description = $snippet['description'] ?? $dto->description;
 
-            $channels[] = $enrichedDto;
+            $channels[] = $dto;
         }
 
         return $channels;

@@ -19,6 +19,20 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Refactor YouTubeChannelDTOMutators (2026-01-15)
+**Summary:** Refactored `YouTubeChannelDTO` to be mutable, simplifying usage by removing `with*` methods and allowing direct property modification.
+
+- **DTO Changes:**
+  - Removed `readonly` modifier from class definition.
+  - Removed `withMetrics`, `withRecentActivity`, and `withSearchSnippet` immutable modifier methods.
+  - Enabled direct property assignment (e.g., `$dto->subscriberCount = 123`).
+
+- **Refactoring:**
+  - Updated `YouTubeChannelSearchService` to remove usage of `withSearchSnippet` and use direct property assignment.
+
+- **Testing:**
+  - Added unit test `tests/Unit/DataTransferObjects/YouTubeChannelDTOTest.php` to verify mutability and data integrity.
+
 ### YouTube Integration & Test Architecture (2026-01-12)
 **Summary:** Implemented comprehensive YouTube data integration to fetch analytics (views, likes, comments) and overhauled the testing architecture to support persistent database environments (PostgreSQL).
 

@@ -7,7 +7,7 @@ namespace App\DataTransferObjects;
  *
  * Represents channel data from YouTube Data API v3 responses.
  */
-readonly class YouTubeChannelDTO
+class YouTubeChannelDTO
 {
     public function __construct(
         public string $channelId,
@@ -63,62 +63,7 @@ readonly class YouTubeChannelDTO
     }
 
 
-    /**
-     * Create a copy with updated subscriber count and video count.
-     */
-    public function withMetrics(int $subscriberCount, int $videoCount): self
-    {
-        return new self(
-            channelId: $this->channelId,
-            subscriberCount: $subscriberCount,
-            videoCount: $videoCount,
-            subscriberCountHidden: $this->subscriberCountHidden,
-            uploadsPlaylistId: $this->uploadsPlaylistId,
-            videoAnalytics: $this->videoAnalytics,
-            title: $this->title,
-            description: $this->description,
-            hasRecentActivity: $this->hasRecentActivity,
-            lastUploadDate: $this->lastUploadDate,
-        );
-    }
 
-    /**
-     * Create a copy with recent activity information.
-     */
-    public function withRecentActivity(bool $hasRecentActivity, ?\DateTimeInterface $lastUploadDate = null): self
-    {
-        return new self(
-            channelId: $this->channelId,
-            subscriberCount: $this->subscriberCount,
-            videoCount: $this->videoCount,
-            subscriberCountHidden: $this->subscriberCountHidden,
-            uploadsPlaylistId: $this->uploadsPlaylistId,
-            videoAnalytics: $this->videoAnalytics,
-            title: $this->title,
-            description: $this->description,
-            hasRecentActivity: $hasRecentActivity,
-            lastUploadDate: $lastUploadDate,
-        );
-    }
-
-    /**
-     * Create a copy with search snippet data (title and description).
-     */
-    public function withSearchSnippet(?string $title, ?string $description): self
-    {
-        return new self(
-            channelId: $this->channelId,
-            subscriberCount: $this->subscriberCount,
-            videoCount: $this->videoCount,
-            subscriberCountHidden: $this->subscriberCountHidden,
-            uploadsPlaylistId: $this->uploadsPlaylistId,
-            videoAnalytics: $this->videoAnalytics,
-            title: $title ?? $this->title,
-            description: $description ?? $this->description,
-            hasRecentActivity: $this->hasRecentActivity,
-            lastUploadDate: $this->lastUploadDate,
-        );
-    }
 
     /**
      * Check if this channel has enough subscribers for automatic replacement.
