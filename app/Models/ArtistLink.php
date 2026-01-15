@@ -55,7 +55,7 @@ class ArtistLink extends Model
             return true;
         }
 
-        return $this->vevo_checked_at->lt(now()->subDays(7));
+        return $this->vevo_checked_at->lt(now()->subDays(config('artist-tree.vevo_detection.recheck_days')));
     }
 
     /**
