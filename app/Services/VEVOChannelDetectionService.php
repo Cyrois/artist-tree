@@ -18,22 +18,13 @@ use Illuminate\Support\Facades\Log;
  */
 class VEVOChannelDetectionService
 {
-    /**
-     * Known VEVO-related patterns in channel names.
-     */
-    private const VEVO_NAME_PATTERNS = [
-        'vevo',
-        'VEVO',
-        'Vevo',
-    ];
+
 
     /**
      * Known VEVO-related patterns in channel descriptions.
      */
     private const VEVO_DESCRIPTION_PATTERNS = [
         'vevo',
-        'VEVO',
-        'Vevo',
         'official music video',
         'redirects to',
         'visit the official channel',
@@ -60,28 +51,16 @@ class VEVOChannelDetectionService
     {
         // Check 1: Channel name contains "VEVO" (case-insensitive)
         if ($this->containsVEVOInName($channel->title)) {
-            Log::debug('VEVO detection: Channel identified by name pattern', [
-                'channel_id' => $channel->channelId,
-                'title' => $channel->title,
-            ]);
             return true;
         }
 
         // Check 2: Channel has zero videos (VEVO channels typically have no content)
         if ($channel->videoCount === 0) {
-            Log::debug('VEVO detection: Channel identified by zero video count', [
-                'channel_id' => $channel->channelId,
-                'title' => $channel->title,
-            ]);
             return true;
         }
 
         // Check 3: Channel description mentions VEVO or redirection
         if ($this->containsVEVOPatterns($channel->description)) {
-            Log::debug('VEVO detection: Channel identified by description pattern', [
-                'channel_id' => $channel->channelId,
-                'title' => $channel->title,
-            ]);
             return true;
         }
 
@@ -272,7 +251,7 @@ class VEVOChannelDetectionService
     public function getVEVODetectionPatterns(): array
     {
         return [
-            'name_patterns' => self::VEVO_NAME_PATTERNS,
+            'name_patterns' => ['vevo'],
             'description_patterns' => self::VEVO_DESCRIPTION_PATTERNS,
         ];
     }
@@ -307,7 +286,7 @@ class VEVOChannelDetectionService
         $lowerDescription = strtolower($description);
 
         foreach (self::VEVO_DESCRIPTION_PATTERNS as $pattern) {
-            if (stripos($lowerDescription, strtolower($pattern)) !== false) {
+            if (strpos($lowerDescription, $pattern) !== false) {
                 return true;
             }
         }
@@ -315,30 +294,19 @@ class VEVOChannelDetectionService
         return false;
     }
 
-    /**
-     * Get the YouTube link for an artist.
-     *
-     * @param Artist $artist The artist
-     * @return ArtistLink|null The YouTube link or null
-     */
-    private function getYouTubeLink(Artist $artist): ?ArtistLink
-    {
-        return $artist->links()
-            ->where('platform', SocialPlatform::YouTube)
-            ->first();
-    }
 
     /**
      * Create a YouTube link record for an artist.
      *
      * @param Artist $artist The artist
+     * @param string $channelId The YouTube channel ID
      * @return ArtistLink The created link
      */
-    private function createYouTubeLink(Artist $artist): ArtistLink
+    private function createYouTubeLink(Artist $artist, string $channelId): ArtistLink
     {
         return $artist->links()->create([
             'platform' => SocialPlatform::YouTube,
-            'url' => "https://www.youtube.com/channel/{$artist->youtube_channel_id}",
+            'url' => "https://www.youtube.com/channel/{$channelId}",
             'vevo_checked_at' => now(),
         ]);
     }
