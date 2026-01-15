@@ -129,7 +129,7 @@ class VEVOChannelDetectionService
                 ->first();
             
             if ($anyYoutubeLink && $anyYoutubeLink->vevo_checked_at) {
-                $daysSinceCheck = abs(now()->diffInDays($anyYoutubeLink->vevo_checked_at));
+                $daysSinceCheck = now()->diffInDays($anyYoutubeLink->vevo_checked_at);
                 if ($daysSinceCheck < $this->recheckDays) {
                     return false;
                 }

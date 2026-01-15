@@ -73,7 +73,6 @@ class YouTubeChannelRankingAlgorithm
 
 
         // Bonus for recent activity
-        // Bonus for recent activity
         if ($channel->hasActiveContent()) {
             $score *= $this->recentActivityBonus;
         }

@@ -154,7 +154,7 @@ class VEVOChannelReplacementJob implements ShouldQueue
             }
 
             // Step 8: Perform replacement
-            $this->replaceChannel($bestChannel, $currentChannel);
+            $this->promoteChannel($bestChannel);
 
             Log::info('VEVOChannelReplacementJob: Successfully replaced VEVO channel', [
                 'artist_id' => $this->artist->id,
@@ -178,6 +178,9 @@ class VEVOChannelReplacementJob implements ShouldQueue
 
     /**
      * Populate channel from existing links (with ranking) or discover via search.
+     * If the artist has an approved YouTube link, we use it regardless of ranking/thresholds
+     * provided it exists on YouTube.
+     * If the artist has no approved YouTube link, we search for the best channel via ranking.
      */
     private function populateChannelFromLinksOrDiscover(
         YouTubeService $youtubeService,
@@ -198,7 +201,7 @@ class VEVOChannelReplacementJob implements ShouldQueue
                 // If we have an approved link, we use it regardless of ranking/thresholds
                 // provided it exists on YouTube
                 if ($channelData) {
-                    $this->populateChannel($channelData);
+                    $this->promoteChannel($channelData);
                     $detectionService->markArtistAsChecked($this->artist, $channelData->channelId);
                     
                     Log::info('VEVOChannelReplacementJob: maintaining approved YouTube channel', [
@@ -224,7 +227,7 @@ class VEVOChannelReplacementJob implements ShouldQueue
             $bestChannel = $rankingAlgorithm->selectBestChannel($channelsFromLinks);
             
             if ($bestChannel !== null) {
-                $this->populateChannel($bestChannel);
+                $this->promoteChannel($bestChannel);
                 $detectionService->markArtistAsChecked($this->artist, $bestChannel->channelId);
                 
                 Log::info('VEVOChannelReplacementJob: Populated youtube_channel_id from existing links', [
@@ -309,7 +312,7 @@ class VEVOChannelReplacementJob implements ShouldQueue
         }
 
         // Populate the channel
-        $this->populateChannel($bestChannel);
+        $this->promoteChannel($bestChannel);
         $detectionService->markArtistAsChecked($this->artist, $bestChannel->channelId);
 
         Log::info('VEVOChannelReplacementJob: Successfully populated YouTube channel', [
@@ -321,9 +324,10 @@ class VEVOChannelReplacementJob implements ShouldQueue
     }
 
     /**
-     * Populate the artist's YouTube channel (for artists without one).
+     * Promote the channel to be the artist's official YouTube channel.
+     * Updates the artist record and the YouTube ArtistLink.
      */
-    private function populateChannel(YouTubeChannelDTO $channel): void
+    private function promoteChannel(YouTubeChannelDTO $channel): void
     {
         DB::transaction(function () use ($channel) {
             // Update artist's youtube_channel_id
@@ -346,39 +350,6 @@ class VEVOChannelReplacementJob implements ShouldQueue
                 $this->artist->links()->create([
                     'platform' => SocialPlatform::YouTube,
                     'url' => "https://www.youtube.com/channel/{$channel->channelId}",
-                    'review_status' => ArtistLink::REVIEW_STATUS_PENDING_APPROVAL,
-                    'vevo_checked_at' => now(),
-                ]);
-            }
-        });
-    }
-
-    /**
-     * Replace the artist's YouTube channel with the new channel.
-     */
-    private function replaceChannel(YouTubeChannelDTO $newChannel, YouTubeChannelDTO $oldChannel): void
-    {
-        DB::transaction(function () use ($newChannel, $oldChannel) {
-            // Update artist's youtube_channel_id
-            $this->artist->update([
-                'youtube_channel_id' => $newChannel->channelId,
-            ]);
-
-            // Update or create YouTube link with pending_approval status
-            $youtubeLink = $this->artist->links()
-                ->where('platform', SocialPlatform::YouTube)
-                ->first();
-
-            if ($youtubeLink) {
-                $youtubeLink->update([
-                    'url' => "https://www.youtube.com/channel/{$newChannel->channelId}",
-                    'review_status' => ArtistLink::REVIEW_STATUS_PENDING_APPROVAL,
-                    'vevo_checked_at' => now(),
-                ]);
-            } else {
-                $this->artist->links()->create([
-                    'platform' => SocialPlatform::YouTube,
-                    'url' => "https://www.youtube.com/channel/{$newChannel->channelId}",
                     'review_status' => ArtistLink::REVIEW_STATUS_PENDING_APPROVAL,
                     'vevo_checked_at' => now(),
                 ]);
