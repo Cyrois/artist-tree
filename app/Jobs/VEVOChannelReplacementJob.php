@@ -185,11 +185,37 @@ class VEVOChannelReplacementJob implements ShouldQueue
         YouTubeChannelRankingAlgorithm $rankingAlgorithm,
         VEVOChannelDetectionService $detectionService,
     ): void {
-        // First, try to get channels from existing YouTube links
+        // 1. Check for an approved YouTube link first
+        $approvedLink = $this->artist->links()
+            ->where('platform', SocialPlatform::YouTube)
+            ->where('review_status', ArtistLink::REVIEW_STATUS_APPROVED)
+            ->first();
+
+        if ($approvedLink) {
+            $channelId = $detectionService->extractChannelIdFromUrl($approvedLink->url);
+            if ($channelId) {
+                $channelData = $youtubeService->getChannelMetrics($channelId);
+                // If we have an approved link, we use it regardless of ranking/thresholds
+                // provided it exists on YouTube
+                if ($channelData) {
+                    $this->populateChannel($channelData);
+                    $detectionService->markArtistAsChecked($this->artist, $channelData->channelId);
+                    
+                    Log::info('VEVOChannelReplacementJob: maintaining approved YouTube channel', [
+                        'artist_id' => $this->artist->id,
+                        'channel_id' => $channelData->channelId,
+                        'channel_title' => $channelData->title,
+                    ]);
+                    return;
+                }
+            }
+        }
+
+        // 2. Try to get channels from unverified YouTube links
         $channelsFromLinks = $this->getChannelsFromLinks($youtubeService, $detectionService);
         
         if (!empty($channelsFromLinks)) {
-            Log::info('VEVOChannelReplacementJob: Found channels from existing links', [
+            Log::info('VEVOChannelReplacementJob: Found channels from existing unverified links', [
                 'artist_id' => $this->artist->id,
                 'channel_count' => count($channelsFromLinks),
             ]);
@@ -211,12 +237,12 @@ class VEVOChannelReplacementJob implements ShouldQueue
             }
         }
         
-        // No valid channels from links, try to discover via search
+        // 3. No valid channels from links, try to discover via search
         $this->discoverAndPopulateChannel($searchService, $rankingAlgorithm, $detectionService);
     }
 
     /**
-     * Get channel data for all YouTube links.
+     * Get channel data for unverified YouTube links.
      *
      * @return array<YouTubeChannelDTO>
      */
@@ -227,14 +253,9 @@ class VEVOChannelReplacementJob implements ShouldQueue
         $channels = [];
         $seenChannelIds = [];
         
-        $youtubeLinks = $detectionService->getUnverifiedYouTubeLinks($this->artist);
+        $unverifiedLinks = $detectionService->getUnverifiedYouTubeLinks($this->artist);
         
-        // Also include approved YouTube links
-        $allYoutubeLinks = $this->artist->links()
-            ->where('platform', SocialPlatform::YouTube)
-            ->get();
-        
-        foreach ($allYoutubeLinks as $link) {
+        foreach ($unverifiedLinks as $link) {
             $channelId = $detectionService->extractChannelIdFromUrl($link->url);
             
             // Skip if no channel ID or already processed

@@ -278,16 +278,14 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 videoCount: 0, // No videos = no activity bonus
                 subscriberCountHidden: false,
                 title: 'Inactive Channel',
-                hasRecentActivity: false,
             );
             
             $active = new YouTubeChannelDTO(
                 channelId: 'UCactive',
                 subscriberCount: 100000,
-                videoCount: 0, // No videos, but hasRecentActivity flag is true
+                videoCount: 10, // Has videos = activity bonus
                 subscriberCountHidden: false,
                 title: 'Active Channel',
-                hasRecentActivity: true,
             );
             
             $inactiveScore = $this->algorithm->calculateChannelScore($inactive);

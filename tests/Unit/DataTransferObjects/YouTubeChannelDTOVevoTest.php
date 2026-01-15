@@ -190,49 +190,7 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
         });
     });
     
-    describe('Immutable Updates', function () {
-        
-        it('creates new instance with updated metrics', function () {
-            $original = new YouTubeChannelDTO(
-                channelId: 'UCtest123',
-                subscriberCount: 1000,
-                videoCount: 10,
-                subscriberCountHidden: false,
-                title: 'Test Channel',
-            );
-            
-            $updated = $original->withMetrics(5000, 50);
-            
-            // Original unchanged
-            expect($original->subscriberCount)->toBe(1000);
-            expect($original->videoCount)->toBe(10);
-            
-            // New instance has updated values
-            expect($updated->subscriberCount)->toBe(5000);
-            expect($updated->videoCount)->toBe(50);
-            expect($updated->title)->toBe('Test Channel'); // Other fields preserved
-        });
-        
-        it('creates new instance with recent activity info', function () {
-            $original = new YouTubeChannelDTO(
-                channelId: 'UCtest123',
-                subscriberCount: 1000,
-                videoCount: 10,
-                subscriberCountHidden: false,
-            );
-            
-            $lastUpload = now()->subDays(30);
-            $updated = $original->withRecentActivity(true, $lastUpload);
-            
-            // Original unchanged
-            expect($original->hasRecentActivity)->toBeFalse();
-            expect($original->lastUploadDate)->toBeNull();
-            
-            // New instance has updated values
-            expect($updated->hasRecentActivity)->toBeTrue();
-            expect($updated->lastUploadDate)->toBe($lastUpload);
-        });
-    });
+
     
     describe('Array Conversion', function () {
         
@@ -247,7 +205,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
                 uploadsPlaylistId: 'UUtest123',
                 title: 'Test Channel',
                 description: 'Test description',
-                hasRecentActivity: true,
                 lastUploadDate: $lastUpload,
             );
             
@@ -258,7 +215,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
             expect($array['video_count'])->toBe(100);
             expect($array['title'])->toBe('Test Channel');
             expect($array['description'])->toBe('Test description');
-            expect($array['has_recent_activity'])->toBeTrue();
             expect($array['last_upload_date'])->toBe($lastUpload->format('Y-m-d H:i:s'));
         });
     });

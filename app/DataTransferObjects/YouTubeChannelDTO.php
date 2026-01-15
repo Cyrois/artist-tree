@@ -18,7 +18,7 @@ class YouTubeChannelDTO
         public ?YouTubeVideoAnalyticsDTO $videoAnalytics = null,
         public ?string $title = null,
         public ?string $description = null,
-        public bool $hasRecentActivity = false,
+
         public ?\DateTimeInterface $lastUploadDate = null,
     ) {}
 
@@ -106,7 +106,6 @@ class YouTubeChannelDTO
             'video_analytics' => $this->videoAnalytics?->toArray(),
             'title' => $this->title,
             'description' => $this->description,
-            'has_recent_activity' => $this->hasRecentActivity,
             'last_upload_date' => $this->lastUploadDate?->format('Y-m-d H:i:s'),
         ];
     }
