@@ -88,7 +88,7 @@ class ArtistController extends Controller
 
         try {
             if ($artistId) {
-                $artist = \App\Models\Artist::with('metrics')->findOrFail($artistId);
+                $artist = \App\Models\Artist::with(['metrics', 'links'])->findOrFail($artistId);
 
                 // If artist has a Spotify ID, refresh their data
                 if ($artist->spotify_id && $artist->hasStaleMetrics()) {
@@ -99,9 +99,6 @@ class ArtistController extends Controller
                 $this->youtubeRefreshService->refreshIfNeeded($artist);
             } else {
                 $artist = $this->searchService->getOrCreateFromSpotify($spotifyId);
-                
-                // Refresh YouTube data if needed
-                $this->youtubeRefreshService->refreshIfNeeded($artist);
             }
 
             return response()->json([

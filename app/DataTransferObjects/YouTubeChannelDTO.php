@@ -68,7 +68,7 @@ class YouTubeChannelDTO
     /**
      * Check if this channel has enough subscribers for automatic replacement.
      */
-    public function meetsMinimumSubscriberThreshold(int $threshold = 1000): bool
+    public function meetsMinimumSubscriberThreshold(int $threshold = 100): bool
     {
         return $this->subscriberCount >= $threshold;
     }

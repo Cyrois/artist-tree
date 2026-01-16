@@ -3,6 +3,21 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | YouTube Channel Discovery
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for YouTube channel discovery during artist search.
+    | Disabling this prevents YouTube API calls when searching for artists,
+    | which helps conserve API quota.
+    |
+    */
+    'youtube_channel_discovery' => [
+        // Enable/disable YouTube channel discovery during search
+        'enabled' => env('YOUTUBE_CHANNEL_DISCOVERY_ENABLED', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | VEVO Channel Detection
     |--------------------------------------------------------------------------
     |

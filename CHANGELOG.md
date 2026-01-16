@@ -19,6 +19,21 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### YouTube Channel Discovery Logic Improvements (2026-01-15)
+**Summary:** Improved the logic for determining when an artist needs YouTube channel discovery and ensured metrics are fetched after channel promotion.
+
+- **Model Changes:**
+  - Added `needsChannelDiscovery()` method to `Artist.php` that returns `true` only if:
+    - Artist has no `youtube_channel_id`, OR
+    - Artist's YouTube channel is not approved (no `ArtistLink` with `review_status = 'approved'`)
+
+- **Service Changes:**
+  - Updated `ArtistSearchService::mergeAndDeduplicate()` to use `$artist->needsChannelDiscovery()` instead of `VEVOChannelDetectionService::shouldCheckArtist()`
+  - Removed unused `VEVOChannelDetectionService` dependency from `ArtistSearchService` constructor
+
+- **Job Changes:**
+  - Updated `VEVOChannelReplacementJob::promoteChannel()` to dispatch `FetchYouTubeDataJob` after promoting a channel, ensuring YouTube metrics are immediately fetched for newly discovered channels
+
 ### Refactor YouTubeChannelDTOMutators (2026-01-15)
 **Summary:** Refactored `YouTubeChannelDTO` to be mutable, simplifying usage by removing `with*` methods and allowing direct property modification.
 

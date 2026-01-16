@@ -7,7 +7,7 @@ use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Jobs\FetchYouTubeDataJob;
-use App\Jobs\VEVOChannelReplacementJob;
+use App\Jobs\UpdateYoutubeLinksJob;
 use App\Jobs\VerifyArtistContentJob;
 use App\Services\YouTubeJobDispatchService;
 use App\Models\Artist;
@@ -28,7 +28,6 @@ class ArtistSearchService
     public function __construct(
         private SpotifyService $spotifyService,
         private YouTubeJobDispatchService $youtubeJobDispatchService,
-        private VEVOChannelDetectionService $vevoDetectionService,
     ) {}
 
     /**
@@ -116,6 +115,7 @@ class ArtistSearchService
         $missingArtists = [];
         $artistsNeedingYouTube = []; // Track artists that need YouTube refresh
         $artistsNeedingVevoCheck = []; // Track artists that need VEVO detection
+        $youtubeDiscoveryEnabled = config('artist-tree.youtube_channel_discovery.enabled', false);
 
         // Add local results first (highest priority)
         foreach ($localResults as $artist) {
@@ -127,12 +127,12 @@ class ArtistSearchService
                 VerifyArtistContentJob::dispatch($artist);
 
                 // Track artists that need YouTube refresh for batch processing
-                if ($artist->shouldRefreshYouTube()) {
+                if ($youtubeDiscoveryEnabled && $artist->shouldRefreshYouTube()) {
                     $artistsNeedingYouTube[] = $artist->id;
                 }
 
-                // Track artists that need VEVO detection (already loaded, no extra query)
-                if ($this->vevoDetectionService->shouldCheckArtist($artist)) {
+                // Track artists that need channel discovery (already loaded, no extra query)
+                if ($youtubeDiscoveryEnabled && $artist->needsToUpdateYoutubeChannel()) {
                     $artistsNeedingVevoCheck[] = $artist;
                 }
             }
@@ -196,12 +196,12 @@ class ArtistSearchService
                 VerifyArtistContentJob::dispatch($localArtist);
 
                 // Track artists that need YouTube refresh for batch processing
-                if ($localArtist->shouldRefreshYouTube()) {
+                if ($youtubeDiscoveryEnabled && $localArtist->shouldRefreshYouTube()) {
                     $artistsNeedingYouTube[] = $localArtist->id;
                 }
 
-                // Track artists that need VEVO detection (already loaded, no extra query)
-                if ($this->vevoDetectionService->shouldCheckArtist($localArtist)) {
+                // Track artists that need channel discovery (already loaded, no extra query)
+                if ($youtubeDiscoveryEnabled && $localArtist->needsToUpdateYoutubeChannel()) {
                     $artistsNeedingVevoCheck[] = $localArtist;
                 }
             }
@@ -242,7 +242,7 @@ class ArtistSearchService
         }
 
         foreach ($artists as $artist) {
-            VEVOChannelReplacementJob::dispatch($artist);
+            UpdateYoutubeLinksJob::dispatch($artist);
         }
 
         Log::debug('Dispatched VEVO detection jobs', [

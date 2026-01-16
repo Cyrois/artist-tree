@@ -152,4 +152,28 @@ class Artist extends Model
 
         return $youtubeLink->needsVevoCheck();
     }
+
+    /**
+     * Check if this artist needs YouTube channel discovery.
+     *
+     * Returns true only if:
+     * - The artist has no youtube_channel_id, OR
+     * - The artist's youtube_channel_id is not approved (no approved YouTube link)
+     */
+    public function needsToUpdateYoutubeChannel(): bool
+    {
+        // If artist has no youtube_channel_id, definitely needs discovery
+        if (!$this->youtube_channel_id) {
+            return true;
+        }
+
+        // Check if there's an approved YouTube link for this channel
+        $hasApprovedLink = $this->links()
+            ->where('platform', \App\Enums\SocialPlatform::YouTube)
+            ->where('review_status', ArtistLink::REVIEW_STATUS_APPROVED)
+            ->exists();
+
+        // If no approved link, the current channel is not confirmed - needs discovery
+        return !$hasApprovedLink;
+    }
 }
