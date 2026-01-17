@@ -122,6 +122,8 @@ export function useSpotifyPlayback() {
                 window.location.origin,
             );
             tokenUrl.searchParams.set('return_url', returnUrl);
+            // Tell backend this is a popup flow
+            tokenUrl.searchParams.set('popup', '1');
 
             const response = await fetch(tokenUrl.toString(), {
                 credentials: 'include',
@@ -133,14 +135,12 @@ export function useSpotifyPlayback() {
             if (!response.ok) {
                 const data = await response.json();
 
-                // If not authenticated, clear token and redirect to Spotify OAuth
+                // If not authenticated, clear token and open popup for OAuth
                 if (data.error === 'not_authenticated' && data.auth_url) {
                     await clearToken();
                     if (allowRedirect) {
-                        window.location.href = data.auth_url;
-                        throw new Error(
-                            'Redirecting to Spotify authentication',
-                        );
+                        // Open OAuth in popup instead of redirecting
+                        return await openAuthPopup(data.auth_url);
                     }
 
                     const error = new Error('Spotify authentication required');
@@ -156,8 +156,8 @@ export function useSpotifyPlayback() {
             accessToken.value = data.access_token;
             return data.access_token;
         } catch (err) {
-            if (err instanceof Error && err.message.includes('Redirecting')) {
-                throw err; // Re-throw redirect errors
+            if (err instanceof Error && err.message.includes('cancelled')) {
+                throw err; // Re-throw popup cancelled errors
             }
             if ((err as any).needsAuth) {
                 throw err;
@@ -166,6 +166,58 @@ export function useSpotifyPlayback() {
                 'Unable to authenticate with Spotify. Please try again.';
             throw err;
         }
+    };
+
+    // Open OAuth in popup and wait for completion
+    const openAuthPopup = (authUrl: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const width = 450;
+            const height = 730;
+            const left = window.screenX + (window.outerWidth - width) / 2;
+            const top = window.screenY + (window.outerHeight - height) / 2;
+
+            const popup = window.open(
+                authUrl,
+                'spotify-auth',
+                `width=${width},height=${height},left=${left},top=${top},popup=yes`,
+            );
+
+            if (!popup) {
+                reject(new Error('Popup blocked. Please allow popups for this site.'));
+                return;
+            }
+
+            // Listen for message from popup
+            const handleMessage = (event: MessageEvent) => {
+                if (event.origin !== window.location.origin) return;
+
+                if (event.data?.spotify_authenticated !== undefined) {
+                    window.removeEventListener('message', handleMessage);
+                    clearInterval(checkClosed);
+
+                    if (event.data.spotify_authenticated) {
+                        // Token is now in session, fetch it
+                        accessToken.value = null;
+                        fetchAccessToken(false)
+                            .then(resolve)
+                            .catch(reject);
+                    } else {
+                        reject(new Error(event.data.error || 'Authentication failed'));
+                    }
+                }
+            };
+
+            window.addEventListener('message', handleMessage);
+
+            // Check if popup was closed without completing auth
+            const checkClosed = setInterval(() => {
+                if (popup.closed) {
+                    clearInterval(checkClosed);
+                    window.removeEventListener('message', handleMessage);
+                    reject(new Error('Authentication cancelled'));
+                }
+            }, 500);
+        });
     };
 
     // Check if user is authenticated without redirecting
@@ -247,8 +299,14 @@ export function useSpotifyPlayback() {
                 name: 'Artist Tree Web Player',
                 getOAuthToken: (cb) => {
                     // Force a re-fetch from the backend to ensure the token is not stale.
+                    // Use false to prevent popup attempts - SDK callbacks aren't user-triggered
                     accessToken.value = null;
-                    fetchAccessToken().then((token) => cb(token));
+                    fetchAccessToken(false)
+                        .then((token) => cb(token))
+                        .catch((err) => {
+                            console.error('Failed to get OAuth token for SDK:', err);
+                            // Don't call cb() - let the SDK handle the auth error
+                        });
                 },
                 volume: 0.5,
             });
@@ -351,6 +409,14 @@ export function useSpotifyPlayback() {
             if (!connected) {
                 throw new Error('Failed to connect to Spotify player');
             }
+
+            // Activate element after connect to unlock audio
+            try {
+                await spotifyPlayer.activateElement();
+            } catch {
+                // May already be active, ignore
+            }
+
             player.value = spotifyPlayer;
         } catch (err) {
             error.value = 'Failed to initialize Spotify player';
@@ -373,23 +439,14 @@ export function useSpotifyPlayback() {
             return;
         }
 
+
+
         try {
-            const token = await fetchAccessToken();
+            const token = await fetchAccessToken(false);
 
-            // Transfer playback to this device
-            await fetch(`https://api.spotify.com/v1/me/player`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    device_ids: [deviceId.value],
-                    play: false,
-                }),
-            });
 
-            // Start playback
+
+            // Build playback body
             const body: any = {};
             if (type === 'track') {
                 body.uris = [`spotify:track:${spotifyId}`];
@@ -397,7 +454,9 @@ export function useSpotifyPlayback() {
                 body.context_uri = `spotify:album:${spotifyId}`;
             }
 
-            await fetch(
+            // Start playback directly on our device (no separate transfer needed)
+            // The device_id parameter ensures playback goes to our web player
+            const playResponse = await fetch(
                 `https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`,
                 {
                     method: 'PUT',
@@ -408,6 +467,8 @@ export function useSpotifyPlayback() {
                     body: JSON.stringify(body),
                 },
             );
+
+
 
             // Set optimistic values for immediate UI feedback
             if (type === 'track') {
@@ -444,8 +505,8 @@ export function useSpotifyPlayback() {
 
         try {
             await player.value.pause();
-        } catch (err) {
-            console.error('Stop error:', err);
+        } catch {
+            // Ignore pause errors
         }
     };
 
@@ -538,5 +599,6 @@ export function useSpotifyPlayback() {
         isContextPlaying,
         checkAuthentication,
         initializePlayer,
+        openAuthPopup,
     };
 }

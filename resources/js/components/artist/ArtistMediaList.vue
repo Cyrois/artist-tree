@@ -91,6 +91,7 @@ const {
     formattedDuration,
     isPlaying,
     initializePlayer,
+    openAuthPopup,
 } = useSpotifyPlayback();
 
 const isAuthDialogOpen = ref(false);
@@ -100,7 +101,8 @@ const expandedMobileId = ref<string | null>(null);
 
 onMounted(() => {
     load(config.value.apiParams);
-    initializePlayer();
+    // Don't initialize player on mount - wait for user to click play
+    // This prevents OAuth popup from appearing before user interaction
 });
 
 const toggleMobileItem = (id: string) => {
@@ -157,9 +159,19 @@ const handlePlayClick = async (item: MediaItem) => {
     }
 };
 
-const confirmAuth = () => {
+const confirmAuth = async () => {
     if (spotifyAuthUrl.value) {
-        window.location.href = spotifyAuthUrl.value;
+        isAuthDialogOpen.value = false;
+        try {
+            await openAuthPopup(spotifyAuthUrl.value);
+            // Auth successful - initialize player so next click works immediately
+            await initializePlayer();
+            pendingItem.value = null;
+        } catch (err) {
+            // User cancelled or auth failed
+            console.log('Spotify auth popup closed:', err);
+            pendingItem.value = null;
+        }
     }
 };
 
