@@ -122,6 +122,8 @@ export function useSpotifyPlayback() {
                 window.location.origin,
             );
             tokenUrl.searchParams.set('return_url', returnUrl);
+            // Tell backend this is a popup flow
+            tokenUrl.searchParams.set('popup', '1');
 
             const response = await fetch(tokenUrl.toString(), {
                 credentials: 'include',
@@ -133,14 +135,12 @@ export function useSpotifyPlayback() {
             if (!response.ok) {
                 const data = await response.json();
 
-                // If not authenticated, clear token and redirect to Spotify OAuth
+                // If not authenticated, clear token and open popup for OAuth
                 if (data.error === 'not_authenticated' && data.auth_url) {
                     await clearToken();
                     if (allowRedirect) {
-                        window.location.href = data.auth_url;
-                        throw new Error(
-                            'Redirecting to Spotify authentication',
-                        );
+                        // Open OAuth in popup instead of redirecting
+                        return await openAuthPopup(data.auth_url);
                     }
 
                     const error = new Error('Spotify authentication required');
@@ -156,8 +156,8 @@ export function useSpotifyPlayback() {
             accessToken.value = data.access_token;
             return data.access_token;
         } catch (err) {
-            if (err instanceof Error && err.message.includes('Redirecting')) {
-                throw err; // Re-throw redirect errors
+            if (err instanceof Error && err.message.includes('cancelled')) {
+                throw err; // Re-throw popup cancelled errors
             }
             if ((err as any).needsAuth) {
                 throw err;
@@ -166,6 +166,58 @@ export function useSpotifyPlayback() {
                 'Unable to authenticate with Spotify. Please try again.';
             throw err;
         }
+    };
+
+    // Open OAuth in popup and wait for completion
+    const openAuthPopup = (authUrl: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const width = 450;
+            const height = 730;
+            const left = window.screenX + (window.outerWidth - width) / 2;
+            const top = window.screenY + (window.outerHeight - height) / 2;
+
+            const popup = window.open(
+                authUrl,
+                'spotify-auth',
+                `width=${width},height=${height},left=${left},top=${top},popup=yes`,
+            );
+
+            if (!popup) {
+                reject(new Error('Popup blocked. Please allow popups for this site.'));
+                return;
+            }
+
+            // Listen for message from popup
+            const handleMessage = (event: MessageEvent) => {
+                if (event.origin !== window.location.origin) return;
+
+                if (event.data?.spotify_authenticated !== undefined) {
+                    window.removeEventListener('message', handleMessage);
+                    clearInterval(checkClosed);
+
+                    if (event.data.spotify_authenticated) {
+                        // Token is now in session, fetch it
+                        accessToken.value = null;
+                        fetchAccessToken(false)
+                            .then(resolve)
+                            .catch(reject);
+                    } else {
+                        reject(new Error(event.data.error || 'Authentication failed'));
+                    }
+                }
+            };
+
+            window.addEventListener('message', handleMessage);
+
+            // Check if popup was closed without completing auth
+            const checkClosed = setInterval(() => {
+                if (popup.closed) {
+                    clearInterval(checkClosed);
+                    window.removeEventListener('message', handleMessage);
+                    reject(new Error('Authentication cancelled'));
+                }
+            }, 500);
+        });
     };
 
     // Check if user is authenticated without redirecting
@@ -538,5 +590,6 @@ export function useSpotifyPlayback() {
         isContextPlaying,
         checkAuthentication,
         initializePlayer,
+        openAuthPopup,
     };
 }

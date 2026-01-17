@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,11 @@ class SpotifyController extends Controller
         $returnUrl = $this->sanitizeReturnUrl($returnUrl);
         $request->session()->put('spotify_oauth_return_url', $returnUrl);
 
+        // Store popup flag for callback to know how to respond
+        if ($request->query('popup') === '1') {
+            $request->session()->put('spotify_oauth_popup', true);
+        }
+
         // If no valid token, redirect to OAuth
         return response()->json([
             'error' => 'not_authenticated',
@@ -121,21 +127,27 @@ class SpotifyController extends Controller
      *
      * GET /api/spotify/callback
      */
-    public function callback(Request $request): RedirectResponse
+    public function callback(Request $request): RedirectResponse|View
     {
         $code = $request->query('code');
         $state = $request->query('state');
         $returnUrl = $request->session()->get('spotify_oauth_return_url', route('dashboard'));
+        $isPopup = $request->session()->get('spotify_oauth_popup', false);
 
-        // Clear the return URL from session
-        $request->session()->forget('spotify_oauth_return_url');
+        // Clear OAuth session data
+        $request->session()->forget(['spotify_oauth_return_url', 'spotify_oauth_popup']);
 
         if (! $code) {
             Log::warning('Spotify OAuth callback missing code', [
                 'query' => $request->query(),
             ]);
 
-            return redirect($returnUrl)->with('error', 'Authorization code not provided');
+            return $this->handleCallbackResponse(
+                $isPopup,
+                $returnUrl,
+                false,
+                'Authorization code not provided'
+            );
         }
 
         // Verify state to prevent CSRF
@@ -146,7 +158,12 @@ class SpotifyController extends Controller
                 'session_state' => $sessionState,
             ]);
 
-            return redirect($returnUrl)->with('error', 'Invalid authentication state. Please try again.');
+            return $this->handleCallbackResponse(
+                $isPopup,
+                $returnUrl,
+                false,
+                'Invalid authentication state. Please try again.'
+            );
         }
 
         try {
@@ -174,7 +191,12 @@ class SpotifyController extends Controller
                     'redirect_uri_used' => $redirectUri,
                 ]);
 
-                return redirect($returnUrl)->with('error', 'Failed to authenticate with Spotify. Please try again.');
+                return $this->handleCallbackResponse(
+                    $isPopup,
+                    $returnUrl,
+                    false,
+                    'Failed to authenticate with Spotify. Please try again.'
+                );
             }
 
             $data = $response->json();
@@ -189,17 +211,47 @@ class SpotifyController extends Controller
 
             Log::info('Spotify OAuth successful', [
                 'return_url' => $returnUrl,
+                'is_popup' => $isPopup,
             ]);
 
-            return redirect($returnUrl)->with('success', 'Successfully authenticated with Spotify');
+            return $this->handleCallbackResponse($isPopup, $returnUrl, true);
         } catch (\Exception $e) {
             Log::error('Spotify OAuth callback error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect($returnUrl)->with('error', 'An error occurred during authentication. Please try again.');
+            return $this->handleCallbackResponse(
+                $isPopup,
+                $returnUrl,
+                false,
+                'An error occurred during authentication. Please try again.'
+            );
         }
+    }
+
+    /**
+     * Handle callback response based on popup mode.
+     */
+    private function handleCallbackResponse(
+        bool $isPopup,
+        string $returnUrl,
+        bool $success,
+        ?string $error = null
+    ): RedirectResponse|View {
+        if ($isPopup) {
+            return view('spotify.callback-success', [
+                'success' => $success,
+                'error' => $error,
+                'returnUrl' => $returnUrl,
+            ]);
+        }
+
+        if ($success) {
+            return redirect($returnUrl)->with('success', 'Successfully authenticated with Spotify');
+        }
+
+        return redirect($returnUrl)->with('error', $error ?? 'Authentication failed');
     }
 
     /**

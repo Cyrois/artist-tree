@@ -19,6 +19,33 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### Spotify OAuth Popup Flow (2026-01-17)
+**Summary:** Replaced full-page redirect OAuth with a popup-based flow to preserve user's page state during Spotify authentication.
+
+- **Backend Changes:**
+  - Modified `SpotifyController::token()` to detect `popup=1` query parameter and store flag in session
+  - Modified `SpotifyController::callback()` to return a Blade view instead of redirect when in popup mode
+  - Added `handleCallbackResponse()` helper method for unified response handling
+  - Created `resources/views/spotify/callback-success.blade.php` - popup callback view that uses `postMessage` to notify parent window
+
+- **Frontend Changes:**
+  - Added `openAuthPopup()` function to `useSpotifyPlayback.ts` composable
+    - Opens OAuth in centered 450x730px popup window
+    - Listens for `postMessage` from popup callback
+    - Handles popup blocked and user cancelled scenarios
+  - Updated `fetchAccessToken()` to use popup instead of `window.location.href`
+  - Exported `openAuthPopup` for use by other components
+  - Updated `ArtistMediaList.vue`:
+    - Removed `initializePlayer()` from `onMounted()` to prevent OAuth popup on page load
+    - Updated `confirmAuth()` to use popup flow instead of redirect
+    - After successful auth, automatically plays the pending track
+
+- **User Experience:**
+  - OAuth popup only appears after user explicitly clicks play button
+  - Custom "Spotify Authentication Required" modal appears first
+  - Main page remains intact (no reload, scroll position preserved)
+  - If user cancels, modal closes gracefully with no side effects
+
 ### YouTube Channel Discovery Logic Improvements (2026-01-15)
 **Summary:** Improved the logic for determining when an artist needs YouTube channel discovery and ensured metrics are fetched after channel promotion.
 
