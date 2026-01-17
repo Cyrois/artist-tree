@@ -25,7 +25,7 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
         it('returns false when subscriber count is below default threshold', function () {
             $dto = new YouTubeChannelDTO(
                 channelId: 'UCtest123',
-                subscriberCount: 999,
+                subscriberCount: 99, // Default threshold is 100
                 videoCount: 50,
                 subscriberCountHidden: false,
             );

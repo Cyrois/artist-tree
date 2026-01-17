@@ -7,6 +7,7 @@ use App\Services\YouTubeService;
 use App\DataTransferObjects\YouTubeChannelDTO;
 use App\DataTransferObjects\YouTubeVideoAnalyticsDTO;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 // No need to explicitly use RefreshDatabase since TestCase handles it
 
@@ -106,12 +107,19 @@ describe('ArtistYouTubeRefreshService', function () {
             'youtube_channel_id' => 'UCTestChannel'
         ]);
 
-        // Create fresh metrics
+        // Create fresh metrics AND an approved YouTube link to prevent job dispatch
         ArtistMetric::factory()->create([
             'artist_id' => $artist->id,
             'youtube_refreshed_at' => now(),
             'youtube_analytics_refreshed_at' => now(),
             'youtube_subscribers' => 1000000,
+        ]);
+        
+        // Add approved link so needsToUpdateYoutubeChannel() returns false
+        $artist->links()->create([
+            'platform' => \App\Enums\SocialPlatform::YouTube,
+            'url' => 'https://youtube.com/c/UCTestChannel',
+            'review_status' => \App\Models\ArtistLink::REVIEW_STATUS_APPROVED,
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -213,26 +221,46 @@ describe('ArtistYouTubeRefreshService', function () {
     });
 
     it('handles artists without YouTube channel ID gracefully', function () {
+        // Fake the queue to prevent actual job dispatch
+        Queue::fake();
+        
         $artist = Artist::factory()->create([
             'youtube_channel_id' => null
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
 
+        // needsRefresh returns false since there's no channel to refresh
+        // forceRefresh returns false since there's no channel
+        // refreshIfNeeded returns true because it dispatches UpdateYoutubeLinksJob for channel discovery
+        // refreshBasicMetrics and refreshAnalytics return false since there's no channel
         expect($service->needsRefresh($artist))->toBeFalse()
             ->and($service->forceRefresh($artist))->toBeFalse()
-            ->and($service->refreshIfNeeded($artist))->toBeFalse()
+            ->and($service->refreshIfNeeded($artist))->toBeTrue() // Now dispatches job for channel discovery
             ->and($service->refreshBasicMetrics($artist))->toBeFalse()
             ->and($service->refreshAnalytics($artist))->toBeFalse();
+        
+        // Verify job was dispatched for channel discovery
+        Queue::assertPushed(\App\Jobs\UpdateYoutubeLinksJob::class);
     });
 
     it('refreshes YouTube data for artist with channel ID but no metrics', function () {
+        // Fake the queue to prevent actual job dispatch
+        Queue::fake();
+        
         // This reproduces the bug: artist has youtube_channel_id but no metrics record
-        $artist = new Artist([
+        $artist = Artist::factory()->create([
             'name' => 'Test Artist',
             'youtube_channel_id' => 'UCTestChannel',
         ]);
-        $artist->save();
+        
+        // Add approved link so needsToUpdateYoutubeChannel() returns false
+        // This ensures forceRefresh is called instead of dispatching the job
+        $artist->links()->create([
+            'platform' => \App\Enums\SocialPlatform::YouTube,
+            'url' => 'https://youtube.com/c/UCTestChannel',
+            'review_status' => \App\Models\ArtistLink::REVIEW_STATUS_APPROVED,
+        ]);
 
         // Ensure no metrics exist
         expect($artist->metrics)->toBeNull();
@@ -242,7 +270,7 @@ describe('ArtistYouTubeRefreshService', function () {
         // needsRefresh should return true for artist with channel but no metrics
         expect($service->needsRefresh($artist))->toBeTrue();
         
-        // refreshIfNeeded should actually refresh the data
+        // refreshIfNeeded should actually refresh the data (via forceRefresh)
         $result = $service->refreshIfNeeded($artist);
         expect($result)->toBeTrue();
 

@@ -145,6 +145,13 @@ it('automatically refreshes stale YouTube data when showing artist', function ()
         ->create([
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
+    
+    // Add approved link so needsToUpdateYoutubeChannel() returns false and refresh actually happens
+    $artist->links()->create([
+        'platform' => \App\Enums\SocialPlatform::YouTube,
+        'url' => 'https://youtube.com/c/UCTestChannelId',
+        'review_status' => \App\Models\ArtistLink::REVIEW_STATUS_APPROVED,
+    ]);
 
     $response = $this->actingAs($this->user)
         ->getJson("/api/artists/{$artist->id}");
@@ -329,6 +336,13 @@ it('refreshes YouTube data when selecting artist', function () {
         ->create([
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
+    
+    // Add approved link so needsToUpdateYoutubeChannel() returns false and refresh actually happens
+    $artist->links()->create([
+        'platform' => \App\Enums\SocialPlatform::YouTube,
+        'url' => 'https://youtube.com/c/UCTestChannelId',
+        'review_status' => \App\Models\ArtistLink::REVIEW_STATUS_APPROVED,
+    ]);
 
     $response = $this->actingAs($this->user)
         ->postJson('/api/artists/select', [

@@ -62,11 +62,6 @@ class ArtistYouTubeRefreshService
             return true;
         }
 
-        // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
-            return false;
-        }
-
         // If no metrics exist, we need to create them and fetch data
         if (!$artist->metrics) {
             return $this->forceRefresh($artist);
