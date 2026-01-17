@@ -59,7 +59,7 @@
 
     <script>
         (function () {
-            const success = @json($success ?? true);
+            const success = @json($success);
             const error = @json($error ?? null);
 
             if (window.opener) {
