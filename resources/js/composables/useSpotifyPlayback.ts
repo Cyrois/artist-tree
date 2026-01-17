@@ -299,8 +299,14 @@ export function useSpotifyPlayback() {
                 name: 'Artist Tree Web Player',
                 getOAuthToken: (cb) => {
                     // Force a re-fetch from the backend to ensure the token is not stale.
+                    // Use false to prevent popup attempts - SDK callbacks aren't user-triggered
                     accessToken.value = null;
-                    fetchAccessToken().then((token) => cb(token));
+                    fetchAccessToken(false)
+                        .then((token) => cb(token))
+                        .catch((err) => {
+                            console.error('Failed to get OAuth token for SDK:', err);
+                            // Don't call cb() - let the SDK handle the auth error
+                        });
                 },
                 volume: 0.5,
             });
@@ -403,6 +409,14 @@ export function useSpotifyPlayback() {
             if (!connected) {
                 throw new Error('Failed to connect to Spotify player');
             }
+
+            // Activate element after connect to unlock audio
+            try {
+                await spotifyPlayer.activateElement();
+            } catch {
+                // May already be active, ignore
+            }
+
             player.value = spotifyPlayer;
         } catch (err) {
             error.value = 'Failed to initialize Spotify player';
@@ -425,23 +439,14 @@ export function useSpotifyPlayback() {
             return;
         }
 
+
+
         try {
-            const token = await fetchAccessToken();
+            const token = await fetchAccessToken(false);
 
-            // Transfer playback to this device
-            await fetch(`https://api.spotify.com/v1/me/player`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    device_ids: [deviceId.value],
-                    play: false,
-                }),
-            });
 
-            // Start playback
+
+            // Build playback body
             const body: any = {};
             if (type === 'track') {
                 body.uris = [`spotify:track:${spotifyId}`];
@@ -449,7 +454,9 @@ export function useSpotifyPlayback() {
                 body.context_uri = `spotify:album:${spotifyId}`;
             }
 
-            await fetch(
+            // Start playback directly on our device (no separate transfer needed)
+            // The device_id parameter ensures playback goes to our web player
+            const playResponse = await fetch(
                 `https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`,
                 {
                     method: 'PUT',
@@ -460,6 +467,8 @@ export function useSpotifyPlayback() {
                     body: JSON.stringify(body),
                 },
             );
+
+
 
             // Set optimistic values for immediate UI feedback
             if (type === 'track') {
@@ -496,8 +505,8 @@ export function useSpotifyPlayback() {
 
         try {
             await player.value.pause();
-        } catch (err) {
-            console.error('Stop error:', err);
+        } catch {
+            // Ignore pause errors
         }
     };
 

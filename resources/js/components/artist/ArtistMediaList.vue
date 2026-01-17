@@ -164,19 +164,13 @@ const confirmAuth = async () => {
         isAuthDialogOpen.value = false;
         try {
             await openAuthPopup(spotifyAuthUrl.value);
-            // Auth successful, play the pending item
-            if (pendingItem.value) {
-                const item = pendingItem.value;
-                pendingItem.value = null;
-                if (props.variant === 'top-tracks') {
-                    await playTrack(item.spotify_id, 'track');
-                } else {
-                    await playTrack(item.spotify_id, 'album');
-                }
-            }
+            // Auth successful - initialize player so next click works immediately
+            await initializePlayer();
+            pendingItem.value = null;
         } catch (err) {
-            // User cancelled or auth failed - do nothing
+            // User cancelled or auth failed
             console.log('Spotify auth popup closed:', err);
+            pendingItem.value = null;
         }
     }
 };

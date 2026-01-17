@@ -33,18 +33,19 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
     - Opens OAuth in centered 450x730px popup window
     - Listens for `postMessage` from popup callback
     - Handles popup blocked and user cancelled scenarios
-  - Updated `fetchAccessToken()` to use popup instead of `window.location.href`
+  - Updated `fetchAccessToken()` to not redirect when called from SDK callbacks (`allowRedirect=false`)
   - Exported `openAuthPopup` for use by other components
   - Updated `ArtistMediaList.vue`:
     - Removed `initializePlayer()` from `onMounted()` to prevent OAuth popup on page load
-    - Updated `confirmAuth()` to use popup flow instead of redirect
-    - After successful auth, automatically plays the pending track
+    - Updated `confirmAuth()` to use popup flow and pre-initialize player after OAuth
+  - Calls `activateElement()` after player connects to unlock browser audio
 
 - **User Experience:**
   - OAuth popup only appears after user explicitly clicks play button
   - Custom "Spotify Authentication Required" modal appears first
   - Main page remains intact (no reload, scroll position preserved)
   - If user cancels, modal closes gracefully with no side effects
+  - **Note:** Due to Spotify Web Playback SDK limitations, user clicks play twice on first connection. Subsequent plays work on first click.
 
 ### YouTube Channel Discovery Logic Improvements (2026-01-15)
 **Summary:** Improved the logic for determining when an artist needs YouTube channel discovery and ensured metrics are fetched after channel promotion.
