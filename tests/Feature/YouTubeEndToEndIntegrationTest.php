@@ -99,6 +99,13 @@ describe('YouTube End-to-End Integration', function () {
             'spotify_id' => 'e2e_test_spotify',
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
+        
+        // Add approved link so needsToUpdateYoutubeChannel() returns false
+        $artist->links()->create([
+            'platform' => \App\Enums\SocialPlatform::YouTube,
+            'url' => 'https://youtube.com/c/UCTestChannelId',
+            'review_status' => \App\Models\ArtistLink::REVIEW_STATUS_APPROVED,
+        ]);
 
         $metrics = ArtistMetric::factory()->create([
             'artist_id' => $artist->id,
@@ -141,6 +148,7 @@ describe('YouTube End-to-End Integration', function () {
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
 
+        // Calculate expected average views: (250000 + 180000 + 320000 + 200000 + 150000) / 5 = 220000
         $response->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', 1500000)
             ->assertJsonPath('data.metrics.youtube_avg_views', 220000) // Now updated via API

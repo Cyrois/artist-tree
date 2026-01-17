@@ -3,6 +3,48 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | YouTube Channel Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for YouTube channel discovery, ranking, and VEVO detection.
+    | VEVO channels are redirect channels with no videos that should be
+    | replaced with the artist's primary YouTube channel.
+    |
+    */
+    'youtube' => [
+        // Enable/disable YouTube channel processing
+        'enabled' => env('YOUTUBE_CHANNEL_ENABLED', true),
+
+        // Days before re-checking an artist for VEVO status
+        'vevo_recheck_days' => env('YOUTUBE_VEVO_RECHECK_DAYS', 7),
+
+        // Minimum subscriber count for a valid channel
+        'minimum_subscribers' => env('YOUTUBE_MINIMUM_SUBSCRIBERS', 1000),
+
+        // Cache TTL for detection results (seconds)
+        'cache_ttl' => env('YOUTUBE_CACHE_TTL', 604800), // 7 days
+
+        // Queue name for YouTube jobs
+        'queue' => env('YOUTUBE_QUEUE', 'default'),
+
+        // Maximum retry attempts for failed jobs
+        'max_retries' => env('VEVO_MAX_RETRIES', 3),
+
+        // Retry delay in seconds (base for exponential backoff)
+        'retry_delay' => env('YOUTUBE_RETRY_DELAY', 60),
+
+        // Verified channel bonus percentage (e.g., 20 = 20% bonus)
+        'verified_bonus_percent' => env('YOUTUBE_VERIFIED_BONUS', 20),
+
+        // Recent activity bonus percentage
+        'activity_bonus_percent' => env('YOUTUBE_ACTIVITY_BONUS', 10),
+
+        // Official channel name bonus percentage (channels with "official" in name)
+        'official_bonus_percent' => env('YOUTUBE_OFFICIAL_BONUS', 15),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Metric Weight Presets
     |--------------------------------------------------------------------------
     |

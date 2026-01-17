@@ -124,4 +124,56 @@ class Artist extends Model
     {
         return $this->metrics();
     }
+
+    /**
+     * Get the YouTube link for this artist.
+     */
+    public function youtubeLink(): ?ArtistLink
+    {
+        return $this->links()
+            ->where('platform', \App\Enums\SocialPlatform::YOUTUBE)
+            ->first();
+    }
+
+    /**
+     * Check if this artist needs VEVO detection check.
+     */
+    public function needsVevoCheck(): bool
+    {
+        if (!$this->youtube_channel_id) {
+            return false;
+        }
+
+        $youtubeLink = $this->youtubeLink();
+        
+        if (!$youtubeLink) {
+            return true;
+        }
+
+        return $youtubeLink->needsVevoCheck();
+    }
+
+    /**
+     * Check if this artist needs YouTube channel discovery.
+     *
+     * Returns true only if:
+     * - The artist has no youtube_channel_id, OR
+     * - The artist's youtube_channel_id is not approved (no approved YouTube link)
+     */
+    public function needsToUpdateYoutubeChannel(): bool
+    {
+        // If artist has no youtube_channel_id, definitely needs discovery
+        if (!$this->youtube_channel_id) {
+            return true;
+        }
+
+        // Check if there's an approved YouTube link for this channel
+        $hasApprovedLink = $this->links()
+            ->where('platform', \App\Enums\SocialPlatform::YouTube)
+            ->where('review_status', ArtistLink::REVIEW_STATUS_APPROVED)
+            ->exists();
+
+        // If no approved link, the current channel is not confirmed - needs discovery
+        return !$hasApprovedLink;
+    }
 }

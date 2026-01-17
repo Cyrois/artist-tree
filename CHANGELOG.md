@@ -19,6 +19,35 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 
 ## [Unreleased]
 
+### YouTube Channel Discovery Logic Improvements (2026-01-15)
+**Summary:** Improved the logic for determining when an artist needs YouTube channel discovery and ensured metrics are fetched after channel promotion.
+
+- **Model Changes:**
+  - Added `needsChannelDiscovery()` method to `Artist.php` that returns `true` only if:
+    - Artist has no `youtube_channel_id`, OR
+    - Artist's YouTube channel is not approved (no `ArtistLink` with `review_status = 'approved'`)
+
+- **Service Changes:**
+  - Updated `ArtistSearchService::mergeAndDeduplicate()` to use `$artist->needsChannelDiscovery()` instead of `VEVOChannelDetectionService::shouldCheckArtist()`
+  - Removed unused `VEVOChannelDetectionService` dependency from `ArtistSearchService` constructor
+
+- **Job Changes:**
+  - Updated `VEVOChannelReplacementJob::promoteChannel()` to dispatch `FetchYouTubeDataJob` after promoting a channel, ensuring YouTube metrics are immediately fetched for newly discovered channels
+
+### Refactor YouTubeChannelDTO (2026-01-15)
+**Summary:** Refactored `YouTubeChannelDTO` to be mutable, simplifying usage by removing helper methods and allowing direct property modification.
+
+- **DTO Changes:**
+  - Removed `readonly` modifier from class definition.
+  - Removed `withMetrics`, `withRecentActivity`, `withSearchSnippet`, and `fromSearchResponse` methods.
+  - Enabled direct property assignment (e.g., `$dto->subscriberCount = 123`).
+
+- **Refactoring:**
+  - Updated `YouTubeChannelSearchService` to remove usage of `withSearchSnippet` and use direct property assignment.
+
+- **Testing:**
+  - Added unit test `tests/Unit/DataTransferObjects/YouTubeChannelDTOTest.php` to verify mutability and data integrity.
+
 ### YouTube Integration & Test Architecture (2026-01-12)
 **Summary:** Implemented comprehensive YouTube data integration to fetch analytics (views, likes, comments) and overhauled the testing architecture to support persistent database environments (PostgreSQL).
 

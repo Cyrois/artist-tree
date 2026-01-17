@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\YouTubeApiException;
 use App\Models\Artist;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\UpdateYoutubeLinksJob;
 
 /**
  * Service for handling YouTube data refresh operations for artists.
@@ -55,9 +56,10 @@ class ArtistYouTubeRefreshService
      */
     public function refreshIfNeeded(Artist $artist): bool
     {
-        // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
-            return false;
+        // Dispatch YouTube channel discovery if needed
+        if ($artist->needsToUpdateYoutubeChannel()) {
+            UpdateYoutubeLinksJob::dispatch($artist);
+            return true;
         }
 
         // If no metrics exist, we need to create them and fetch data

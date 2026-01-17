@@ -7,7 +7,7 @@ use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Jobs\FetchYouTubeDataJob;
-use App\Jobs\VerifyArtistContentJob;
+use App\Jobs\VerifyArtistSpotifyContentJob;
 use App\Services\YouTubeJobDispatchService;
 use App\Models\Artist;
 use App\Models\Genre;
@@ -121,7 +121,7 @@ class ArtistSearchService
                 $seenSpotifyIds[$artist->spotify_id] = true;
 
                 // Verify content for local results
-                VerifyArtistContentJob::dispatch($artist);
+                VerifyArtistSpotifyContentJob::dispatch($artist);
 
                 // Track artists that need YouTube refresh for batch processing
                 if ($artist->shouldRefreshYouTube()) {
@@ -185,7 +185,7 @@ class ArtistSearchService
                 $missingArtists[] = $spotifyArtist;
             } else {
                 // It exists locally and is not trashed, so verify it
-                VerifyArtistContentJob::dispatch($localArtist);
+                VerifyArtistSpotifyContentJob::dispatch($localArtist);
 
                 // Track artists that need YouTube refresh for batch processing
                 if ($localArtist->shouldRefreshYouTube()) {

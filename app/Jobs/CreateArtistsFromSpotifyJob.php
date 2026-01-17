@@ -90,7 +90,7 @@ class CreateArtistsFromSpotifyJob implements ShouldQueue
                         
                         // Verify the artist has content (tracks)
                         // This will soft-delete the artist if they have no tracks
-                        VerifyArtistContentJob::dispatch($artist);
+                        VerifyArtistSpotifyContentJob::dispatch($artist);
                     } else {
                         $alreadyExistCount++;
                     }

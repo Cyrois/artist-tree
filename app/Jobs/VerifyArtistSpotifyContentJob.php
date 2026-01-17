@@ -11,7 +11,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
-class VerifyArtistContentJob implements ShouldQueue, ShouldBeUnique
+/**
+ * VerifyArtistContentJob
+ *
+ * This job is responsible for verifying the content of an artist.
+ * It checks if the artist has any tracks on Spotify and soft deletes the artist if they don't.
+ */
+class VerifyArtistSpotifyContentJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;
 

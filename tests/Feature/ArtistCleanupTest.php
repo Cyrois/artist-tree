@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\VerifyArtistContentJob;
+use App\Jobs\VerifyArtistSpotifyContentJob;
 use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
@@ -61,7 +61,9 @@ class ArtistCleanupTest extends TestCase
 
         // 3. Search
         $mockYouTube = Mockery::mock(\App\Services\YouTubeJobDispatchService::class);
-        $service = new ArtistSearchService($mockSpotify, $mockYouTube);
+        $mockVevo = Mockery::mock(\App\Services\VEVOChannelDetectionService::class);
+        $mockVevo->shouldReceive('shouldCheckArtist')->andReturn(false);
+        $service = new ArtistSearchService($mockSpotify, $mockYouTube, $mockVevo);
         $results = $service->search($name);
 
         // 4. Assert
@@ -89,7 +91,7 @@ class ArtistCleanupTest extends TestCase
             ->andReturn([]);
 
         // 3. Run Job (manually handling it bypasses the queue fake but uses our mock)
-        $job = new VerifyArtistContentJob($artist);
+        $job = new VerifyArtistSpotifyContentJob($artist);
         $job->handle($mockSpotify);
 
         // 4. Assert

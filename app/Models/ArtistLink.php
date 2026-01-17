@@ -9,15 +9,30 @@ class ArtistLink extends Model
 {
     use HasFactory;
 
+    /**
+     * Review status values for channel links.
+     */
+    public const REVIEW_STATUS_PUBLIC_ADDED = 'public_added';
+    public const REVIEW_STATUS_ADMIN_ADDED = 'admin_added';
+    public const REVIEW_STATUS_PENDING_APPROVAL = 'pending_approval';
+    public const REVIEW_STATUS_APPROVED = 'approved';
+
     protected $fillable = [
         'artist_id',
         'platform',
         'url',
         'vote_score',
+        'review_status',
+        'vevo_checked_at',
     ];
 
     protected $casts = [
         'platform' => \App\Enums\SocialPlatform::class,
+        'vevo_checked_at' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'review_status' => self::REVIEW_STATUS_PUBLIC_ADDED,
     ];
 
     public function artist()
@@ -28,5 +43,26 @@ class ArtistLink extends Model
     public function votes()
     {
         return $this->hasMany(ArtistLinkVote::class);
+    }
+
+    /**
+     * Check if this link needs VEVO detection check.
+     * Returns true if never checked or checked more than 7 days ago.
+     */
+    public function needsVevoCheck(): bool
+    {
+        if (!$this->vevo_checked_at) {
+            return true;
+        }
+
+        return $this->vevo_checked_at->lt(now()->subDays(config('artist-tree.youtube.vevo_recheck_days')));
+    }
+
+    /**
+     * Mark this link as checked for VEVO detection.
+     */
+    public function markVevoChecked(): void
+    {
+        $this->update(['vevo_checked_at' => now()]);
     }
 }
