@@ -34,12 +34,12 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 - **Job Changes:**
   - Updated `VEVOChannelReplacementJob::promoteChannel()` to dispatch `FetchYouTubeDataJob` after promoting a channel, ensuring YouTube metrics are immediately fetched for newly discovered channels
 
-### Refactor YouTubeChannelDTOMutators (2026-01-15)
-**Summary:** Refactored `YouTubeChannelDTO` to be mutable, simplifying usage by removing `with*` methods and allowing direct property modification.
+### Refactor YouTubeChannelDTO (2026-01-15)
+**Summary:** Refactored `YouTubeChannelDTO` to be mutable, simplifying usage by removing helper methods and allowing direct property modification.
 
 - **DTO Changes:**
   - Removed `readonly` modifier from class definition.
-  - Removed `withMetrics`, `withRecentActivity`, and `withSearchSnippet` immutable modifier methods.
+  - Removed `withMetrics`, `withRecentActivity`, `withSearchSnippet`, and `fromSearchResponse` methods.
   - Enabled direct property assignment (e.g., `$dto->subscriberCount = 123`).
 
 - **Refactoring:**

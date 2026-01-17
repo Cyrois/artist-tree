@@ -3,62 +3,44 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | YouTube Channel Discovery
+    | YouTube Channel Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration for YouTube channel discovery during artist search.
-    | Disabling this prevents YouTube API calls when searching for artists,
-    | which helps conserve API quota.
-    |
-    */
-    'youtube_channel_discovery' => [
-        // Enable/disable YouTube channel discovery during search
-        'enabled' => env('YOUTUBE_CHANNEL_DISCOVERY_ENABLED', true),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | VEVO Channel Detection
-    |--------------------------------------------------------------------------
-    |
-    | Configuration for automatic VEVO channel detection and replacement.
+    | Configuration for YouTube channel discovery, ranking, and VEVO detection.
     | VEVO channels are redirect channels with no videos that should be
     | replaced with the artist's primary YouTube channel.
     |
     */
-    'vevo_detection' => [
-        // Enable/disable VEVO detection processing
-        'enabled' => env('VEVO_DETECTION_ENABLED', true),
+    'youtube' => [
+        // Enable/disable YouTube channel processing
+        'enabled' => env('YOUTUBE_CHANNEL_ENABLED', true),
 
-        // Days before re-checking an artist for VEVO channel
-        'recheck_days' => env('VEVO_RECHECK_DAYS', 7),
+        // Days before re-checking an artist for VEVO status
+        'vevo_recheck_days' => env('YOUTUBE_VEVO_RECHECK_DAYS', 7),
 
-        // Minimum subscriber count for replacement channel
-        'minimum_subscribers' => env('VEVO_MINIMUM_SUBSCRIBERS', 1000),
+        // Minimum subscriber count for a valid channel
+        'minimum_subscribers' => env('YOUTUBE_MINIMUM_SUBSCRIBERS', 1000),
 
         // Cache TTL for detection results (seconds)
-        'cache_ttl' => env('VEVO_CACHE_TTL', 604800), // 7 days
+        'cache_ttl' => env('YOUTUBE_CACHE_TTL', 604800), // 7 days
 
-        // Queue name for VEVO replacement jobs
-        'queue' => env('VEVO_QUEUE', 'default'),
+        // Queue name for YouTube jobs
+        'queue' => env('YOUTUBE_QUEUE', 'default'),
 
         // Maximum retry attempts for failed jobs
         'max_retries' => env('VEVO_MAX_RETRIES', 3),
 
         // Retry delay in seconds (base for exponential backoff)
-        'retry_delay' => env('VEVO_RETRY_DELAY', 60),
+        'retry_delay' => env('YOUTUBE_RETRY_DELAY', 60),
 
         // Verified channel bonus percentage (e.g., 20 = 20% bonus)
-        'verified_bonus_percent' => env('VEVO_VERIFIED_BONUS', 20),
+        'verified_bonus_percent' => env('YOUTUBE_VERIFIED_BONUS', 20),
 
         // Recent activity bonus percentage
-        'activity_bonus_percent' => env('VEVO_ACTIVITY_BONUS', 10),
+        'activity_bonus_percent' => env('YOUTUBE_ACTIVITY_BONUS', 10),
 
         // Official channel name bonus percentage (channels with "official" in name)
-        'official_bonus_percent' => env('VEVO_OFFICIAL_BONUS', 15),
-
-        // Months threshold for "recent activity"
-        'activity_months_threshold' => env('VEVO_ACTIVITY_MONTHS', 12),
+        'official_bonus_percent' => env('YOUTUBE_OFFICIAL_BONUS', 15),
     ],
 
     /*

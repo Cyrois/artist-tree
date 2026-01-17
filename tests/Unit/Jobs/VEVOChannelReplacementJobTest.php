@@ -340,7 +340,7 @@ describe('UpdateYoutubeLinksJob', function () {
         });
         
         it('uses configured queue name', function () {
-            config(['artist-tree.vevo_detection.queue' => 'custom-queue']);
+            config(['artist-tree.youtube.queue' => 'custom-queue']);
             
             $artist = Artist::factory()->create(['youtube_channel_id' => 'UCtest']);
             $job = new UpdateYoutubeLinksJob($artist);

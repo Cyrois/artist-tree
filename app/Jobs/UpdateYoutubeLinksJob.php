@@ -46,7 +46,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
      */
     public function backoff(): array
     {
-        $baseDelay = (int) config('artist-tree.vevo_detection.retry_delay', 60);
+        $baseDelay = (int) config('artist-tree.youtube.retry_delay', 60);
         // Exponential backoff: base, base*2, base*4
         return [$baseDelay, $baseDelay * 2, $baseDelay * 4];
     }
@@ -57,9 +57,9 @@ class UpdateYoutubeLinksJob implements ShouldQueue
     public function __construct(
         public Artist $artist,
     ) {
-        $this->tries = (int) config('artist-tree.vevo_detection.max_retries', 3);
-        $this->backoff = (int) config('artist-tree.vevo_detection.retry_delay', 60);
-        $queue = config('artist-tree.vevo_detection.queue', 'default');
+        $this->tries = (int) config('artist-tree.youtube.max_retries', 3);
+        $this->backoff = (int) config('artist-tree.youtube.retry_delay', 60);
+        $queue = config('artist-tree.youtube.queue', 'default');
         $this->onQueue($queue);
     }
 

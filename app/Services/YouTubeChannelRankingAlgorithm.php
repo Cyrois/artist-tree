@@ -20,10 +20,10 @@ class YouTubeChannelRankingAlgorithm
 
     public function __construct()
     {
-        $this->minimumSubscriberThreshold = (int) config('artist-tree.vevo_detection.minimum_subscribers', 1000);
-        $verifiedPercent = (int) config('artist-tree.vevo_detection.verified_bonus_percent', 20);
-        $activityPercent = (int) config('artist-tree.vevo_detection.activity_bonus_percent', 10);
-        $officialPercent = (int) config('artist-tree.vevo_detection.official_bonus_percent', 15);
+        $this->minimumSubscriberThreshold = (int) config('artist-tree.youtube.minimum_subscribers', 1000);
+        $verifiedPercent = (int) config('artist-tree.youtube.verified_bonus_percent', 20);
+        $activityPercent = (int) config('artist-tree.youtube.activity_bonus_percent', 10);
+        $officialPercent = (int) config('artist-tree.youtube.official_bonus_percent', 15);
         
         $this->recentActivityBonus = 1 + ($activityPercent / 100);
         $this->officialBonus = 1 + ($officialPercent / 100);

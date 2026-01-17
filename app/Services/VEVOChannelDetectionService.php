@@ -18,8 +18,6 @@ use Illuminate\Support\Facades\Log;
  */
 class VEVOChannelDetectionService
 {
-
-
     /**
      * Known VEVO-related patterns in channel descriptions.
      */
@@ -36,9 +34,9 @@ class VEVOChannelDetectionService
 
     public function __construct()
     {
-        $this->cacheTtl = (int) config('artist-tree.vevo_detection.cache_ttl', 604800);
-        $this->recheckDays = (int) config('artist-tree.vevo_detection.recheck_days', 7);
-        $this->enabled = (bool) config('artist-tree.vevo_detection.enabled', true);
+        $this->cacheTtl = (int) config('artist-tree.youtube.cache_ttl', 604800);
+        $this->recheckDays = (int) config('artist-tree.youtube.vevo_recheck_days', 7);
+        $this->enabled = (bool) config('artist-tree.youtube.enabled', true);
     }
 
     /**
