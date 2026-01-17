@@ -171,23 +171,6 @@ describe('YouTubeChannelDTO VEVO Detection Extensions', function () {
             expect($dto->description)->toBe('Official channel for Test Artist');
         });
         
-        it('creates DTO from search response', function () {
-            $response = [
-                'id' => ['channelId' => 'UCtest456'],
-                'snippet' => [
-                    'title' => 'Search Result Artist',
-                    'description' => 'Found via search',
-                ],
-            ];
-            
-            $dto = YouTubeChannelDTO::fromSearchResponse($response);
-            
-            expect($dto->channelId)->toBe('UCtest456');
-            expect($dto->title)->toBe('Search Result Artist');
-            expect($dto->description)->toBe('Found via search');
-            expect($dto->subscriberCount)->toBe(0); // Not available in search
-            expect($dto->videoCount)->toBe(0); // Not available in search
-        });
     });
     
 

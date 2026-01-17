@@ -45,27 +45,6 @@ class YouTubeChannelDTO
     }
 
     /**
-     * Create DTO from YouTube Search API response array.
-     */
-    public static function fromSearchResponse(array $data): self
-    {
-        $snippet = $data['snippet'] ?? [];
-        $channelId = $data['id']['channelId'] ?? $data['id'] ?? '';
-        
-        return new self(
-            channelId: $channelId,
-            subscriberCount: 0, // Not available in search results
-            videoCount: 0, // Not available in search results
-            subscriberCountHidden: false,
-            title: $snippet['title'] ?? null,
-            description: $snippet['description'] ?? null,
-        );
-    }
-
-
-
-
-    /**
      * Check if this channel has enough subscribers for automatic replacement.
      */
     public function meetsMinimumSubscriberThreshold(int $threshold = 100): bool
