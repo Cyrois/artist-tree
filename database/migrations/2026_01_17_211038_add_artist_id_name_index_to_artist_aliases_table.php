@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('artist_aliases', function (Blueprint $table) {
-            $table->index(['artist_id', 'name'], 'artist_aliases_artist_id_name_index');
+            $table->unique(['artist_id', 'name'], 'artist_aliases_artist_id_name_unique');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('artist_aliases', function (Blueprint $table) {
-            $table->dropIndex('artist_aliases_artist_id_name_index');
+            $table->dropUnique('artist_aliases_artist_id_name_unique');
         });
     }
 };
