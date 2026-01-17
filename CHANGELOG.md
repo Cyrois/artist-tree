@@ -23,8 +23,8 @@ This changelog tracks implementation progress and helps ensure AI assistants mai
 **Summary:** Added a composite index to the `artist_aliases` and `artist_links` table to improve search performance.
 
 - **Migrations:**
-  - Added index on `['artist_id', 'name']` to `artist_aliases` table.
-  - Added index on `['artist_id', 'link_type']` to `artist_links` table.
+  - Added unique index on `['artist_id', 'name']` to `artist_aliases` table.
+  - Added unique index on `['artist_id', 'link_type']` to `artist_links` table.
 
 ### Spotify OAuth Popup Flow (2026-01-17)
 **Summary:** Replaced full-page redirect OAuth with a popup-based flow to preserve user's page state during Spotify authentication.
