@@ -28,20 +28,6 @@ describe('ArtistLink VEVO Detection Schema', function () {
         expect($link->review_status)->toBe(ArtistLink::REVIEW_STATUS_PUBLIC_ADDED);
     });
     
-    it('can mark link as pending approval', function () {
-        $artist = Artist::factory()->create();
-        
-        $link = ArtistLink::create([
-            'artist_id' => $artist->id,
-            'platform' => SocialPlatform::YouTube,
-            'url' => 'https://youtube.com/channel/UCtest123',
-        ]);
-        
-        $link->markPendingApproval();
-        
-        expect($link->fresh()->review_status)->toBe(ArtistLink::REVIEW_STATUS_PENDING_APPROVAL);
-    });
-    
     it('supports all review status values', function () {
         $artist = Artist::factory()->create();
         
@@ -129,24 +115,5 @@ describe('ArtistLink VEVO Detection Schema', function () {
         $link->markVevoChecked();
         
         expect($link->fresh()->vevo_checked_at)->not->toBeNull();
-    });
-    
-    it('correctly identifies YouTube links', function () {
-        $artist = Artist::factory()->create();
-        
-        $youtubeLink = ArtistLink::create([
-            'artist_id' => $artist->id,
-            'platform' => SocialPlatform::YouTube,
-            'url' => 'https://youtube.com/channel/UCtest123',
-        ]);
-        
-        $spotifyLink = ArtistLink::create([
-            'artist_id' => $artist->id,
-            'platform' => SocialPlatform::Spotify,
-            'url' => 'https://open.spotify.com/artist/123',
-        ]);
-        
-        expect($youtubeLink->isYouTubeLink())->toBeTrue();
-        expect($spotifyLink->isYouTubeLink())->toBeFalse();
     });
 });

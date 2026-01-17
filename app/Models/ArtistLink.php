@@ -65,20 +65,4 @@ class ArtistLink extends Model
     {
         $this->update(['vevo_checked_at' => now()]);
     }
-
-    /**
-     * Mark this link as pending approval (used after automatic VEVO replacement).
-     */
-    public function markPendingApproval(): void
-    {
-        $this->update(['review_status' => self::REVIEW_STATUS_PENDING_APPROVAL]);
-    }
-
-    /**
-     * Check if this link is a YouTube link.
-     */
-    public function isYouTubeLink(): bool
-    {
-        return $this->platform === \App\Enums\SocialPlatform::YouTube;
-    }
 }
