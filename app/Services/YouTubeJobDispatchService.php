@@ -21,7 +21,9 @@ class YouTubeJobDispatchService
      * Batch sizes for different priority levels.
      */
     private const HIGH_PRIORITY_BATCH_SIZE = 20;
+
     private const MEDIUM_PRIORITY_BATCH_SIZE = 15;
+
     private const LOW_PRIORITY_BATCH_SIZE = 10;
 
     public function __construct(
@@ -31,8 +33,8 @@ class YouTubeJobDispatchService
     /**
      * Dispatch YouTube jobs for artists with priority-based processing.
      *
-     * @param array<int> $artistIds Array of artist IDs to process
-     * @param bool $respectQuota Whether to check quota availability before dispatching
+     * @param  array<int>  $artistIds  Array of artist IDs to process
+     * @param  bool  $respectQuota  Whether to check quota availability before dispatching
      * @return array Statistics about dispatched jobs
      */
     public function dispatchPriorityJobs(array $artistIds, bool $respectQuota = true): array
@@ -44,11 +46,12 @@ class YouTubeJobDispatchService
         }
 
         // Check quota availability if requested
-        if ($respectQuota && !$this->youtubeService->checkQuotaAvailability()) {
+        if ($respectQuota && ! $this->youtubeService->checkQuotaAvailability()) {
             Log::warning('YouTubeJobDispatchService: Quota exhausted, skipping job dispatch', [
                 'artist_count' => count($artistIds),
             ]);
             $stats['quota_exhausted'] = true;
+
             return $stats;
         }
 
@@ -63,6 +66,7 @@ class YouTubeJobDispatchService
                 'requested_count' => count($artistIds),
             ]);
             $stats['total_artists'] = 0;
+
             return $stats;
         }
 
@@ -111,9 +115,6 @@ class YouTubeJobDispatchService
 
     /**
      * Initialize a standard statistics response array.
-     *
-     * @param int $totalArtists
-     * @return array
      */
     private function initializeStats(int $totalArtists = 0): array
     {
@@ -130,7 +131,7 @@ class YouTubeJobDispatchService
     /**
      * Categorize artists by priority based on their YouTube data staleness.
      *
-     * @param Collection<Artist> $artists
+     * @param  Collection<Artist>  $artists
      * @return array<string, Collection<Artist>>
      */
     private function categorizeArtistsByPriority(Collection $artists): array
@@ -141,8 +142,9 @@ class YouTubeJobDispatchService
 
         foreach ($artists as $artist) {
             // Artists without metrics get high priority (first-time fetch)
-            if (!$artist->metrics) {
+            if (! $artist->metrics) {
                 $high->push($artist);
+
                 continue;
             }
 
@@ -153,7 +155,7 @@ class YouTubeJobDispatchService
                 $high->push($artist);
             }
             // Low priority: First-time analytics fetch (has basic data but no analytics)
-            elseif (!$metrics->hasYouTubeAnalytics() && $metrics->hasYouTubeData()) {
+            elseif (! $metrics->hasYouTubeAnalytics() && $metrics->hasYouTubeData()) {
                 $low->push($artist);
             }
             // Medium priority: Analytics are stale (>7 days) but basic metrics are fresh
@@ -173,9 +175,7 @@ class YouTubeJobDispatchService
     /**
      * Dispatch jobs for a specific priority group.
      *
-     * @param Collection<Artist> $artists
-     * @param string $priority
-     * @param int $batchSize
+     * @param  Collection<Artist>  $artists
      * @return int Number of jobs dispatched
      */
     private function dispatchJobsForPriority(Collection $artists, string $priority, int $batchSize): int
@@ -187,10 +187,10 @@ class YouTubeJobDispatchService
         foreach ($batches as $batch) {
             // Add delay based on priority to manage system load
             $delay = $this->getDelayForPriority($priority, $jobCount);
-            
+
             FetchYouTubeDataJob::dispatch($batch, $batchSize)
                 ->delay($delay);
-            
+
             $jobCount++;
         }
 
@@ -207,8 +207,6 @@ class YouTubeJobDispatchService
     /**
      * Get delay for job based on priority and job index.
      *
-     * @param string $priority
-     * @param int $jobIndex
      * @return \DateTimeInterface|int
      */
     private function getDelayForPriority(string $priority, int $jobIndex)
@@ -224,7 +222,7 @@ class YouTubeJobDispatchService
     /**
      * Dispatch YouTube jobs for artists that need basic metrics refresh.
      *
-     * @param array<int> $artistIds
+     * @param  array<int>  $artistIds
      * @return int Number of jobs dispatched
      */
     public function dispatchBasicMetricsJobs(array $artistIds): int
@@ -238,7 +236,7 @@ class YouTubeJobDispatchService
             ->with('metrics')
             ->get()
             ->filter(function ($artist) {
-                return !$artist->metrics || $artist->metrics->isYouTubeStale();
+                return ! $artist->metrics || $artist->metrics->isYouTubeStale();
             });
 
         if ($artists->isEmpty()) {
@@ -264,7 +262,7 @@ class YouTubeJobDispatchService
     /**
      * Dispatch YouTube jobs for artists that need video analytics refresh.
      *
-     * @param array<int> $artistIds
+     * @param  array<int>  $artistIds
      * @return int Number of jobs dispatched
      */
     public function dispatchAnalyticsJobs(array $artistIds): int

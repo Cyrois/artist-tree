@@ -4,13 +4,11 @@ namespace Tests\Feature\Api;
 
 use App\Models\Artist;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ArtistSpotifyDataTest extends TestCase
 {
-
     private User $user;
 
     private Artist $artist;
@@ -357,10 +355,10 @@ class ArtistSpotifyDataTest extends TestCase
 
         // Third request - clear cache, should hit API again
         \Illuminate\Support\Facades\Cache::flush();
-        
+
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artistWithoutSpotifyId->id}/top-tracks");
-            
+
         // Now it should have called 1 token + 1 search again = 4 total
         Http::assertSentCount(4);
     }

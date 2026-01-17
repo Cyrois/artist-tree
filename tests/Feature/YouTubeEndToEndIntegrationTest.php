@@ -5,17 +5,15 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
 use App\Services\YouTubeService;
-
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    
+
     // Clear any existing cache
     Cache::flush();
-    
+
     // Mock YouTube API responses for consistent testing
     Http::fake([
         'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
@@ -99,7 +97,7 @@ describe('YouTube End-to-End Integration', function () {
             'spotify_id' => 'e2e_test_spotify',
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
-        
+
         // Add approved link so needsToUpdateYoutubeChannel() returns false
         $artist->links()->create([
             'platform' => \App\Enums\SocialPlatform::YouTube,
@@ -144,7 +142,7 @@ describe('YouTube End-to-End Integration', function () {
         // Step 5: Test video analytics through API (which triggers calculateVideoAnalytics)
         // The API should automatically refresh stale analytics
         $metrics->update(['youtube_analytics_refreshed_at' => now()->subDays(8)]); // Make analytics stale
-        
+
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
 
@@ -158,7 +156,7 @@ describe('YouTube End-to-End Integration', function () {
 
         // Step 5: Verify caching is working (second request should use cache)
         Http::fake(); // Clear HTTP fakes to ensure no new requests
-        
+
         $cachedResponse = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
 
@@ -234,7 +232,7 @@ describe('YouTube End-to-End Integration', function () {
         }
 
         // Track quota usage - the service should track quota internally
-        $initialQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $initialQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
 
         // Process all artists
         $allArtistIds = $highPriorityArtists->pluck('id')
@@ -245,7 +243,7 @@ describe('YouTube End-to-End Integration', function () {
         $job->handle(app(YouTubeService::class));
 
         // Verify quota was tracked (service should increment quota usage)
-        $finalQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $finalQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
         expect($finalQuota)->toBeGreaterThanOrEqual($initialQuota); // Should be same or higher
 
         // Verify high priority artists were processed (basic metrics)
@@ -274,7 +272,7 @@ describe('YouTube End-to-End Integration', function () {
         ]);
 
         // Simulate quota exhaustion
-        Cache::put('youtube_quota_' . now()->format('Y-m-d'), 10000); // At limit
+        Cache::put('youtube_quota_'.now()->format('Y-m-d'), 10000); // At limit
         Cache::put('youtube_quota_exhausted', true, now()->addDay());
 
         $job = new FetchYouTubeDataJob([$artist->id]);
@@ -312,7 +310,7 @@ describe('YouTube End-to-End Integration', function () {
         expect($artist->metrics)->not->toBeNull();
 
         $metrics = $artist->metrics;
-        
+
         // Verify data consistency - job only handles basic metrics
         expect($metrics->youtube_subscribers)->toBe(1500000)
             ->and($metrics->youtube_refreshed_at)->not->toBeNull();
@@ -329,7 +327,7 @@ describe('YouTube End-to-End Integration', function () {
             ->getJson("/api/artists/{$artist->id}");
 
         $responseData = $response->json('data.metrics');
-        
+
         expect($responseData['youtube_subscribers'])->toBe($metrics->youtube_subscribers);
     });
 

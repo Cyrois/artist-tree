@@ -10,7 +10,7 @@ test('unauthenticated users are redirected to login from home', function () {
 
 test('authenticated users are redirected to dashboard from home', function () {
     $user = User::factory()->create([
-        'email' => 'test-' . uniqid() . '@example.com',
+        'email' => 'test-'.uniqid().'@example.com',
     ]);
 
     $response = $this->actingAs($user)->get(route('home'));

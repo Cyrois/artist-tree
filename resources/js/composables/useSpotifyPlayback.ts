@@ -439,12 +439,8 @@ export function useSpotifyPlayback() {
             return;
         }
 
-
-
         try {
             const token = await fetchAccessToken(false);
-
-
 
             // Build playback body
             const body: any = {};
@@ -456,7 +452,7 @@ export function useSpotifyPlayback() {
 
             // Start playback directly on our device (no separate transfer needed)
             // The device_id parameter ensures playback goes to our web player
-            const playResponse = await fetch(
+            await fetch(
                 `https://api.spotify.com/v1/me/player/play?device_id=${deviceId.value}`,
                 {
                     method: 'PUT',
@@ -467,8 +463,6 @@ export function useSpotifyPlayback() {
                     body: JSON.stringify(body),
                 },
             );
-
-
 
             // Set optimistic values for immediate UI feedback
             if (type === 'track') {

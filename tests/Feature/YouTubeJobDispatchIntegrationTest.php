@@ -6,13 +6,12 @@ use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
 use App\Services\YouTubeJobDispatchService;
-
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     Queue::fake();
-    
+
     // Mock Spotify OAuth token request and search endpoint
     Http::fake([
         'accounts.spotify.com/api/token' => Http::response([
@@ -30,9 +29,9 @@ beforeEach(function () {
                         'images' => [['url' => 'https://example.com/image.jpg']],
                         'popularity' => 80,
                         'followers' => ['total' => 100000],
-                    ]
-                ]
-            ]
+                    ],
+                ],
+            ],
         ]),
         // Keep other specific mocks if they are added later or needed
         '*' => Http::response(), // Fallback for other requests to prevent actual HTTP calls if not matched above, though specific matches take precedence.
@@ -43,7 +42,7 @@ describe('YouTube Job Dispatch Integration', function () {
     it('dispatches youtube jobs when searching for artists with stale data', function () {
         // This test verifies that the search service integration works
         // The actual job dispatch logic is tested in unit tests
-        
+
         $localArtist = Artist::factory()->create([
             'spotify_id' => 'local123',
             'name' => 'Local Artist',
@@ -231,7 +230,7 @@ describe('YouTube Job Dispatch Integration', function () {
     it('integrates with artist search service for mixed local and spotify results', function () {
         // This test verifies that the dispatch service can handle multiple artists
         // with different priority levels
-        
+
         $staleArtist = Artist::factory()->create([
             'spotify_id' => 'local_stale',
             'name' => 'Stale Local Artist',
@@ -283,9 +282,9 @@ describe('YouTube Job Dispatch Integration', function () {
 
         // Mock Spotify search to return this artist (or generic response)
         // Since we are testing search integration, we rely on searchLocal finding the artist
-        
+
         $searchService = app(ArtistSearchService::class);
-        
+
         // Search for the artist (this should trigger YouTube job dispatch)
         $results = $searchService->search('Test Artist', 10);
 
@@ -300,6 +299,7 @@ describe('YouTube Job Dispatch Integration', function () {
             $r = new ReflectionProperty($job, 'artistIds');
             $r->setAccessible(true);
             $ids = $r->getValue($job);
+
             return in_array($artist->id, $ids);
         });
     });
@@ -316,7 +316,7 @@ describe('YouTube Job Dispatch Integration', function () {
         ]);
 
         $searchService = app(ArtistSearchService::class);
-        
+
         // Search for the artist
         $results = $searchService->search('Test Artist No YouTube', 10);
 

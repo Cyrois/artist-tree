@@ -3,12 +3,11 @@
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    
+
     // Mock YouTube API responses
     Http::fake([
         'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
@@ -145,7 +144,7 @@ it('automatically refreshes stale YouTube data when showing artist', function ()
         ->create([
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
-    
+
     // Add approved link so needsToUpdateYoutubeChannel() returns false and refresh actually happens
     $artist->links()->create([
         'platform' => \App\Enums\SocialPlatform::YouTube,
@@ -169,7 +168,7 @@ it('automatically refreshes stale YouTube data when showing artist', function ()
 it('does not refresh YouTube data when not stale', function () {
     $originalRefreshTime = now()->subHours(12);
     $originalAnalyticsRefreshTime = now()->subDays(3);
-    
+
     $artist = Artist::factory()
         ->has(ArtistMetric::factory([
             'youtube_subscribers' => 500000,
@@ -336,7 +335,7 @@ it('refreshes YouTube data when selecting artist', function () {
         ->create([
             'youtube_channel_id' => 'UCTestChannelId',
         ]);
-    
+
     // Add approved link so needsToUpdateYoutubeChannel() returns false and refresh actually happens
     $artist->links()->create([
         'platform' => \App\Enums\SocialPlatform::YouTube,

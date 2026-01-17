@@ -111,9 +111,9 @@ class Artist extends Model
 
         return $query->where(function ($q) use ($term, $like) {
             $q->where('artists.name', $like, "%{$term}%")
-              ->orWhereHas('aliases', function ($sub) use ($term, $like) {
-                  $sub->where('name', $like, "%{$term}%");
-              });
+                ->orWhereHas('aliases', function ($sub) use ($term, $like) {
+                    $sub->where('name', $like, "%{$term}%");
+                });
         });
     }
 
@@ -140,13 +140,13 @@ class Artist extends Model
      */
     public function needsVevoCheck(): bool
     {
-        if (!$this->youtube_channel_id) {
+        if (! $this->youtube_channel_id) {
             return false;
         }
 
         $youtubeLink = $this->youtubeLink();
-        
-        if (!$youtubeLink) {
+
+        if (! $youtubeLink) {
             return true;
         }
 
@@ -163,7 +163,7 @@ class Artist extends Model
     public function needsToUpdateYoutubeChannel(): bool
     {
         // If artist has no youtube_channel_id, definitely needs discovery
-        if (!$this->youtube_channel_id) {
+        if (! $this->youtube_channel_id) {
             return true;
         }
 
@@ -174,6 +174,6 @@ class Artist extends Model
             ->exists();
 
         // If no approved link, the current channel is not confirmed - needs discovery
-        return !$hasApprovedLink;
+        return ! $hasApprovedLink;
     }
 }

@@ -34,6 +34,7 @@ class YouTubeChannelSearchService
     private const SEARCH_QUOTA_COST = 100;
 
     private string $baseUrl;
+
     private string $apiKey;
 
     public function __construct(
@@ -58,8 +59,9 @@ class YouTubeChannelSearchService
     /**
      * Search for YouTube channels for an artist.
      *
-     * @param Artist $artist The artist to search for
+     * @param  Artist  $artist  The artist to search for
      * @return array<YouTubeChannelDTO> Array of candidate channels (excluding VEVO)
+     *
      * @throws YouTubeApiException
      */
     public function searchChannelsForArtist(Artist $artist): array
@@ -96,8 +98,9 @@ class YouTubeChannelSearchService
     /**
      * Search YouTube for channels by query string.
      *
-     * @param string $query The search query
+     * @param  string  $query  The search query
      * @return array<YouTubeChannelDTO> Array of channel DTOs
+     *
      * @throws YouTubeApiException
      */
     public function searchByQuery(string $query): array
@@ -107,10 +110,11 @@ class YouTubeChannelSearchService
         }
 
         // Check quota availability
-        if (!$this->youtubeService->checkQuotaAvailability(self::SEARCH_QUOTA_COST)) {
+        if (! $this->youtubeService->checkQuotaAvailability(self::SEARCH_QUOTA_COST)) {
             Log::warning('YouTube channel search skipped: quota unavailable', [
                 'query' => $query,
             ]);
+
             return [];
         }
 
@@ -119,7 +123,7 @@ class YouTubeChannelSearchService
                 ->retry(3, function ($attempt) {
                     return 1000 * (2 ** ($attempt - 1));
                 })
-                ->get($this->baseUrl . '/search', [
+                ->get($this->baseUrl.'/search', [
                     'part' => 'snippet',
                     'type' => 'channel',
                     'q' => $query,
@@ -127,7 +131,7 @@ class YouTubeChannelSearchService
                     'key' => $this->apiKey,
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $this->handleApiError($response, $query);
             }
 
@@ -140,7 +144,7 @@ class YouTubeChannelSearchService
 
             // Extract channel IDs for detailed info
             $channelIds = array_map(
-                fn($item) => $item['id']['channelId'] ?? null,
+                fn ($item) => $item['id']['channelId'] ?? null,
                 $items
             );
             $channelIds = array_filter($channelIds);
@@ -159,6 +163,7 @@ class YouTubeChannelSearchService
                 'query' => $query,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -166,22 +171,22 @@ class YouTubeChannelSearchService
     /**
      * Filter out VEVO channels from candidates.
      *
-     * @param array<YouTubeChannelDTO> $channels Array of channels
+     * @param  array<YouTubeChannelDTO>  $channels  Array of channels
      * @return array<YouTubeChannelDTO> Filtered array without VEVO channels
      */
     public function filterVEVOChannels(array $channels): array
     {
         return array_values(array_filter(
             $channels,
-            fn(YouTubeChannelDTO $channel) => !$this->vevoDetectionService->isVEVOChannel($channel)
+            fn (YouTubeChannelDTO $channel) => ! $this->vevoDetectionService->isVEVOChannel($channel)
         ));
     }
 
     /**
      * Validate if a channel likely belongs to an artist.
      *
-     * @param YouTubeChannelDTO $channel The channel to validate
-     * @param Artist $artist The artist to match against
+     * @param  YouTubeChannelDTO  $channel  The channel to validate
+     * @param  Artist  $artist  The artist to match against
      * @return bool True if channel likely belongs to artist
      */
     public function validateChannelOwnership(YouTubeChannelDTO $channel, Artist $artist): bool
@@ -213,8 +218,8 @@ class YouTubeChannelSearchService
     /**
      * Get detailed channel information for a list of channel IDs.
      *
-     * @param array<string> $channelIds Array of channel IDs
-     * @param array $searchItems Original search result items for snippet data
+     * @param  array<string>  $channelIds  Array of channel IDs
+     * @param  array  $searchItems  Original search result items for snippet data
      * @return array<YouTubeChannelDTO> Array of channel DTOs with full details
      */
     private function getChannelDetails(array $channelIds, array $searchItems): array
@@ -239,7 +244,7 @@ class YouTubeChannelSearchService
 
             // Enrich DTO with snippet data from search results
             $snippet = $snippetMap[$channelId] ?? [];
-            
+
             $dto->title = $snippet['title'] ?? $dto->title;
             $dto->description = $snippet['description'] ?? $dto->description;
 
@@ -252,7 +257,7 @@ class YouTubeChannelSearchService
     /**
      * Remove duplicate channels by channel ID.
      *
-     * @param array<YouTubeChannelDTO> $channels Array of channels
+     * @param  array<YouTubeChannelDTO>  $channels  Array of channels
      * @return array<YouTubeChannelDTO> Array with duplicates removed
      */
     private function removeDuplicates(array $channels): array
@@ -261,7 +266,7 @@ class YouTubeChannelSearchService
         $unique = [];
 
         foreach ($channels as $channel) {
-            if (!isset($seen[$channel->channelId])) {
+            if (! isset($seen[$channel->channelId])) {
                 $seen[$channel->channelId] = true;
                 $unique[] = $channel;
             }
@@ -273,8 +278,8 @@ class YouTubeChannelSearchService
     /**
      * Handle API error responses.
      *
-     * @param \Illuminate\Http\Client\Response $response
-     * @param string $query
+     * @param  \Illuminate\Http\Client\Response  $response
+     *
      * @throws YouTubeApiException
      */
     private function handleApiError($response, string $query): void
@@ -308,7 +313,7 @@ class YouTubeChannelSearchService
     /**
      * Clear the search cache for an artist.
      *
-     * @param Artist $artist The artist
+     * @param  Artist  $artist  The artist
      */
     public function clearCacheForArtist(Artist $artist): void
     {

@@ -1,16 +1,15 @@
 <?php
 
+use App\Jobs\UpdateLineupTimestamp;
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Services\LineupStackService;
-
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use App\Jobs\UpdateLineupTimestamp;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
-    $this->stackService = new LineupStackService();
+    $this->stackService = new LineupStackService;
 });
 
 it('can add an artist to a new stack', function () {
@@ -30,7 +29,7 @@ it('can add an artist to a new stack', function () {
         'stack_id' => $stackId,
         'is_stack_primary' => true,
     ]);
-    
+
     Queue::assertPushed(UpdateLineupTimestamp::class);
 });
 
@@ -135,7 +134,7 @@ it('can remove an artist from a stack and pick a new primary', function () {
             }
     */
     // If only artist 2 remains, it dissolves the stack.
-    
+
     $this->assertDatabaseHas('lineup_artists', [
         'lineup_id' => $lineup->id,
         'artist_id' => $artist2->id,
@@ -173,12 +172,12 @@ it('promotes next artist when primary is removed from a stack with 3 artists', f
         ->count();
 
     expect($remainingPrimary)->toBe(1);
-    
+
     $inStackCount = DB::table('lineup_artists')
         ->where('lineup_id', $lineup->id)
         ->where('stack_id', $stackId)
         ->count();
-        
+
     expect($inStackCount)->toBe(2);
 });
 

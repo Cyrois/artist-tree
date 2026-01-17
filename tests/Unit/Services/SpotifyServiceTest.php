@@ -278,7 +278,7 @@ it('clears token cache on 401 error', function () {
     // Second attempt: should fetch 'fresh_token' because cache was cleared
     $service->searchArtists('test');
 
-    // Sent count: 
+    // Sent count:
     // 1. POST token (fetching 'expired_token')
     // 2. GET search (fails 401) -> triggers cache clear
     // 3. POST token (fetching 'fresh_token')

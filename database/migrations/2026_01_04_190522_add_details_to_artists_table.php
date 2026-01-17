@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('youtube_channel_id')->nullable()->after('spotify_id');
             $table->string('musicbrainz_id')->nullable()->unique()->after('youtube_channel_id');
             $table->foreignId('country_id')->nullable()->after('name')->constrained('countries')->nullOnDelete();
-            
+
             $table->dropColumn('genres');
         });
     }

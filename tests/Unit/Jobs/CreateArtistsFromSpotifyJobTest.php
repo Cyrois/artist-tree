@@ -3,7 +3,6 @@
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Jobs\CreateArtistsFromSpotifyJob;
 use App\Models\Artist;
-
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
@@ -12,8 +11,8 @@ beforeEach(function () {
 });
 
 test('it creates artists from Spotify data', function () {
-    $id1 = 'spotify_' . uniqid();
-    $id2 = 'spotify_' . uniqid();
+    $id1 = 'spotify_'.uniqid();
+    $id2 = 'spotify_'.uniqid();
 
     $spotifyArtists = [
         new SpotifyArtistDTO(
@@ -56,8 +55,8 @@ test('it creates artists from Spotify data', function () {
 });
 
 test('it is idempotent and does not create duplicates', function () {
-    $id1 = 'spotify_' . uniqid();
-    $id2 = 'spotify_' . uniqid();
+    $id1 = 'spotify_'.uniqid();
+    $id2 = 'spotify_'.uniqid();
 
     // Create an artist first
     $artist = Artist::factory()->create([

@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Log;
  */
 class YouTubeChannelRankingAlgorithm
 {
-
     private int $minimumSubscriberThreshold;
+
     private float $recentActivityBonus;
+
     private float $officialBonus;
 
     public function __construct()
@@ -24,7 +25,7 @@ class YouTubeChannelRankingAlgorithm
         $verifiedPercent = (int) config('artist-tree.youtube.verified_bonus_percent', 20);
         $activityPercent = (int) config('artist-tree.youtube.activity_bonus_percent', 10);
         $officialPercent = (int) config('artist-tree.youtube.official_bonus_percent', 15);
-        
+
         $this->recentActivityBonus = 1 + ($activityPercent / 100);
         $this->officialBonus = 1 + ($officialPercent / 100);
     }
@@ -32,7 +33,7 @@ class YouTubeChannelRankingAlgorithm
     /**
      * Rank channels by calculated score.
      *
-     * @param array<YouTubeChannelDTO> $channels Array of channels to rank
+     * @param  array<YouTubeChannelDTO>  $channels  Array of channels to rank
      * @return array<YouTubeChannelDTO> Sorted array with highest scores first
      */
     public function rankChannels(array $channels): array
@@ -40,14 +41,13 @@ class YouTubeChannelRankingAlgorithm
         // Filter out channels below minimum threshold
         $validChannels = array_filter(
             $channels,
-            fn(YouTubeChannelDTO $channel) => $channel->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)
+            fn (YouTubeChannelDTO $channel) => $channel->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)
         );
 
         // Sort by calculated score (descending)
         usort($validChannels, function (YouTubeChannelDTO $a, YouTubeChannelDTO $b) {
             $scoreA = $this->calculateChannelScore($a);
             $scoreB = $this->calculateChannelScore($b);
-
 
             return $scoreB <=> $scoreA;
         });
@@ -58,19 +58,18 @@ class YouTubeChannelRankingAlgorithm
     /**
      * Calculate a score for a channel based on various factors.
      *
-     * @param YouTubeChannelDTO $channel The channel to score
+     * @param  YouTubeChannelDTO  $channel  The channel to score
      * @return float The calculated score
      */
     public function calculateChannelScore(YouTubeChannelDTO $channel): float
     {
         // Channels below minimum threshold get zero score
-        if (!$channel->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)) {
+        if (! $channel->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)) {
             return 0.0;
         }
 
         // Base score from subscriber count
         $score = (float) $channel->subscriberCount;
-
 
         // Bonus for recent activity
         if ($channel->hasActiveContent()) {
@@ -88,7 +87,7 @@ class YouTubeChannelRankingAlgorithm
     /**
      * Check if channel name contains "official" (case-insensitive).
      *
-     * @param YouTubeChannelDTO $channel The channel to check
+     * @param  YouTubeChannelDTO  $channel  The channel to check
      * @return bool True if channel name contains "official"
      */
     public function hasOfficialInName(YouTubeChannelDTO $channel): bool
@@ -103,7 +102,7 @@ class YouTubeChannelRankingAlgorithm
     /**
      * Select the best channel from a list of candidates.
      *
-     * @param array<YouTubeChannelDTO> $channels Array of candidate channels
+     * @param  array<YouTubeChannelDTO>  $channels  Array of candidate channels
      * @return YouTubeChannelDTO|null The best channel or null if none qualify
      */
     public function selectBestChannel(array $channels): ?YouTubeChannelDTO
@@ -119,6 +118,7 @@ class YouTubeChannelRankingAlgorithm
                 'candidate_count' => count($channels),
                 'threshold' => $this->minimumSubscriberThreshold,
             ]);
+
             return null;
         }
 
@@ -134,19 +134,17 @@ class YouTubeChannelRankingAlgorithm
         return $best;
     }
 
-
-
     /**
      * Validate that a replacement channel is significantly better than the original.
      *
-     * @param YouTubeChannelDTO $replacement The proposed replacement channel
-     * @param YouTubeChannelDTO|null $original The original channel (if available)
+     * @param  YouTubeChannelDTO  $replacement  The proposed replacement channel
+     * @param  YouTubeChannelDTO|null  $original  The original channel (if available)
      * @return bool True if replacement is valid
      */
     public function isValidReplacement(YouTubeChannelDTO $replacement, ?YouTubeChannelDTO $original = null): bool
     {
         // Must meet minimum threshold
-        if (!$replacement->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)) {
+        if (! $replacement->meetsMinimumSubscriberThreshold($this->minimumSubscriberThreshold)) {
             return false;
         }
 

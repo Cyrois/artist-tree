@@ -3,13 +3,11 @@
 namespace Tests\Feature\Api;
 
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class SpotifyAuthTest extends TestCase
 {
-
     private User $user;
 
     protected function setUp(): void

@@ -4,13 +4,11 @@ namespace Tests\Feature\Api;
 
 use App\Models\Artist;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class SimilarArtistsTest extends TestCase
 {
-
     private User $user;
 
     private Artist $artist;

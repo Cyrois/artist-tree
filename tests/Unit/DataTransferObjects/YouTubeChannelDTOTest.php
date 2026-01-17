@@ -55,7 +55,7 @@ class YouTubeChannelDTOTest extends TestCase
 
         // Update property
         $dto->subscriberCount = 5000;
-        
+
         $arrayUpdated = $dto->toArray();
         $this->assertEquals(5000, $arrayUpdated['subscriber_count']);
     }

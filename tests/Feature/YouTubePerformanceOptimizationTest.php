@@ -4,14 +4,13 @@ use App\Jobs\FetchYouTubeDataJob;
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Services\YouTubeService;
-
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     // Clear cache before each test
     Cache::flush();
-    
+
     // Mock YouTube API responses for consistent testing
     Http::fake([
         'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
@@ -73,12 +72,13 @@ describe('YouTube Performance and Quota Optimization', function () {
     it('validates optimal batch size configuration', function () {
         // Create 50 artists with YouTube channel IDs
         $artists = Artist::factory()->count(50)->create()->map(function ($artist, $index) {
-            $artist->update(['youtube_channel_id' => "UCTestChannel" . ($index + 1)]);
+            $artist->update(['youtube_channel_id' => 'UCTestChannel'.($index + 1)]);
             ArtistMetric::factory()->create([
                 'artist_id' => $artist->id,
                 'youtube_subscribers' => 500000,
                 'youtube_refreshed_at' => now()->subDays(2), // All stale
             ]);
+
             return $artist;
         });
 
@@ -87,7 +87,7 @@ describe('YouTube Performance and Quota Optimization', function () {
         // Test that batch size 50 (YouTube API limit) is used effectively
         $job = new FetchYouTubeDataJob($artistIds, 50);
         $job->handle(app(YouTubeService::class));
-        
+
         // Verify all artists were processed
         $updatedCount = 0;
         foreach ($artists as $artist) {
@@ -98,7 +98,7 @@ describe('YouTube Performance and Quota Optimization', function () {
         }
 
         expect($updatedCount)->toBe(50); // All artists should be updated
-        
+
         // Verify minimal API requests were made (should be 1 for 50 channels)
         $apiRequests = Http::recorded()->count();
         expect($apiRequests)->toBeLessThanOrEqual(2); // Should be very efficient
@@ -107,26 +107,27 @@ describe('YouTube Performance and Quota Optimization', function () {
     it('validates quota usage projections are accurate', function () {
         // Create test data with known quota costs
         $basicOnlyArtists = Artist::factory()->count(20)->create()->map(function ($artist, $index) {
-            $artist->update(['youtube_channel_id' => "UCBasic" . ($index + 1)]);
+            $artist->update(['youtube_channel_id' => 'UCBasic'.($index + 1)]);
             ArtistMetric::factory()->create([
                 'artist_id' => $artist->id,
                 'youtube_refreshed_at' => now()->subDays(2), // Needs basic refresh
             ]);
+
             return $artist;
         });
 
-        $startQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $startQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
 
         // Process basic metrics only
         $basicJob = new FetchYouTubeDataJob($basicOnlyArtists->pluck('id')->toArray());
         $basicJob->handle(app(YouTubeService::class));
 
-        $afterBasicQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $afterBasicQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
         $basicQuotaUsed = $afterBasicQuota - $startQuota;
 
         // Basic metrics should use minimal quota (1 unit for up to 50 channels)
         expect($basicQuotaUsed)->toBeLessThanOrEqual(2); // Very efficient for basic metrics
-        
+
         // Verify all artists were processed
         foreach ($basicOnlyArtists as $artist) {
             $artist->metrics->refresh();
@@ -146,7 +147,7 @@ describe('YouTube Performance and Quota Optimization', function () {
         $initialRequestCount = Http::recorded()->count();
         $channelData2 = $youtubeService->getChannelMetrics('UCTestChannel1');
         $finalRequestCount = Http::recorded()->count();
-        
+
         expect($channelData2)->not->toBeNull();
         expect($channelData2->subscriberCount)->toBe(1100000);
         expect($finalRequestCount)->toBe($initialRequestCount); // No new requests
@@ -163,12 +164,12 @@ describe('YouTube Performance and Quota Optimization', function () {
         expect($youtubeService->getRemainingQuota())->toBeGreaterThan(9000); // Should have plenty
 
         // Test 2: Quota tracking works
-        $initialQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
-        
+        $initialQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
+
         // Make a request that uses quota
         $youtubeService->getChannelMetrics('UCTestChannel1');
-        
-        $finalQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+
+        $finalQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
         expect($finalQuota)->toBeGreaterThanOrEqual($initialQuota); // Quota should be tracked
     });
 
@@ -181,18 +182,19 @@ describe('YouTube Performance and Quota Optimization', function () {
                 'youtube_refreshed_at' => now()->subDays(2),
                 'youtube_subscribers' => 500000,
             ]);
+
             return $artist;
         });
 
         // Measure processing time
         $startTime = microtime(true);
-        $startQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $startQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
 
         $job = new FetchYouTubeDataJob($artists->pluck('id')->toArray());
         $job->handle(app(YouTubeService::class));
 
         $endTime = microtime(true);
-        $endQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+        $endQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
 
         $processingTime = $endTime - $startTime;
         $quotaUsed = $endQuota - $startQuota;
@@ -222,6 +224,7 @@ describe('YouTube Performance and Quota Optimization', function () {
                 'youtube_refreshed_at' => now()->subDays(2), // All need updates
                 'youtube_subscribers' => 100000,
             ]);
+
             return $artist;
         });
 
@@ -241,7 +244,7 @@ describe('YouTube Performance and Quota Optimization', function () {
         // Verify efficiency
         expect($processingTime)->toBeLessThan(2.0); // Fast processing
         expect($apiRequestsMade)->toBeLessThanOrEqual(2); // Minimal API calls for 30 artists
-        
+
         // Verify all artists were updated
         foreach ($artists as $artist) {
             $artist->metrics->refresh();

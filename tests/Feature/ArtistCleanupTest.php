@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Jobs\VerifyArtistSpotifyContentJob;
 use App\Models\Artist;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
-use App\DataTransferObjects\SpotifyArtistDTO;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
@@ -34,9 +34,9 @@ class ArtistCleanupTest extends TestCase
     {
         // 1. Create a soft-deleted artist with unique name and ID
         $suffix = uniqid();
-        $name = 'Deleted Artist ' . $suffix;
-        $spotifyId = 'deleted_artist_' . $suffix;
-        
+        $name = 'Deleted Artist '.$suffix;
+        $spotifyId = 'deleted_artist_'.$suffix;
+
         $artist = Artist::create([
             'name' => $name,
             'spotify_id' => $spotifyId,
@@ -56,7 +56,7 @@ class ArtistCleanupTest extends TestCase
                     popularity: 50,
                     followers: 1000,
                     genres: ['pop']
-                )
+                ),
             ]);
 
         // 3. Search
@@ -74,9 +74,9 @@ class ArtistCleanupTest extends TestCase
     {
         // 1. Create active artist
         $suffix = uniqid();
-        $name = 'Empty Artist ' . $suffix;
-        $spotifyId = 'empty_artist_' . $suffix;
-        
+        $name = 'Empty Artist '.$suffix;
+        $spotifyId = 'empty_artist_'.$suffix;
+
         $artist = Artist::create([
             'name' => $name,
             'spotify_id' => $spotifyId,

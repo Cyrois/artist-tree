@@ -44,7 +44,7 @@ test('unauthenticated users cannot access lineup show', function () {
 test('authenticated users can access lineup show they belong to', function () {
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($this->user->id, ['role' => 'owner']);
-    
+
     $artist = Artist::factory()->has(ArtistMetric::factory(), 'metrics')->create();
 
     $lineup->artists()->attach($artist->id, ['tier' => ArtistTier::Headliner->value]);

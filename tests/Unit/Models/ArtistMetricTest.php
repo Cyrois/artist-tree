@@ -4,12 +4,12 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 
 describe('ArtistMetric Model', function () {
-    
+
     describe('Property 8: Database Update Consistency', function () {
         it('maintains consistent data when updating YouTube metrics', function () {
-            // Property 8: For any successful YouTube API response, 
+            // Property 8: For any successful YouTube API response,
             // the system should update the artist_metrics table and record the refresh timestamp
-            
+
             $artist = Artist::factory()->create();
             $metrics = ArtistMetric::factory()->create([
                 'artist_id' => $artist->id,
@@ -30,7 +30,7 @@ describe('ArtistMetric Model', function () {
             ]);
 
             $metrics->refresh();
-            
+
             expect($metrics->youtube_subscribers)->toBe(100000);
             expect($metrics->youtube_refreshed_at->format('Y-m-d H:i:s'))
                 ->toBe($basicUpdateTime->format('Y-m-d H:i:s'));
@@ -46,14 +46,14 @@ describe('ArtistMetric Model', function () {
             ]);
 
             $metrics->refresh();
-            
+
             expect($metrics->youtube_avg_views)->toBe(50000);
             expect($metrics->youtube_avg_likes)->toBe(2500);
             expect($metrics->youtube_avg_comments)->toBe(150);
             expect($metrics->youtube_videos_analyzed)->toBe(10);
             expect($metrics->youtube_analytics_refreshed_at->format('Y-m-d H:i:s'))
                 ->toBe($analyticsUpdateTime->format('Y-m-d H:i:s'));
-                
+
             // Basic metrics should remain unchanged
             expect($metrics->youtube_subscribers)->toBe(100000);
             expect($metrics->youtube_refreshed_at->format('Y-m-d H:i:s'))
@@ -98,12 +98,12 @@ describe('ArtistMetric Model', function () {
             ]);
 
             $metrics->refresh();
-            
+
             // Basic metrics should be updated
             expect($metrics->youtube_subscribers)->toBe(75000);
             expect($metrics->youtube_refreshed_at->format('Y-m-d H:i:s'))
                 ->toBe($newBasicTime->format('Y-m-d H:i:s'));
-                
+
             // Analytics should remain unchanged
             expect($metrics->youtube_avg_views)->toBe(25000);
             expect($metrics->youtube_avg_likes)->toBe(1250);
@@ -116,16 +116,16 @@ describe('ArtistMetric Model', function () {
 
     describe('Property 13: Automatic Refresh for Stale Data', function () {
         it('correctly identifies stale YouTube basic metrics', function () {
-            // Property 13: For any artist request where YouTube data is older than 24 hours, 
+            // Property 13: For any artist request where YouTube data is older than 24 hours,
             // the system should automatically trigger a refresh
-            
+
             // Fresh YouTube data (within 24 hours)
             $freshArtist = Artist::factory()->create();
             $freshMetrics = ArtistMetric::factory()->create([
                 'artist_id' => $freshArtist->id,
                 'youtube_refreshed_at' => now()->subHours(12),
             ]);
-            
+
             expect($freshMetrics->isYouTubeStale())->toBeFalse();
             expect($freshMetrics->needsYouTubeRefresh())->toBeFalse();
 
@@ -135,7 +135,7 @@ describe('ArtistMetric Model', function () {
                 'artist_id' => $staleArtist->id,
                 'youtube_refreshed_at' => now()->subHours(25),
             ]);
-            
+
             expect($staleMetrics->isYouTubeStale())->toBeTrue();
             expect($staleMetrics->needsYouTubeRefresh())->toBeTrue();
 
@@ -145,7 +145,7 @@ describe('ArtistMetric Model', function () {
                 'artist_id' => $noDataArtist->id,
                 'youtube_refreshed_at' => null,
             ]);
-            
+
             expect($noDataMetrics->isYouTubeStale())->toBeTrue();
             expect($noDataMetrics->needsYouTubeRefresh())->toBeTrue();
         });
@@ -157,7 +157,7 @@ describe('ArtistMetric Model', function () {
                 'artist_id' => $freshArtist->id,
                 'youtube_analytics_refreshed_at' => now()->subDays(3),
             ]);
-            
+
             expect($freshAnalytics->isYouTubeAnalyticsStale())->toBeFalse();
 
             // Stale analytics (older than 7 days)
@@ -166,7 +166,7 @@ describe('ArtistMetric Model', function () {
                 'artist_id' => $staleArtist->id,
                 'youtube_analytics_refreshed_at' => now()->subDays(8),
             ]);
-            
+
             expect($staleAnalytics->isYouTubeAnalyticsStale())->toBeTrue();
             expect($staleAnalytics->needsYouTubeRefresh())->toBeTrue();
 
@@ -176,7 +176,7 @@ describe('ArtistMetric Model', function () {
                 'artist_id' => $noAnalyticsArtist->id,
                 'youtube_analytics_refreshed_at' => null,
             ]);
-            
+
             expect($noAnalytics->isYouTubeAnalyticsStale())->toBeTrue();
             expect($noAnalytics->needsYouTubeRefresh())->toBeTrue();
         });
@@ -189,7 +189,7 @@ describe('ArtistMetric Model', function () {
                 'youtube_refreshed_at' => now()->subHours(12), // Fresh
                 'youtube_analytics_refreshed_at' => now()->subDays(8), // Stale
             ]);
-            
+
             expect($mixedStale1->isYouTubeStale())->toBeFalse();
             expect($mixedStale1->isYouTubeAnalyticsStale())->toBeTrue();
             expect($mixedStale1->needsYouTubeRefresh())->toBeTrue();
@@ -201,7 +201,7 @@ describe('ArtistMetric Model', function () {
                 'youtube_refreshed_at' => now()->subHours(25), // Stale
                 'youtube_analytics_refreshed_at' => now()->subDays(3), // Fresh
             ]);
-            
+
             expect($mixedStale2->isYouTubeStale())->toBeTrue();
             expect($mixedStale2->isYouTubeAnalyticsStale())->toBeFalse();
             expect($mixedStale2->needsYouTubeRefresh())->toBeTrue();
@@ -213,7 +213,7 @@ describe('ArtistMetric Model', function () {
                 'youtube_refreshed_at' => now()->subHours(12), // Fresh
                 'youtube_analytics_refreshed_at' => now()->subDays(3), // Fresh
             ]);
-            
+
             expect($bothFresh->isYouTubeStale())->toBeFalse();
             expect($bothFresh->isYouTubeAnalyticsStale())->toBeFalse();
             expect($bothFresh->needsYouTubeRefresh())->toBeFalse();
@@ -228,7 +228,7 @@ describe('ArtistMetric Model', function () {
                 'youtube_avg_views' => null,
                 'youtube_videos_analyzed' => null,
             ]);
-            
+
             expect($hasBasicData->hasYouTubeData())->toBeTrue();
             expect($hasBasicData->hasYouTubeAnalytics())->toBeFalse();
 
@@ -240,7 +240,7 @@ describe('ArtistMetric Model', function () {
                 'youtube_avg_views' => 50000,
                 'youtube_videos_analyzed' => 10,
             ]);
-            
+
             expect($hasAnalyticsData->hasYouTubeData())->toBeTrue();
             expect($hasAnalyticsData->hasYouTubeAnalytics())->toBeTrue();
 
@@ -249,7 +249,7 @@ describe('ArtistMetric Model', function () {
             $noData = ArtistMetric::factory()->withoutYouTube()->create([
                 'artist_id' => $noDataArtist->id,
             ]);
-            
+
             expect($noData->hasYouTubeData())->toBeFalse();
             expect($noData->hasYouTubeAnalytics())->toBeFalse();
         });

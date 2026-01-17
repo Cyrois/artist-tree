@@ -35,7 +35,7 @@ class YouTubeService
     {
         $baseUrl = config('services.youtube.base_url');
         $apiKey = config('services.youtube.api_key');
-        
+
         if (empty($baseUrl)) {
             throw new \RuntimeException('YouTube API base URL not configured');
         }
@@ -54,22 +54,24 @@ class YouTubeService
     /**
      * Get channel metrics for a single channel.
      *
-     * @param string $channelId YouTube channel ID
+     * @param  string  $channelId  YouTube channel ID
      * @return YouTubeChannelDTO|null Channel data or null if not found
+     *
      * @throws YouTubeApiException
      */
     public function getChannelMetrics(string $channelId): ?YouTubeChannelDTO
     {
         $results = $this->getMultipleChannelMetrics([$channelId]);
-        
+
         return $results[$channelId] ?? null;
     }
 
     /**
      * Get channel metrics for multiple channels in batch.
      *
-     * @param array<string> $channelIds Array of YouTube channel IDs (max 50)
+     * @param  array<string>  $channelIds  Array of YouTube channel IDs (max 50)
      * @return array<string, YouTubeChannelDTO> Keyed by channel ID
+     *
      * @throws YouTubeApiException
      */
     public function getMultipleChannelMetrics(array $channelIds): array
@@ -89,7 +91,7 @@ class YouTubeService
         foreach ($channelIds as $channelId) {
             $cacheKey = "youtube_channel:{$channelId}";
             $cached = Cache::get($cacheKey);
-            
+
             if ($cached !== null) {
                 $results[$channelId] = $cached;
             } else {
@@ -108,9 +110,9 @@ class YouTubeService
                 'requested_channels' => count($channelIds),
                 'cached_channels' => count($results),
                 'uncached_channels' => count($uncachedIds),
-                'quota_status' => $this->getQuotaStatus()
+                'quota_status' => $this->getQuotaStatus(),
             ]);
-            
+
             // Return only cached results when quota is exhausted
             return array_filter($results);
         }
@@ -127,32 +129,32 @@ class YouTubeService
             // Process API results
             foreach ($channels as $channelData) {
                 $channelId = $channelData['id'];
-                
+
                 Log::debug('YouTube getMultipleChannelMetrics: raw channel data', [
                     'channel_id' => $channelId,
                     'raw_data' => $channelData,
                 ]);
-                
+
                 $dto = YouTubeChannelDTO::fromYouTubeResponse($channelData);
-                
+
                 // Cache the result
                 $cacheKey = "youtube_channel:{$channelId}";
                 Cache::put($cacheKey, $dto, $this->cacheTtl);
-                
+
                 $results[$channelId] = $dto;
             }
 
             // Log channels that were not found
             $foundIds = array_column($channels, 'id');
             $notFoundIds = array_diff($uncachedIds, $foundIds);
-            
+
             foreach ($notFoundIds as $channelId) {
                 Log::info('YouTube channel not found or private', ['channel_id' => $channelId]);
-                
+
                 // Cache null result to prevent repeated API calls
                 $cacheKey = "youtube_channel:{$channelId}";
                 Cache::put($cacheKey, null, 3600); // Cache for 1 hour
-                
+
                 $results[$channelId] = null;
             }
 
@@ -162,16 +164,16 @@ class YouTubeService
                 Log::warning('YouTube quota exhausted, returning cached data only', [
                     'requested_channels' => count($channelIds),
                     'cached_channels' => count($results),
-                    'uncached_channels' => count($uncachedIds)
+                    'uncached_channels' => count($uncachedIds),
                 ]);
             } else {
                 Log::error('YouTube API error during channel metrics fetch', [
                     'error' => $e->getMessage(),
                     'status_code' => $e->statusCode,
-                    'requested_channels' => count($uncachedIds)
+                    'requested_channels' => count($uncachedIds),
                 ]);
             }
-            
+
             // Return only cached results when API fails
             return array_filter($results);
         }
@@ -182,9 +184,10 @@ class YouTubeService
     /**
      * Get recent videos from a channel's uploads playlist.
      *
-     * @param string $channelId YouTube channel ID
-     * @param int $limit Maximum number of videos to fetch (default 15)
+     * @param  string  $channelId  YouTube channel ID
+     * @param  int  $limit  Maximum number of videos to fetch (default 15)
      * @return array<string> Array of video IDs
+     *
      * @throws YouTubeApiException
      */
     public function getChannelVideos(string $channelId, int $limit = 15): array
@@ -196,7 +199,7 @@ class YouTubeService
             try {
                 // First, get the uploads playlist ID
                 $channelData = $this->getChannelMetrics($channelId);
-                
+
                 Log::debug('YouTube getChannelVideos: channel data', [
                     'channel_id' => $channelId,
                     'channel_data' => $channelData ? [
@@ -204,13 +207,14 @@ class YouTubeService
                         'uploadsPlaylistId' => $channelData->uploadsPlaylistId,
                     ] : null,
                 ]);
-                
-                if (!$channelData || !$channelData->uploadsPlaylistId) {
+
+                if (! $channelData || ! $channelData->uploadsPlaylistId) {
                     Log::debug('YouTube getChannelVideos: no uploads playlist ID', [
                         'channel_id' => $channelId,
                         'has_channel_data' => $channelData !== null,
                         'uploads_playlist_id' => $channelData?->uploadsPlaylistId,
                     ]);
+
                     return [];
                 }
 
@@ -222,16 +226,16 @@ class YouTubeService
                 ], 1);
 
                 $items = $data['items'] ?? [];
-                
+
                 Log::debug('YouTube getChannelVideos: playlist items', [
                     'channel_id' => $channelId,
                     'playlist_id' => $channelData->uploadsPlaylistId,
                     'items_count' => count($items),
                     'limit' => $limit,
                 ]);
-                
+
                 return array_map(
-                    fn($item) => $item['contentDetails']['videoId'],
+                    fn ($item) => $item['contentDetails']['videoId'],
                     $items
                 );
 
@@ -240,9 +244,9 @@ class YouTubeService
                 Log::warning('YouTube API error during channel videos fetch', [
                     'channel_id' => $channelId,
                     'error' => $e->getMessage(),
-                    'status_code' => $e->statusCode
+                    'status_code' => $e->statusCode,
                 ]);
-                
+
                 // Return empty array when API fails
                 return [];
             }
@@ -252,8 +256,9 @@ class YouTubeService
     /**
      * Get video analytics for multiple videos.
      *
-     * @param array<string> $videoIds Array of video IDs (max 50)
+     * @param  array<string>  $videoIds  Array of video IDs (max 50)
      * @return array<string, array> Video statistics keyed by video ID
+     *
      * @throws YouTubeApiException
      */
     public function getVideoAnalytics(array $videoIds): array
@@ -279,9 +284,9 @@ class YouTubeService
             foreach ($videos as $video) {
                 $videoId = $video['id'];
                 $statistics = $video['statistics'] ?? [];
-                
+
                 // Only include videos with available statistics
-                if (!empty($statistics['viewCount'])) {
+                if (! empty($statistics['viewCount'])) {
                     $results[$videoId] = [
                         'viewCount' => (int) ($statistics['viewCount'] ?? 0),
                         'likeCount' => (int) ($statistics['likeCount'] ?? 0),
@@ -297,9 +302,9 @@ class YouTubeService
             Log::warning('YouTube API error during video analytics fetch', [
                 'video_count' => count($videoIds),
                 'error' => $e->getMessage(),
-                'status_code' => $e->statusCode
+                'status_code' => $e->statusCode,
             ]);
-            
+
             // Return empty array when API fails
             return [];
         }
@@ -308,8 +313,9 @@ class YouTubeService
     /**
      * Calculate video analytics for a channel.
      *
-     * @param string $channelId YouTube channel ID
+     * @param  string  $channelId  YouTube channel ID
      * @return YouTubeVideoAnalyticsDTO|null Analytics data or null if unavailable
+     *
      * @throws YouTubeApiException
      */
     public function calculateVideoAnalytics(string $channelId): ?YouTubeVideoAnalyticsDTO
@@ -320,14 +326,14 @@ class YouTubeService
             try {
                 // Get recent videos
                 $videoIds = $this->getChannelVideos($channelId, 15);
-                
+
                 if (empty($videoIds)) {
                     return null;
                 }
 
                 // Get video analytics
                 $videoAnalytics = $this->getVideoAnalytics($videoIds);
-                
+
                 if (empty($videoAnalytics)) {
                     return null;
                 }
@@ -339,9 +345,9 @@ class YouTubeService
                 Log::warning('YouTube API error during video analytics calculation', [
                     'channel_id' => $channelId,
                     'error' => $e->getMessage(),
-                    'status_code' => $e->statusCode
+                    'status_code' => $e->statusCode,
                 ]);
-                
+
                 // Return null when API fails
                 return null;
             }
@@ -351,7 +357,7 @@ class YouTubeService
     /**
      * Check if quota is available for API requests.
      *
-     * @param int $requiredQuota Optional quota amount to check (default 1)
+     * @param  int  $requiredQuota  Optional quota amount to check (default 1)
      * @return bool True if quota is available, false if exhausted
      */
     public function checkQuotaAvailability(int $requiredQuota = 1): bool
@@ -363,18 +369,18 @@ class YouTubeService
 
         $currentUsage = $this->getCurrentQuotaUsage();
         $wouldExceedLimit = ($currentUsage + $requiredQuota) > $this->quotaLimit;
-        
+
         if ($wouldExceedLimit) {
             Log::warning('YouTube API quota would be exceeded by request', [
                 'current_usage' => $currentUsage,
                 'required_quota' => $requiredQuota,
                 'limit' => $this->quotaLimit,
-                'would_exceed_by' => ($currentUsage + $requiredQuota) - $this->quotaLimit
+                'would_exceed_by' => ($currentUsage + $requiredQuota) - $this->quotaLimit,
             ]);
-            
+
             return false;
         }
-        
+
         return true;
     }
 
@@ -387,7 +393,7 @@ class YouTubeService
     {
         $currentUsage = $this->getCurrentQuotaUsage();
         $lowThreshold = (int) ($this->quotaLimit * 0.9);
-        
+
         return $currentUsage >= $lowThreshold;
     }
 
@@ -410,7 +416,7 @@ class YouTubeService
     public function getRemainingQuota(): int
     {
         $currentUsage = $this->getCurrentQuotaUsage();
-        
+
         return max(0, $this->quotaLimit - $currentUsage);
     }
 
@@ -422,7 +428,7 @@ class YouTubeService
     public function getQuotaUsagePercentage(): float
     {
         $currentUsage = $this->getCurrentQuotaUsage();
-        
+
         return round(($currentUsage / $this->quotaLimit) * 100, 2);
     }
 
@@ -437,7 +443,7 @@ class YouTubeService
         $remaining = $this->getRemainingQuota();
         $percentage = $this->getQuotaUsagePercentage();
         $isExhausted = Cache::has(self::QUOTA_EXHAUSTED_KEY);
-        
+
         return [
             'used' => $currentUsage,
             'remaining' => $remaining,
@@ -445,7 +451,7 @@ class YouTubeService
             'percentage_used' => $percentage,
             'is_exhausted' => $isExhausted,
             'date' => now()->utc()->format('Y-m-d'),
-            'resets_at' => now()->utc()->endOfDay()->toISOString()
+            'resets_at' => now()->utc()->endOfDay()->toISOString(),
         ];
     }
 
@@ -456,30 +462,30 @@ class YouTubeService
     public function resetQuotaTracking(): void
     {
         $today = now()->utc()->format('Y-m-d');
-        $key = self::QUOTA_CACHE_KEY . ":{$today}";
-        
+        $key = self::QUOTA_CACHE_KEY.":{$today}";
+
         Cache::forget($key);
         Cache::forget(self::QUOTA_EXHAUSTED_KEY);
-        
+
         Log::info('YouTube API quota tracking reset', [
             'date' => $today,
-            'reset_at' => now()->utc()->toISOString()
+            'reset_at' => now()->utc()->toISOString(),
         ]);
     }
 
     /**
      * Track quota usage for an API request.
      *
-     * @param int $cost Quota cost of the request
+     * @param  int  $cost  Quota cost of the request
      */
     private function trackQuotaUsage(int $cost): void
     {
         $today = now()->utc()->format('Y-m-d');
-        $key = self::QUOTA_CACHE_KEY . ":{$today}";
-        
+        $key = self::QUOTA_CACHE_KEY.":{$today}";
+
         $currentUsage = Cache::get($key, 0);
         $newUsage = $currentUsage + $cost;
-        
+
         // Cache until end of day (midnight UTC)
         $endOfDay = now()->utc()->endOfDay();
         Cache::put($key, $newUsage, $endOfDay);
@@ -489,7 +495,7 @@ class YouTubeService
             'total_usage' => $newUsage,
             'remaining' => $this->quotaLimit - $newUsage,
             'date' => $today,
-            'percentage_used' => round(($newUsage / $this->quotaLimit) * 100, 1)
+            'percentage_used' => round(($newUsage / $this->quotaLimit) * 100, 1),
         ]);
 
         // Mark quota as exhausted if we've hit the limit
@@ -498,7 +504,7 @@ class YouTubeService
             Log::warning('YouTube API quota exhausted', [
                 'usage' => $newUsage,
                 'limit' => $this->quotaLimit,
-                'date' => $today
+                'date' => $today,
             ]);
         }
 
@@ -509,21 +515,21 @@ class YouTubeService
     /**
      * Check and log quota warnings at various thresholds.
      *
-     * @param int $previousUsage Previous quota usage
-     * @param int $currentUsage Current quota usage after request
+     * @param  int  $previousUsage  Previous quota usage
+     * @param  int  $currentUsage  Current quota usage after request
      */
     private function checkQuotaWarnings(int $previousUsage, int $currentUsage): void
     {
         $warningThresholds = [
             50 => 'YouTube API quota at 50% usage',
-            75 => 'YouTube API quota at 75% usage', 
+            75 => 'YouTube API quota at 75% usage',
             90 => 'YouTube API quota approaching limit (90%)',
-            95 => 'YouTube API quota critically low (95%)'
+            95 => 'YouTube API quota critically low (95%)',
         ];
 
         foreach ($warningThresholds as $threshold => $message) {
             $thresholdUsage = (int) ($this->quotaLimit * ($threshold / 100));
-            
+
             // Log warning if we've crossed this threshold with this request
             if ($currentUsage >= $thresholdUsage && $previousUsage < $thresholdUsage) {
                 Log::warning($message, [
@@ -531,7 +537,7 @@ class YouTubeService
                     'limit' => $this->quotaLimit,
                     'percentage' => round(($currentUsage / $this->quotaLimit) * 100, 1),
                     'remaining' => $this->quotaLimit - $currentUsage,
-                    'threshold' => $threshold
+                    'threshold' => $threshold,
                 ]);
             }
         }
@@ -545,15 +551,13 @@ class YouTubeService
     private function getCurrentQuotaUsage(): int
     {
         $today = now()->utc()->format('Y-m-d');
-        $key = self::QUOTA_CACHE_KEY . ":{$today}";
-        
+        $key = self::QUOTA_CACHE_KEY.":{$today}";
+
         return Cache::get($key, 0);
     }
 
     /**
      * Create HTTP client for YouTube API requests with retry logic.
-     *
-     * @return PendingRequest
      */
     private function makeRequest(): PendingRequest
     {
@@ -561,24 +565,24 @@ class YouTubeService
             ->retry(3, function ($attempt, $exception) {
                 // Exponential backoff: 1s, 2s, 4s
                 $delay = 1000 * (2 ** ($attempt - 1));
-                
+
                 Log::info('YouTube API request retry', [
                     'attempt' => $attempt,
                     'delay_ms' => $delay,
-                    'exception' => $exception?->getMessage()
+                    'exception' => $exception?->getMessage(),
                 ]);
-                
+
                 return $delay;
             }, function ($exception, $request) {
                 // Retry on network errors and 5xx responses, but not on 4xx
                 if ($exception instanceof \Illuminate\Http\Client\RequestException) {
                     $response = $exception->response;
-                    
+
                     // Don't retry on quota exhaustion (403) or not found (404)
                     if ($response && in_array($response->status(), [403, 404])) {
                         return false;
                     }
-                    
+
                     return $response && $response->status() >= 500;
                 }
 
@@ -589,16 +593,17 @@ class YouTubeService
     /**
      * Make a YouTube API request with comprehensive error handling.
      *
-     * @param string $endpoint API endpoint path
-     * @param array $params Query parameters
-     * @param int $quotaCost Quota cost of this request
+     * @param  string  $endpoint  API endpoint path
+     * @param  array  $params  Query parameters
+     * @param  int  $quotaCost  Quota cost of this request
      * @return array API response data
+     *
      * @throws YouTubeApiException
      */
     private function makeApiRequest(string $endpoint, array $params, int $quotaCost = 1): array
     {
         // Check quota availability before making request
-        if (!$this->checkQuotaAvailability($quotaCost)) {
+        if (! $this->checkQuotaAvailability($quotaCost)) {
             throw YouTubeApiException::quotaExhausted($quotaCost);
         }
 
@@ -607,9 +612,9 @@ class YouTubeService
             $this->trackQuotaUsage($quotaCost);
 
             $response = $this->makeRequest()
-                ->get($this->baseUrl . $endpoint, array_merge($params, ['key' => $this->apiKey]));
+                ->get($this->baseUrl.$endpoint, array_merge($params, ['key' => $this->apiKey]));
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $this->handleApiError($response, $endpoint, $quotaCost);
             }
 
@@ -624,7 +629,7 @@ class YouTubeService
                 'endpoint' => $endpoint,
                 'params' => $params,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw new YouTubeApiException(
@@ -640,9 +645,8 @@ class YouTubeService
     /**
      * Handle API error responses with appropriate exception types.
      *
-     * @param \Illuminate\Http\Client\Response $response
-     * @param string $endpoint
-     * @param int $quotaCost
+     * @param  \Illuminate\Http\Client\Response  $response
+     *
      * @throws YouTubeApiException
      */
     private function handleApiError($response, string $endpoint, int $quotaCost): void
@@ -654,18 +658,18 @@ class YouTubeService
             'endpoint' => $endpoint,
             'status_code' => $statusCode,
             'response_body' => $body,
-            'quota_cost' => $quotaCost
+            'quota_cost' => $quotaCost,
         ]);
 
         // Handle quota exhaustion
         if ($statusCode === 403) {
             $errorReason = $body['error']['errors'][0]['reason'] ?? '';
-            
+
             if (in_array($errorReason, ['quotaExceeded', 'dailyLimitExceeded'])) {
                 // Mark quota as exhausted
                 $endOfDay = now()->endOfDay();
                 Cache::put(self::QUOTA_EXHAUSTED_KEY, true, $endOfDay);
-                
+
                 throw YouTubeApiException::quotaExhausted($quotaCost);
             }
         }

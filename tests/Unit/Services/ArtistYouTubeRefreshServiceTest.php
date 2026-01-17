@@ -3,9 +3,6 @@
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Services\ArtistYouTubeRefreshService;
-use App\Services\YouTubeService;
-use App\DataTransferObjects\YouTubeChannelDTO;
-use App\DataTransferObjects\YouTubeVideoAnalyticsDTO;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
@@ -20,22 +17,22 @@ beforeEach(function () {
                     'id' => 'UCTestChannel',
                     'statistics' => [
                         'subscriberCount' => '1500000',
-                        'videoCount' => '250'
+                        'videoCount' => '250',
                     ],
                     'contentDetails' => [
                         'relatedPlaylists' => [
-                            'uploads' => 'UUTestChannel'
-                        ]
-                    ]
-                ]
-            ]
+                            'uploads' => 'UUTestChannel',
+                        ],
+                    ],
+                ],
+            ],
         ]),
         'www.googleapis.com/youtube/v3/playlistItems*' => Http::response([
             'items' => [
                 ['contentDetails' => ['videoId' => 'video1']],
                 ['contentDetails' => ['videoId' => 'video2']],
-                ['contentDetails' => ['videoId' => 'video3']]
-            ]
+                ['contentDetails' => ['videoId' => 'video3']],
+            ],
         ]),
         'www.googleapis.com/youtube/v3/videos*' => Http::response([
             'items' => [
@@ -44,34 +41,34 @@ beforeEach(function () {
                     'statistics' => [
                         'viewCount' => '100000',
                         'likeCount' => '5000',
-                        'commentCount' => '250'
-                    ]
+                        'commentCount' => '250',
+                    ],
                 ],
                 [
                     'id' => 'video2',
                     'statistics' => [
                         'viewCount' => '200000',
                         'likeCount' => '10000',
-                        'commentCount' => '500'
-                    ]
+                        'commentCount' => '500',
+                    ],
                 ],
                 [
                     'id' => 'video3',
                     'statistics' => [
                         'viewCount' => '150000',
                         'likeCount' => '7500',
-                        'commentCount' => '375'
-                    ]
-                ]
-            ]
-        ])
+                        'commentCount' => '375',
+                    ],
+                ],
+            ],
+        ]),
     ]);
 });
 
 describe('ArtistYouTubeRefreshService', function () {
     it('force refreshes YouTube data for artist with channel ID', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => 'UCTestChannel'
+            'youtube_channel_id' => 'UCTestChannel',
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -92,7 +89,7 @@ describe('ArtistYouTubeRefreshService', function () {
 
     it('skips refresh for artist without YouTube channel ID', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => null
+            'youtube_channel_id' => null,
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -104,7 +101,7 @@ describe('ArtistYouTubeRefreshService', function () {
 
     it('refreshes only when needed based on staleness', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => 'UCTestChannel'
+            'youtube_channel_id' => 'UCTestChannel',
         ]);
 
         // Create fresh metrics AND an approved YouTube link to prevent job dispatch
@@ -114,7 +111,7 @@ describe('ArtistYouTubeRefreshService', function () {
             'youtube_analytics_refreshed_at' => now(),
             'youtube_subscribers' => 1000000,
         ]);
-        
+
         // Add approved link so needsToUpdateYoutubeChannel() returns false
         $artist->links()->create([
             'platform' => \App\Enums\SocialPlatform::YouTube,
@@ -123,7 +120,7 @@ describe('ArtistYouTubeRefreshService', function () {
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
-        
+
         // Should not refresh fresh data
         $result = $service->refreshIfNeeded($artist);
         expect($result)->toBeFalse();
@@ -144,7 +141,7 @@ describe('ArtistYouTubeRefreshService', function () {
 
     it('refreshes basic metrics only', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => 'UCTestChannel'
+            'youtube_channel_id' => 'UCTestChannel',
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -162,7 +159,7 @@ describe('ArtistYouTubeRefreshService', function () {
 
     it('refreshes analytics only', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => 'UCTestChannel'
+            'youtube_channel_id' => 'UCTestChannel',
         ]);
 
         // Create existing metrics without analytics
@@ -185,7 +182,7 @@ describe('ArtistYouTubeRefreshService', function () {
 
     it('correctly identifies when refresh is needed', function () {
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => 'UCTestChannel'
+            'youtube_channel_id' => 'UCTestChannel',
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -215,7 +212,7 @@ describe('ArtistYouTubeRefreshService', function () {
         // Reset and make analytics stale
         $artist->metrics->update([
             'youtube_refreshed_at' => now(),
-            'youtube_analytics_refreshed_at' => now()->subDays(8)
+            'youtube_analytics_refreshed_at' => now()->subDays(8),
         ]);
         expect($service->needsRefresh($artist))->toBeTrue();
     });
@@ -223,9 +220,9 @@ describe('ArtistYouTubeRefreshService', function () {
     it('handles artists without YouTube channel ID gracefully', function () {
         // Fake the queue to prevent actual job dispatch
         Queue::fake();
-        
+
         $artist = Artist::factory()->create([
-            'youtube_channel_id' => null
+            'youtube_channel_id' => null,
         ]);
 
         $service = app(ArtistYouTubeRefreshService::class);
@@ -239,7 +236,7 @@ describe('ArtistYouTubeRefreshService', function () {
             ->and($service->refreshIfNeeded($artist))->toBeTrue() // Now dispatches job for channel discovery
             ->and($service->refreshBasicMetrics($artist))->toBeFalse()
             ->and($service->refreshAnalytics($artist))->toBeFalse();
-        
+
         // Verify job was dispatched for channel discovery
         Queue::assertPushed(\App\Jobs\UpdateYoutubeLinksJob::class);
     });
@@ -247,13 +244,13 @@ describe('ArtistYouTubeRefreshService', function () {
     it('refreshes YouTube data for artist with channel ID but no metrics', function () {
         // Fake the queue to prevent actual job dispatch
         Queue::fake();
-        
+
         // This reproduces the bug: artist has youtube_channel_id but no metrics record
         $artist = Artist::factory()->create([
             'name' => 'Test Artist',
             'youtube_channel_id' => 'UCTestChannel',
         ]);
-        
+
         // Add approved link so needsToUpdateYoutubeChannel() returns false
         // This ensures forceRefresh is called instead of dispatching the job
         $artist->links()->create([
@@ -266,10 +263,10 @@ describe('ArtistYouTubeRefreshService', function () {
         expect($artist->metrics)->toBeNull();
 
         $service = app(ArtistYouTubeRefreshService::class);
-        
+
         // needsRefresh should return true for artist with channel but no metrics
         expect($service->needsRefresh($artist))->toBeTrue();
-        
+
         // refreshIfNeeded should actually refresh the data (via forceRefresh)
         $result = $service->refreshIfNeeded($artist);
         expect($result)->toBeTrue();

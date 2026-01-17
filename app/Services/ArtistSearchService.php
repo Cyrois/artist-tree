@@ -6,12 +6,9 @@ use App\DataTransferObjects\ArtistSearchResultDTO;
 use App\DataTransferObjects\SpotifyArtistDTO;
 use App\Exceptions\SpotifyApiException;
 use App\Jobs\CreateArtistsFromSpotifyJob;
-use App\Jobs\FetchYouTubeDataJob;
 use App\Jobs\VerifyArtistSpotifyContentJob;
-use App\Services\YouTubeJobDispatchService;
 use App\Models\Artist;
 use App\Models\Genre;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -135,13 +132,13 @@ class ArtistSearchService
         // Bulk check for existing artists (including soft-deleted)
         $spotifyIdsToCheck = [];
         foreach ($spotifyResults as $spotifyArtist) {
-            if (!isset($seenSpotifyIds[$spotifyArtist->spotifyId])) {
+            if (! isset($seenSpotifyIds[$spotifyArtist->spotifyId])) {
                 $spotifyIdsToCheck[] = $spotifyArtist->spotifyId;
             }
         }
 
         $existingArtistsMap = [];
-        if (!empty($spotifyIdsToCheck)) {
+        if (! empty($spotifyIdsToCheck)) {
             $existingArtistsMap = Artist::withTrashed()
                 ->whereIn('spotify_id', $spotifyIdsToCheck)
                 ->get()
@@ -204,7 +201,7 @@ class ArtistSearchService
         }
 
         // Dispatch priority-based YouTube jobs for artists needing refresh
-        if (!empty($artistsNeedingYouTube)) {
+        if (! empty($artistsNeedingYouTube)) {
             $this->youtubeJobDispatchService->dispatchPriorityJobs($artistsNeedingYouTube);
         }
 
@@ -312,6 +309,7 @@ class ArtistSearchService
     {
         if (empty($genreNames)) {
             $artist->genres()->detach();
+
             return;
         }
 

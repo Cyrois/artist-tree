@@ -3,8 +3,8 @@
 use App\Models\Artist;
 use App\Models\Lineup;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -12,7 +12,7 @@ beforeEach(function () {
 
 test('unauthenticated users cannot access stack endpoints', function () {
     $lineup = Lineup::factory()->create();
-    
+
     $this->postJson(route('api.lineups.stacks.store', $lineup->id), [])
         ->assertStatus(401);
 });
@@ -21,7 +21,7 @@ test('authenticated users cannot manage stacks for lineups they do not own', fun
     $otherUser = User::factory()->create();
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($otherUser->id, ['role' => 'owner']);
-    
+
     $artist = Artist::factory()->create();
     $lineup->artists()->attach($artist->id);
 

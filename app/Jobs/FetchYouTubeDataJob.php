@@ -2,14 +2,13 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\YouTubeApiException;
 use App\Models\Artist;
 use App\Services\YouTubeService;
-use App\Exceptions\YouTubeApiException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 
 /**
  * Background job to fetch YouTube data for artists with YouTube channel IDs.
@@ -53,8 +52,8 @@ class FetchYouTubeDataJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param array<int> $artistIds Array of artist IDs to process
-     * @param int $batchSize Maximum number of channels to process per API request
+     * @param  array<int>  $artistIds  Array of artist IDs to process
+     * @param  int  $batchSize  Maximum number of channels to process per API request
      */
     public function __construct(
         private array $artistIds,
@@ -68,17 +67,19 @@ class FetchYouTubeDataJob implements ShouldQueue
     {
         if (empty($this->artistIds)) {
             Log::info('FetchYouTubeDataJob: No artist IDs provided');
+
             return;
         }
 
         Log::info('FetchYouTubeDataJob: Starting job', [
             'artist_count' => count($this->artistIds),
-            'batch_size' => $this->batchSize
+            'batch_size' => $this->batchSize,
         ]);
 
         // Check quota availability before processing
-        if (!$youTubeService->checkQuotaAvailability()) {
+        if (! $youTubeService->checkQuotaAvailability()) {
             Log::warning('FetchYouTubeDataJob: YouTube quota exhausted, skipping job');
+
             return;
         }
 
@@ -95,6 +96,7 @@ class FetchYouTubeDataJob implements ShouldQueue
 
             if ($artists->isEmpty()) {
                 Log::info('FetchYouTubeDataJob: No artists with YouTube channel IDs found');
+
                 return;
             }
 
@@ -110,7 +112,7 @@ class FetchYouTubeDataJob implements ShouldQueue
                     Log::debug('FetchYouTubeDataJob: Processing batch', [
                         'batch_index' => $batchIndex + 1,
                         'batch_size' => count($channelBatch),
-                        'total_batches' => count($batches)
+                        'total_batches' => count($batches),
                     ]);
 
                     // Fetch channel metrics for the batch
@@ -129,7 +131,7 @@ class FetchYouTubeDataJob implements ShouldQueue
                                 Log::error('FetchYouTubeDataJob: Failed to update artist metrics', [
                                     'artist_id' => $artist->id,
                                     'channel_id' => $channelId,
-                                    'error' => $e->getMessage()
+                                    'error' => $e->getMessage(),
                                 ]);
                                 $errorCount++;
                             }
@@ -137,11 +139,11 @@ class FetchYouTubeDataJob implements ShouldQueue
                     }
 
                     // Check quota after each batch
-                    if (!$youTubeService->checkQuotaAvailability()) {
+                    if (! $youTubeService->checkQuotaAvailability()) {
                         Log::warning('FetchYouTubeDataJob: Quota exhausted during processing', [
                             'processed_batches' => $batchIndex + 1,
                             'total_batches' => count($batches),
-                            'processed_count' => $processedCount
+                            'processed_count' => $processedCount,
                         ]);
                         break;
                     }
@@ -151,17 +153,17 @@ class FetchYouTubeDataJob implements ShouldQueue
                         Log::warning('FetchYouTubeDataJob: Quota exhausted, stopping processing', [
                             'processed_batches' => $batchIndex,
                             'total_batches' => count($batches),
-                            'processed_count' => $processedCount
+                            'processed_count' => $processedCount,
                         ]);
                         break;
                     } else {
                         Log::error('FetchYouTubeDataJob: API error in batch', [
                             'batch_index' => $batchIndex + 1,
                             'error' => $e->getMessage(),
-                            'status_code' => $e->statusCode
+                            'status_code' => $e->statusCode,
                         ]);
                         $errorCount += count($channelBatch);
-                        
+
                         // Continue with next batch for non-quota errors
                         continue;
                     }
@@ -169,10 +171,10 @@ class FetchYouTubeDataJob implements ShouldQueue
                     Log::error('FetchYouTubeDataJob: Unexpected error in batch', [
                         'batch_index' => $batchIndex + 1,
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
                     ]);
                     $errorCount += count($channelBatch);
-                    
+
                     // Continue with next batch
                     continue;
                 }
@@ -182,9 +184,9 @@ class FetchYouTubeDataJob implements ShouldQueue
             Log::error('FetchYouTubeDataJob: Fatal error during job execution', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'artist_ids' => $this->artistIds
+                'artist_ids' => $this->artistIds,
             ]);
-            
+
             // Re-throw to trigger job retry
             throw $e;
         }
@@ -194,21 +196,20 @@ class FetchYouTubeDataJob implements ShouldQueue
             'processed_count' => $processedCount,
             'error_count' => $errorCount,
             'skipped_count' => $skippedCount,
-            'remaining_quota' => $youTubeService->getRemainingQuota()
+            'remaining_quota' => $youTubeService->getRemainingQuota(),
         ]);
     }
 
     /**
      * Update artist metrics with YouTube data.
      *
-     * @param Artist $artist
-     * @param \App\DataTransferObjects\YouTubeChannelDTO|null $channelData
+     * @param  \App\DataTransferObjects\YouTubeChannelDTO|null  $channelData
      */
     private function updateArtistMetrics(Artist $artist, $channelData): void
     {
         DB::transaction(function () use ($artist, $channelData) {
             // Ensure artist has metrics record
-            if (!$artist->metrics) {
+            if (! $artist->metrics) {
                 $artist->metrics()->create([
                     'refreshed_at' => now(),
                 ]);
@@ -221,20 +222,20 @@ class FetchYouTubeDataJob implements ShouldQueue
 
             if ($channelData) {
                 $updateData['youtube_subscribers'] = $channelData->subscriberCount;
-                
+
                 Log::debug('FetchYouTubeDataJob: Updated artist YouTube metrics', [
                     'artist_id' => $artist->id,
                     'channel_id' => $artist->youtube_channel_id,
                     'subscribers' => $channelData->subscriberCount,
-                    'video_count' => $channelData->videoCount
+                    'video_count' => $channelData->videoCount,
                 ]);
             } else {
                 // Channel not found or private - set to null but record the attempt
                 $updateData['youtube_subscribers'] = null;
-                
+
                 Log::info('FetchYouTubeDataJob: Channel not found or private', [
                     'artist_id' => $artist->id,
-                    'channel_id' => $artist->youtube_channel_id
+                    'channel_id' => $artist->youtube_channel_id,
                 ]);
             }
 
@@ -251,7 +252,7 @@ class FetchYouTubeDataJob implements ShouldQueue
             'artist_ids' => $this->artistIds,
             'batch_size' => $this->batchSize,
             'error' => $exception->getMessage(),
-            'exception_type' => get_class($exception)
+            'exception_type' => get_class($exception),
         ];
 
         if ($exception instanceof YouTubeApiException) {
@@ -261,15 +262,16 @@ class FetchYouTubeDataJob implements ShouldQueue
 
             if ($exception->isQuotaExhausted) {
                 Log::warning('FetchYouTubeDataJob: Job failed due to quota exhaustion', $errorContext);
-                
+
                 // Schedule job for next day when quota resets
                 $this->scheduleForQuotaReset();
+
                 return;
             }
         }
 
         Log::error('FetchYouTubeDataJob: Job failed permanently', array_merge($errorContext, [
-            'trace' => $exception->getTraceAsString()
+            'trace' => $exception->getTraceAsString(),
         ]));
 
         // Continue processing other artists by dispatching smaller batches
@@ -282,10 +284,10 @@ class FetchYouTubeDataJob implements ShouldQueue
     private function scheduleForQuotaReset(): void
     {
         $nextDay = now()->addDay()->startOfDay();
-        
+
         Log::info('FetchYouTubeDataJob: Scheduling job for quota reset', [
             'artist_ids' => $this->artistIds,
-            'scheduled_for' => $nextDay->toISOString()
+            'scheduled_for' => $nextDay->toISOString(),
         ]);
 
         // Dispatch the same job for tomorrow
@@ -301,8 +303,9 @@ class FetchYouTubeDataJob implements ShouldQueue
         if (count($this->artistIds) <= 1) {
             // Can't split further, log and give up
             Log::error('FetchYouTubeDataJob: Cannot split job further, giving up', [
-                'artist_ids' => $this->artistIds
+                'artist_ids' => $this->artistIds,
             ]);
+
             return;
         }
 
@@ -313,7 +316,7 @@ class FetchYouTubeDataJob implements ShouldQueue
         Log::info('FetchYouTubeDataJob: Dispatching fallback jobs', [
             'original_batch_size' => count($this->artistIds),
             'new_batch_size' => $smallerBatchSize,
-            'number_of_jobs' => count($chunks)
+            'number_of_jobs' => count($chunks),
         ]);
 
         foreach ($chunks as $chunk) {
@@ -339,8 +342,9 @@ class FetchYouTubeDataJob implements ShouldQueue
         if ($exception instanceof YouTubeApiException && $exception->isQuotaExhausted) {
             Log::info('FetchYouTubeDataJob: Not retrying due to quota exhaustion', [
                 'artist_ids' => $this->artistIds,
-                'exception' => $exception->getMessage()
+                'exception' => $exception->getMessage(),
             ]);
+
             return false;
         }
 
@@ -351,8 +355,9 @@ class FetchYouTubeDataJob implements ShouldQueue
                 Log::info('FetchYouTubeDataJob: Not retrying due to permanent API error', [
                     'status_code' => $statusCode,
                     'artist_ids' => $this->artistIds,
-                    'exception' => $exception->getMessage()
+                    'exception' => $exception->getMessage(),
                 ]);
+
                 return false;
             }
         }
