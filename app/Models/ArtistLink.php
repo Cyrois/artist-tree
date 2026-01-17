@@ -13,8 +13,11 @@ class ArtistLink extends Model
      * Review status values for channel links.
      */
     public const REVIEW_STATUS_PUBLIC_ADDED = 'public_added';
+
     public const REVIEW_STATUS_ADMIN_ADDED = 'admin_added';
+
     public const REVIEW_STATUS_PENDING_APPROVAL = 'pending_approval';
+
     public const REVIEW_STATUS_APPROVED = 'approved';
 
     protected $fillable = [
@@ -51,7 +54,7 @@ class ArtistLink extends Model
      */
     public function needsVevoCheck(): bool
     {
-        if (!$this->vevo_checked_at) {
+        if (! $this->vevo_checked_at) {
             return true;
         }
 

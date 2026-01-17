@@ -2,10 +2,8 @@
 
 use App\Jobs\FetchYouTubeDataJob;
 use App\Models\Artist;
-use App\Models\ArtistMetric;
 use App\Services\YouTubeJobDispatchService;
 use App\Services\YouTubeService;
-
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
@@ -50,7 +48,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $artistIds = [$highPriorityArtist->id, $mediumPriorityArtist->id, $lowPriorityArtist->id];
 
@@ -72,7 +70,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $stats = $service->dispatchPriorityJobs([$artistWithoutYouTube->id], false);
 
@@ -122,7 +120,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $jobCount = $service->dispatchBasicMetricsJobs([$staleArtist->id, $freshArtist->id]);
 
@@ -161,7 +159,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $jobCount = $service->dispatchAnalyticsJobs([$staleAnalyticsArtist->id, $freshAnalyticsArtist->id]);
 
@@ -193,7 +191,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $artistIds = $highPriorityArtists->pluck('id')->toArray();
         $stats = $service->dispatchPriorityJobs($artistIds, false);
@@ -207,7 +205,7 @@ describe('YouTubeJobDispatchService', function () {
     it('handles empty artist arrays gracefully', function () {
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $stats = $service->dispatchPriorityJobs([], false);
 
@@ -225,7 +223,7 @@ describe('YouTubeJobDispatchService', function () {
 
         $youtubeService = $this->mock(YouTubeService::class);
         $youtubeService->shouldReceive('checkQuotaAvailability')->andReturn(true);
-        
+
         $service = new YouTubeJobDispatchService($youtubeService);
         $stats = $service->dispatchPriorityJobs([$artistWithoutMetrics->id], false);
 

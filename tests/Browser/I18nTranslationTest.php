@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+
 use function Pest\Laravel\actingAs;
 
 it('displays translated text on login page', function () {
@@ -85,7 +86,7 @@ it('ensures no translation keys are visible in common UI elements', function () 
     actingAs($user);
 
     $browser = visit('/dashboard');
-    
+
     // Common translation key patterns that should NOT appear
     $forbiddenPatterns = [
         'auth.',
@@ -114,7 +115,7 @@ it('translates input placeholders', function () {
 
     // Check that email input has translated placeholder
     $emailPlaceholder = $browser->attribute('input[type="email"]', 'placeholder');
-    
+
     expect($emailPlaceholder)->not->toBeEmpty();
     expect($emailPlaceholder)->not->toContain('auth.login_email_placeholder');
     // Should contain something like "email@example.com"
@@ -134,7 +135,7 @@ it('translates page titles', function () {
     $browser = visit('/login');
     // Using assertTitleContains to verify translation
     // If it contains "Log in", it means it's not showing the raw key (unless key is Log in, which it isn't)
-    $browser->assertTitleContains('Log in'); 
+    $browser->assertTitleContains('Log in');
 });
 
 it('translates navigation menu items', function () {
@@ -150,7 +151,7 @@ it('translates navigation menu items', function () {
         ->click('[data-test="sidebar-menu-button"]')
         ->waitForText('Settings', 5)
         ->assertSee('Settings')
-        
+
         // Ensure translation keys are NOT visible
         ->assertDontSee('common.navigation_dashboard')
         ->assertDontSee('common.navigation_lineups')

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -41,7 +41,7 @@ return new class extends Migration
                 'youtube_avg_comments',
                 'youtube_avg_views',
                 'youtube_avg_likes',
-                'youtube_refreshed_at'
+                'youtube_refreshed_at',
             ]);
         });
     }

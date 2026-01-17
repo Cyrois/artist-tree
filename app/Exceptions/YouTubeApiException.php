@@ -34,7 +34,7 @@ class YouTubeApiException extends Exception
             : $errorMessage;
 
         // Check if this is a quota exhaustion error
-        $isQuotaExhausted = $statusCode === 403 && 
+        $isQuotaExhausted = $statusCode === 403 &&
             isset($body['error']['errors'][0]['reason']) &&
             in_array($body['error']['errors'][0]['reason'], ['quotaExceeded', 'dailyLimitExceeded']);
 
@@ -64,7 +64,7 @@ class YouTubeApiException extends Exception
     /**
      * Create rate limit exception.
      */
-    public static function rateLimited(int $retryAfter = null): self
+    public static function rateLimited(?int $retryAfter = null): self
     {
         $message = 'YouTube API rate limit exceeded';
         if ($retryAfter) {
@@ -109,7 +109,7 @@ class YouTubeApiException extends Exception
      */
     public function getRetryAfter(): ?int
     {
-        if (!$this->response) {
+        if (! $this->response) {
             return null;
         }
 

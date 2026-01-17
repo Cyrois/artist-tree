@@ -3,7 +3,6 @@
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\actingAs;
@@ -12,7 +11,7 @@ beforeEach(function () {
     $this->user = User::factory()->withoutTwoFactor()->create();
     $this->artist = Artist::factory()->create([
         'name' => 'Test Artist',
-        'spotify_id' => 'test_spotify_id_' . uniqid(),
+        'spotify_id' => 'test_spotify_id_'.uniqid(),
         'youtube_channel_id' => 'UCTestChannelId',
     ]);
 
@@ -59,7 +58,7 @@ it('displays N/A for null YouTube metrics', function () {
     // Create artist without YouTube data
     $artistWithoutYouTube = Artist::factory()->create([
         'name' => 'No YouTube Artist',
-        'spotify_id' => 'no_youtube_spotify_id_' . uniqid(),
+        'spotify_id' => 'no_youtube_spotify_id_'.uniqid(),
         'youtube_channel_id' => null,
     ]);
 
@@ -91,7 +90,7 @@ it('handles partial YouTube data correctly', function () {
     // Create artist with basic YouTube data but no analytics
     $artistPartialYouTube = Artist::factory()->create([
         'name' => 'Partial YouTube Artist',
-        'spotify_id' => 'partial_youtube_spotify_id_' . uniqid(),
+        'spotify_id' => 'partial_youtube_spotify_id_'.uniqid(),
         'youtube_channel_id' => 'UCPartialChannelId',
     ]);
 

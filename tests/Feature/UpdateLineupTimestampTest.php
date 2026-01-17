@@ -15,7 +15,7 @@ test('changing stack dispatches update lineup timestamp job', function () {
 
     $lineup = Lineup::factory()->create();
     $lineup->users()->attach($this->user->id, ['role' => 'owner']);
-    
+
     $artist = Artist::factory()->create();
     $lineup->artists()->attach($artist->id);
 

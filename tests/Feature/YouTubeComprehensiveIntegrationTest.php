@@ -5,15 +5,13 @@ use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
 use App\Services\YouTubeService;
-
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
     Cache::flush();
-    
+
     // Mock comprehensive YouTube API responses
     Http::fake([
         'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
@@ -78,15 +76,15 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates API authentication and request structure (Property 1)', function () {
         $youtubeService = app(YouTubeService::class);
-        
+
         $result = $youtubeService->getChannelMetrics('UCTestChannel');
-        
+
         expect($result)->not->toBeNull();
-        
+
         // Verify API key was included in request
         $requests = Http::recorded();
         expect($requests)->toHaveCount(1);
-        
+
         // The recorded request structure is [request, response]
         $request = $requests[0][0];
         expect($request->url())->toContain('key=');
@@ -99,14 +97,14 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates quota tracking and enforcement (Property 2)', function () {
         $youtubeService = app(YouTubeService::class);
-        
-        $initialQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
-        
+
+        $initialQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
+
         $youtubeService->getChannelMetrics('UCTestChannel');
-        
-        $finalQuota = Cache::get('youtube_quota_' . now()->format('Y-m-d'), 0);
+
+        $finalQuota = Cache::get('youtube_quota_'.now()->format('Y-m-d'), 0);
         expect($finalQuota)->toBeGreaterThanOrEqual($initialQuota); // Should track quota
-        
+
         // Test quota enforcement by setting quota exhausted flag
         Cache::put('youtube_quota_exhausted', true, now()->addDay());
         expect($youtubeService->checkQuotaAvailability(1))->toBeFalse(); // Should fail when exhausted
@@ -118,15 +116,15 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates response caching behavior (Property 3)', function () {
         $youtubeService = app(YouTubeService::class);
-        
+
         // First request
         $result1 = $youtubeService->getChannelMetrics('UCTestChannel');
         $initialRequestCount = Http::recorded()->count();
-        
+
         // Second request should use cache
         $result2 = $youtubeService->getChannelMetrics('UCTestChannel');
         $finalRequestCount = Http::recorded()->count();
-        
+
         expect($result1)->not->toBeNull();
         expect($result2)->not->toBeNull();
         expect($result1->subscriberCount)->toBe($result2->subscriberCount);
@@ -139,13 +137,13 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates channel metrics fetching (Property 6)', function () {
         $youtubeService = app(YouTubeService::class);
-        
+
         $result = $youtubeService->getChannelMetrics('UCTestChannel');
-        
+
         expect($result)->not->toBeNull();
         expect($result->subscriberCount)->toBe(1500000);
         expect($result->videoCount)->toBe(750);
-        
+
         // Verify single request was made
         expect(Http::recorded())->toHaveCount(1);
     });
@@ -156,7 +154,7 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates batch processing optimization (Property 7)', function () {
         $channelIds = ['UCTestChannel1', 'UCTestChannel2', 'UCTestChannel3'];
-        
+
         Http::fake([
             'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
                 'items' => array_map(function ($id) {
@@ -170,10 +168,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
                 }, $channelIds),
             ], 200),
         ]);
-        
+
         $youtubeService = app(YouTubeService::class);
         $results = $youtubeService->getMultipleChannelMetrics($channelIds);
-        
+
         expect($results)->toHaveCount(1); // Only UCTestChannel1 will be returned due to mock
         expect(Http::recorded())->toHaveCount(1); // Single batch request
     });
@@ -185,10 +183,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
     it('validates database update consistency (Property 8)', function () {
         $artist = Artist::factory()->create(['youtube_channel_id' => 'UCTestChannel']);
         ArtistMetric::factory()->create(['artist_id' => $artist->id]);
-        
+
         $job = new FetchYouTubeDataJob([$artist->id]);
         $job->handle(app(YouTubeService::class));
-        
+
         $artist->metrics->refresh();
         expect($artist->metrics->youtube_subscribers)->toBe(1500000);
         expect($artist->metrics->youtube_refreshed_at)->toBeGreaterThan(now()->subMinute());
@@ -201,19 +199,19 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
     it('validates background job idempotency (Property 10)', function () {
         $artist = Artist::factory()->create(['youtube_channel_id' => 'UCTestChannel']);
         ArtistMetric::factory()->create(['artist_id' => $artist->id]);
-        
+
         $job = new FetchYouTubeDataJob([$artist->id]);
-        
+
         // Run job twice
         $job->handle(app(YouTubeService::class));
         $firstUpdate = $artist->metrics->fresh()->youtube_refreshed_at;
-        
+
         // Small delay to ensure timestamp difference would be visible
         sleep(1);
-        
+
         $job->handle(app(YouTubeService::class));
         $secondUpdate = $artist->metrics->fresh()->youtube_refreshed_at;
-        
+
         // Second run should use cache, so timestamp should be very close
         expect($secondUpdate->diffInSeconds($firstUpdate))->toBeLessThan(2);
     });
@@ -230,10 +228,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'youtube_subscribers' => 1500000,
             'youtube_avg_views' => 250000,
         ]);
-        
+
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artistWithYouTube->id}");
-        
+
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
@@ -246,7 +244,7 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
                 ],
             ])
             ->assertJsonPath('data.metrics.youtube_subscribers', 1500000);
-        
+
         // Artist without YouTube data
         $artistWithoutYouTube = Artist::factory()->create(['youtube_channel_id' => null]);
         ArtistMetric::factory()->create([
@@ -256,10 +254,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'youtube_avg_likes' => null,
             'youtube_avg_comments' => null,
         ]);
-        
+
         $response2 = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artistWithoutYouTube->id}");
-        
+
         $response2->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', null);
     });
@@ -271,10 +269,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
     it('validates data validation and sanitization (Property 17)', function () {
         // This test validates that the system handles edge case values correctly
         $youtubeService = app(YouTubeService::class);
-        
+
         // Test with the existing mock data which has valid positive values
         $result = $youtubeService->getChannelMetrics('UCTestChannel');
-        
+
         expect($result)->not->toBeNull();
         expect($result->subscriberCount)->toBeGreaterThanOrEqual(0);
         expect($result->videoCount)->toBeGreaterThanOrEqual(0);
@@ -288,9 +286,9 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates video analytics collection (Property 20)', function () {
         $youtubeService = app(YouTubeService::class);
-        
+
         $analytics = $youtubeService->calculateVideoAnalytics('UCTestChannel');
-        
+
         expect($analytics)->not->toBeNull();
         expect($analytics->videosAnalyzed)->toBe(3);
         expect($analytics->averageViews)->toBe(250000.0); // Float values from calculation
@@ -312,10 +310,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'youtube_avg_comments' => 625,
             'youtube_videos_analyzed' => 3,
         ]);
-        
+
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
-        
+
         $response->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', 1500000)
             ->assertJsonPath('data.metrics.youtube_avg_views', 250000)
@@ -337,10 +335,10 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'youtube_avg_likes' => null,
             'youtube_avg_comments' => null,
         ]);
-        
+
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
-        
+
         $response->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', null)
             ->assertJsonPath('data.metrics.youtube_avg_views', null)
@@ -362,7 +360,7 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'youtube_subscribers' => 1000000,
             'youtube_refreshed_at' => now()->subDays(1),
         ]);
-        
+
         // Mock Spotify API for refresh
         Http::fake([
             'https://accounts.spotify.com/api/token' => Http::response(['access_token' => 'token'], 200),
@@ -412,12 +410,12 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
                 ],
             ], 200),
         ]);
-        
+
         $response = $this->actingAs($this->user)
             ->postJson("/api/artists/{$artist->id}/refresh");
-        
+
         $response->assertStatus(200);
-        
+
         $artist->metrics->refresh();
         expect($artist->metrics->youtube_subscribers)->toBe(1500000);
         expect($artist->metrics->youtube_avg_views)->toBe(250000);
@@ -430,17 +428,17 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
     it('validates comprehensive error handling integration', function () {
         $artist = Artist::factory()->create(['youtube_channel_id' => 'UCErrorChannel']);
         ArtistMetric::factory()->create(['artist_id' => $artist->id]);
-        
+
         // Mock API errors
         Http::fake([
             'https://www.googleapis.com/youtube/v3/channels*' => Http::response([
                 'error' => ['code' => 404, 'message' => 'Channel not found'],
             ], 404),
         ]);
-        
+
         $job = new FetchYouTubeDataJob([$artist->id]);
         $job->handle(app(YouTubeService::class));
-        
+
         // Should handle error gracefully
         $artist->metrics->refresh();
         expect($artist->metrics->youtube_subscribers)->toBeNull(); // Set to null for not found
@@ -453,14 +451,14 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
     it('validates comprehensive quota management integration', function () {
         // Test that quota management works at the service level
         $youtubeService = app(YouTubeService::class);
-        
+
         // Test normal quota availability
         expect($youtubeService->checkQuotaAvailability(1))->toBeTrue();
-        
+
         // Test quota exhaustion flag
         Cache::put('youtube_quota_exhausted', true, now()->addDay());
         expect($youtubeService->checkQuotaAvailability(1))->toBeFalse();
-        
+
         // Test that service respects quota exhaustion
         $result = $youtubeService->getChannelMetrics('UCTestChannel');
         expect($result)->toBeNull(); // Should return null when quota exhausted
@@ -471,20 +469,20 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
      */
     it('validates comprehensive caching integration', function () {
         $youtubeService = app(YouTubeService::class);
-        
+
         // First request - should hit API
         $result1 = $youtubeService->getChannelMetrics('UCTestChannel');
         $firstRequestCount = Http::recorded()->count();
-        
+
         // Second request - should use cache
         $result2 = $youtubeService->getChannelMetrics('UCTestChannel');
         $secondRequestCount = Http::recorded()->count();
-        
+
         expect($result1)->not->toBeNull();
         expect($result2)->not->toBeNull();
         expect($result1->subscriberCount)->toBe($result2->subscriberCount);
         expect($secondRequestCount)->toBe($firstRequestCount); // No new requests
-        
+
         // Verify cache keys exist
         expect(Cache::has('youtube_channel:UCTestChannel'))->toBeTrue();
     });
@@ -498,32 +496,32 @@ describe('YouTube Comprehensive Integration Tests - All Properties', function ()
             'artist_id' => $artist->id,
             'youtube_refreshed_at' => now()->subDays(2), // Stale
         ]);
-        
+
         // Step 1: Background job processes data
         $job = new FetchYouTubeDataJob([$artist->id]);
         $job->handle(app(YouTubeService::class));
-        
+
         // Step 2: Verify database is updated
         $artist->metrics->refresh();
         expect($artist->metrics->youtube_subscribers)->toBe(1500000);
         expect($artist->metrics->youtube_refreshed_at)->toBeGreaterThan(now()->subMinute());
-        
+
         // Step 3: API returns updated data
         $response = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
-        
+
         $response->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', 1500000);
-        
+
         // Step 4: Verify caching works for subsequent requests
         Http::fake(); // Clear to ensure no new requests
-        
+
         $response2 = $this->actingAs($this->user)
             ->getJson("/api/artists/{$artist->id}");
-        
+
         $response2->assertStatus(200)
             ->assertJsonPath('data.metrics.youtube_subscribers', 1500000);
-        
+
         Http::assertNothingSent(); // Should use cached data
     });
 });

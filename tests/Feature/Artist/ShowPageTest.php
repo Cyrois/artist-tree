@@ -11,13 +11,13 @@ beforeEach(function () {
 
 test('artist show page includes user lineups for the add to lineup modal', function () {
     $artist = Artist::factory()->create();
-    
+
     // Create 3 lineups for this user
     $lineups = Lineup::factory()->count(3)->create();
     foreach ($lineups as $lineup) {
         $lineup->users()->attach($this->user->id, ['role' => 'owner']);
     }
-    
+
     // Create one lineup for a different user
     $otherUser = User::factory()->create();
     $otherLineup = Lineup::factory()->create();

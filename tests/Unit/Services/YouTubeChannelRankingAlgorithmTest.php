@@ -10,13 +10,13 @@ use App\Services\YouTubeChannelRankingAlgorithm;
  * Validates: Requirements 3.1, 3.2, 3.6, 4.5
  */
 describe('YouTubeChannelRankingAlgorithm', function () {
-    
+
     beforeEach(function () {
-        $this->algorithm = new YouTubeChannelRankingAlgorithm();
+        $this->algorithm = new YouTubeChannelRankingAlgorithm;
     });
-    
+
     describe('Property 7: Subscriber Count Ranking Priority', function () {
-        
+
         it('ranks channels by subscriber count (highest first)', function () {
             $channels = [
                 new YouTubeChannelDTO(
@@ -41,20 +41,20 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     title: 'Mid Subs Channel',
                 ),
             ];
-            
+
             $ranked = $this->algorithm->rankChannels($channels);
-            
+
             expect($ranked[0]->channelId)->toBe('UChigh');
             expect($ranked[1]->channelId)->toBe('UCmid');
             expect($ranked[2]->channelId)->toBe('UClow');
         });
-        
+
         it('property: higher subscriber count always ranks higher (without bonuses)', function () {
             // Generate random channels with varying subscriber counts
             for ($i = 0; $i < 10; $i++) {
                 $lowSubs = rand(1000, 50000);
                 $highSubs = $lowSubs + rand(10000, 100000);
-                
+
                 $channels = [
                     new YouTubeChannelDTO(
                         channelId: 'UClow',
@@ -71,15 +71,15 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                         title: 'High Channel',
                     ),
                 ];
-                
+
                 $ranked = $this->algorithm->rankChannels($channels);
-                
+
                 expect($ranked[0]->channelId)->toBe('UChigh',
                     "Channel with {$highSubs} subs should rank above {$lowSubs} subs"
                 );
             }
         });
-        
+
         it('calculates base score from subscriber count', function () {
             $channel = new YouTubeChannelDTO(
                 channelId: 'UCtest',
@@ -88,18 +88,16 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Test Channel',
             );
-            
+
             $score = $this->algorithm->calculateChannelScore($channel);
-            
+
             // Base score should be subscriber count (no bonuses applied)
             expect($score)->toBe(50000.0);
         });
     });
 
-    
-
     describe('Property 11: Minimum Subscriber Threshold', function () {
-        
+
         it('excludes channels below 1000 subscribers', function () {
             $channels = [
                 new YouTubeChannelDTO(
@@ -117,13 +115,13 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     title: 'Valid Channel',
                 ),
             ];
-            
+
             $ranked = $this->algorithm->rankChannels($channels);
-            
+
             expect($ranked)->toHaveCount(1);
             expect($ranked[0]->channelId)->toBe('UCvalid');
         });
-        
+
         it('returns zero score for channels below threshold', function () {
             $channel = new YouTubeChannelDTO(
                 channelId: 'UClow',
@@ -132,12 +130,12 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Low Subs Channel',
             );
-            
+
             $score = $this->algorithm->calculateChannelScore($channel);
-            
+
             expect($score)->toBe(0.0);
         });
-        
+
         it('returns null when no channels meet threshold', function () {
             $channels = [
                 new YouTubeChannelDTO(
@@ -155,42 +153,42 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     title: 'Very Low Channel 2',
                 ),
             ];
-            
+
             $best = $this->algorithm->selectBestChannel($channels);
-            
+
             expect($best)->toBeNull();
         });
-        
+
         it('property: no channel below 1000 subscribers is ever selected', function () {
             for ($i = 0; $i < 10; $i++) {
                 $channels = [];
-                
+
                 // Add channels below threshold
                 for ($j = 0; $j < 5; $j++) {
                     $channels[] = new YouTubeChannelDTO(
-                        channelId: 'UClow' . $j,
+                        channelId: 'UClow'.$j,
                         subscriberCount: rand(1, 999),
                         videoCount: rand(10, 100),
                         subscriberCountHidden: false,
-                        title: 'Low Channel ' . $j,
+                        title: 'Low Channel '.$j,
                     );
                 }
-                
+
                 $best = $this->algorithm->selectBestChannel($channels);
-                
+
                 expect($best)->toBeNull(
-                    "No channel below 1000 subscribers should be selected"
+                    'No channel below 1000 subscribers should be selected'
                 );
             }
         });
-        
+
         it('exposes minimum threshold value', function () {
             expect($this->algorithm->getMinimumSubscriberThreshold())->toBe(1000);
         });
     });
-    
+
     describe('Best Channel Selection', function () {
-        
+
         it('selects channel with highest score', function () {
             $channels = [
                 new YouTubeChannelDTO(
@@ -208,22 +206,22 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     title: 'High Channel',
                 ),
             ];
-            
+
             $best = $this->algorithm->selectBestChannel($channels);
-            
+
             expect($best)->not->toBeNull();
             expect($best->channelId)->toBe('UChigh');
         });
-        
+
         it('returns null for empty array', function () {
             $best = $this->algorithm->selectBestChannel([]);
-            
+
             expect($best)->toBeNull();
         });
     });
-    
+
     describe('Replacement Validation', function () {
-        
+
         it('validates replacement meets minimum threshold', function () {
             $replacement = new YouTubeChannelDTO(
                 channelId: 'UCnew',
@@ -232,10 +230,10 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'New Channel',
             );
-            
+
             expect($this->algorithm->isValidReplacement($replacement))->toBeTrue();
         });
-        
+
         it('rejects replacement below minimum threshold', function () {
             $replacement = new YouTubeChannelDTO(
                 channelId: 'UCnew',
@@ -244,10 +242,10 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'New Channel',
             );
-            
+
             expect($this->algorithm->isValidReplacement($replacement))->toBeFalse();
         });
-        
+
         it('validates replacement with content against VEVO original', function () {
             $original = new YouTubeChannelDTO(
                 channelId: 'UCvevo',
@@ -256,7 +254,7 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'ArtistVEVO',
             );
-            
+
             $replacement = new YouTubeChannelDTO(
                 channelId: 'UCreal',
                 subscriberCount: 200000, // 20% of original
@@ -264,13 +262,13 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Artist Official',
             );
-            
+
             expect($this->algorithm->isValidReplacement($replacement, $original))->toBeTrue();
         });
     });
-    
+
     describe('Recent Activity Bonus', function () {
-        
+
         it('gives 10% bonus for recent activity', function () {
             $inactive = new YouTubeChannelDTO(
                 channelId: 'UCinactive',
@@ -279,7 +277,7 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Inactive Channel',
             );
-            
+
             $active = new YouTubeChannelDTO(
                 channelId: 'UCactive',
                 subscriberCount: 100000,
@@ -287,17 +285,17 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Active Channel',
             );
-            
+
             $inactiveScore = $this->algorithm->calculateChannelScore($inactive);
             $activeScore = $this->algorithm->calculateChannelScore($active);
-            
+
             // Active should have 10% higher score
             expect($activeScore)->toBe($inactiveScore * 1.1);
         });
     });
 
     describe('Official Channel Name Bonus', function () {
-        
+
         it('gives 15% bonus for channels with "official" in name', function () {
             $regular = new YouTubeChannelDTO(
                 channelId: 'UCregular',
@@ -306,7 +304,7 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Artist Name',
             );
-            
+
             $official = new YouTubeChannelDTO(
                 channelId: 'UCofficial',
                 subscriberCount: 100000,
@@ -314,14 +312,14 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Artist Name Official',
             );
-            
+
             $regularScore = $this->algorithm->calculateChannelScore($regular);
             $officialScore = $this->algorithm->calculateChannelScore($official);
-            
+
             // Official should have 15% higher score
             expect($officialScore)->toBe($regularScore * 1.15);
         });
-        
+
         it('detects "official" case-insensitively', function () {
             $variations = [
                 'Artist Official Channel',
@@ -329,7 +327,7 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 'Official Artist Channel',
                 'The official channel',
             ];
-            
+
             foreach ($variations as $title) {
                 $channel = new YouTubeChannelDTO(
                     channelId: 'UCtest',
@@ -338,13 +336,13 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     subscriberCountHidden: false,
                     title: $title,
                 );
-                
+
                 expect($this->algorithm->hasOfficialInName($channel))->toBeTrue(
                     "Should detect 'official' in: {$title}"
                 );
             }
         });
-        
+
         it('returns false for channels without "official"', function () {
             $channel = new YouTubeChannelDTO(
                 channelId: 'UCtest',
@@ -353,10 +351,10 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                 subscriberCountHidden: false,
                 title: 'Artist Name Music',
             );
-            
+
             expect($this->algorithm->hasOfficialInName($channel))->toBeFalse();
         });
-        
+
         it('official channel with fewer subs can outrank regular channel', function () {
             $channels = [
                 new YouTubeChannelDTO(
@@ -374,9 +372,9 @@ describe('YouTubeChannelRankingAlgorithm', function () {
                     title: 'Artist Name Official',
                 ),
             ];
-            
+
             $ranked = $this->algorithm->rankChannels($channels);
-            
+
             // Official channel should rank higher due to 15% bonus
             // 90000 * 1.15 = 103500 > 100000
             expect($ranked[0]->channelId)->toBe('UCofficial');

@@ -307,7 +307,7 @@ class ArtistController extends Controller
     {
         $artist = Artist::with('genres')->findOrFail($id);
         $limit = $request->validated('limit', 10);
-        
+
         if ($artist->genres->isEmpty()) {
             return response()->json([
                 'data' => [],

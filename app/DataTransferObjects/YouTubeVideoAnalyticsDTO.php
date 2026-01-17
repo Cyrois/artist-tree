@@ -72,7 +72,7 @@ readonly class YouTubeVideoAnalyticsDTO
         }
 
         $videosAnalyzed = count($videoIds);
-        
+
         if ($videosAnalyzed === 0) {
             return new self(
                 videosAnalyzed: 0,

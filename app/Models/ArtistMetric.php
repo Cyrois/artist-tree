@@ -106,7 +106,7 @@ class ArtistMetric extends Model
      */
     public function hasYouTubeAnalytics(): bool
     {
-        return ! is_null($this->youtube_avg_views) && 
+        return ! is_null($this->youtube_avg_views) &&
                ! is_null($this->youtube_videos_analyzed);
     }
 }

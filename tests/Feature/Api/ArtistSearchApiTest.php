@@ -3,7 +3,6 @@
 use App\Models\Artist;
 use App\Models\ArtistMetric;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {

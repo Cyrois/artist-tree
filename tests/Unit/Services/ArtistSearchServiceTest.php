@@ -7,7 +7,6 @@ use App\Models\ArtistMetric;
 use App\Services\ArtistSearchService;
 use App\Services\SpotifyService;
 use App\Services\YouTubeJobDispatchService;
-
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {

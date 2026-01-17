@@ -47,6 +47,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
     public function backoff(): array
     {
         $baseDelay = (int) config('artist-tree.youtube.retry_delay', 60);
+
         // Exponential backoff: base, base*2, base*4
         return [$baseDelay, $baseDelay * 2, $baseDelay * 4];
     }
@@ -79,10 +80,11 @@ class UpdateYoutubeLinksJob implements ShouldQueue
 
         try {
             // Step 0: Check if artist needs to be updated
-            if (!$this->artist->needsToUpdateYoutubeChannel()) {
+            if (! $this->artist->needsToUpdateYoutubeChannel()) {
                 Log::debug('UpdateYoutubeLinksJob: Artist does not need YouTube channel update', [
                     'artist_id' => $this->artist->id,
                 ]);
+
                 return;
             }
 
@@ -95,6 +97,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
                 Log::info('UpdateYoutubeLinksJob: No YouTube links found', [
                     'artist_id' => $this->artist->id,
                 ]);
+
                 return;
             }
 
@@ -105,7 +108,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
 
             foreach ($youtubeLinks as $link) {
                 $channelId = $vevoDetectionService->extractChannelIdFromUrl($link->url);
-                if (!$channelId) {
+                if (! $channelId) {
                     continue;
                 }
 
@@ -117,7 +120,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
                 $channelIdToUrl[$channelId] = $link->url; // Store original URL
 
                 $channelData = $youtubeService->getChannelMetrics($channelId);
-                if (!$channelData) {
+                if (! $channelData) {
                     continue;
                 }
 
@@ -128,6 +131,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
                         'channel_id' => $channelId,
                         'channel_title' => $channelData->title,
                     ]);
+
                     continue;
                 }
 
@@ -138,6 +142,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
                 Log::info('UpdateYoutubeLinksJob: No valid non-VEVO channels found', [
                     'artist_id' => $this->artist->id,
                 ]);
+
                 return;
             }
 
@@ -148,6 +153,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
                     'artist_id' => $this->artist->id,
                     'channel_count' => count($channels),
                 ]);
+
                 return;
             }
 
@@ -178,8 +184,8 @@ class UpdateYoutubeLinksJob implements ShouldQueue
      * Promote the channel to be the artist's official YouTube channel.
      * Updates the artist record and the YouTube ArtistLink.
      *
-     * @param YouTubeChannelDTO $channel The channel to promote
-     * @param string|null $originalUrl The original URL of the link (for finding the correct link to update)
+     * @param  YouTubeChannelDTO  $channel  The channel to promote
+     * @param  string|null  $originalUrl  The original URL of the link (for finding the correct link to update)
      */
     private function promoteChannel(YouTubeChannelDTO $channel, ?string $originalUrl = null): void
     {
@@ -234,6 +240,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
         if ($e->isQuotaExhausted) {
             // Release job to retry after quota reset (1 hour)
             $this->release(3600);
+
             return;
         }
 
@@ -241,6 +248,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
         if ($this->attempts() < $this->tries) {
             $delay = $this->backoff()[$this->attempts() - 1] ?? 240;
             $this->release($delay);
+
             return;
         }
 
@@ -270,7 +278,7 @@ class UpdateYoutubeLinksJob implements ShouldQueue
     {
         return [
             'youtube-links',
-            'artist:' . $this->artist->id,
+            'artist:'.$this->artist->id,
         ];
     }
 }

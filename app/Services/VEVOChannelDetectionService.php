@@ -29,7 +29,9 @@ class VEVOChannelDetectionService
     ];
 
     private int $cacheTtl;
+
     private int $recheckDays;
+
     private bool $enabled;
 
     public function __construct()
@@ -42,7 +44,7 @@ class VEVOChannelDetectionService
     /**
      * Check if a YouTube channel is a VEVO channel.
      *
-     * @param YouTubeChannelDTO $channel The channel to check
+     * @param  YouTubeChannelDTO  $channel  The channel to check
      * @return bool True if the channel is identified as VEVO
      */
     public function isVEVOChannel(YouTubeChannelDTO $channel): bool
@@ -68,13 +70,13 @@ class VEVOChannelDetectionService
     /**
      * Check if an artist should be checked for VEVO channel or channel discovery.
      *
-     * @param Artist $artist The artist to check
+     * @param  Artist  $artist  The artist to check
      * @return bool True if the artist should be checked
      */
     public function shouldCheckArtist(Artist $artist): bool
     {
         // Check if VEVO detection is enabled
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return false;
         }
 
@@ -86,9 +88,9 @@ class VEVOChannelDetectionService
 
         // If artist has no youtube_channel_id, they need channel discovery
         // Check if we've recently tried to discover a channel for them
-        if (!$artist->youtube_channel_id) {
+        if (! $artist->youtube_channel_id) {
             $youtubeLinks = $this->getUnverifiedYouTubeLinks($artist);
-            
+
             // If they have unverified links, check if any need processing
             if ($youtubeLinks->isNotEmpty()) {
                 foreach ($youtubeLinks as $link) {
@@ -96,29 +98,30 @@ class VEVOChannelDetectionService
                         return true;
                     }
                 }
+
                 return false; // All links recently checked
             }
-            
+
             // No links and no channel ID - need to discover a channel
             // But only if we haven't tried recently (check any YouTube link's vevo_checked_at)
             $anyYoutubeLink = $artist->links()
                 ->where('platform', SocialPlatform::YouTube)
                 ->first();
-            
+
             if ($anyYoutubeLink && $anyYoutubeLink->vevo_checked_at) {
                 $daysSinceCheck = now()->diffInDays($anyYoutubeLink->vevo_checked_at);
                 if ($daysSinceCheck < $this->recheckDays) {
                     return false;
                 }
             }
-            
+
             // No recent check - should try to discover channel
             return true;
         }
 
         // Artist has youtube_channel_id - check for VEVO replacement
         $youtubeLinks = $this->getUnverifiedYouTubeLinks($artist);
-        
+
         if ($youtubeLinks->isEmpty()) {
             // Has youtube_channel_id but no link record - should check
             return true;
@@ -137,7 +140,7 @@ class VEVOChannelDetectionService
     /**
      * Get unverified YouTube links for an artist.
      *
-     * @param Artist $artist The artist
+     * @param  Artist  $artist  The artist
      * @return \Illuminate\Support\Collection<ArtistLink>
      */
     public function getUnverifiedYouTubeLinks(Artist $artist): \Illuminate\Support\Collection
@@ -151,7 +154,7 @@ class VEVOChannelDetectionService
     /**
      * Extract YouTube channel ID from a YouTube URL.
      *
-     * @param string $url The YouTube URL
+     * @param  string  $url  The YouTube URL
      * @return string|null The channel ID or null if not found
      */
     public function extractChannelIdFromUrl(string $url): ?string
@@ -171,22 +174,23 @@ class VEVOChannelDetectionService
     /**
      * Detect if an artist has a VEVO channel.
      *
-     * @param Artist $artist The artist to check
-     * @param YouTubeChannelDTO|null $channelData Optional pre-fetched channel data
+     * @param  Artist  $artist  The artist to check
+     * @param  YouTubeChannelDTO|null  $channelData  Optional pre-fetched channel data
      * @return bool True if the artist has a VEVO channel
      */
     public function detectVEVOChannelForArtist(Artist $artist, ?YouTubeChannelDTO $channelData = null): bool
     {
-        if (!$this->shouldCheckArtist($artist)) {
+        if (! $this->shouldCheckArtist($artist)) {
             return false;
         }
 
         // If no channel data provided, we can't detect
-        if (!$channelData) {
+        if (! $channelData) {
             Log::debug('VEVO detection: No channel data available', [
                 'artist_id' => $artist->id,
                 'channel_id' => $artist->youtube_channel_id,
             ]);
+
             return false;
         }
 
@@ -215,14 +219,14 @@ class VEVOChannelDetectionService
     /**
      * Mark an artist as checked for VEVO detection.
      *
-     * @param Artist $artist The artist to mark
-     * @param string|null $channelId The channel ID that was checked
+     * @param  Artist  $artist  The artist to mark
+     * @param  string|null  $channelId  The channel ID that was checked
      */
     public function markArtistAsChecked(Artist $artist, ?string $channelId = null): void
     {
         // Mark all unverified YouTube links as checked
         $youtubeLinks = $this->getUnverifiedYouTubeLinks($artist);
-        
+
         foreach ($youtubeLinks as $link) {
             // If we have a channel ID, only mark the matching link
             if ($channelId) {
@@ -257,7 +261,7 @@ class VEVOChannelDetectionService
     /**
      * Check if a channel name contains VEVO patterns.
      *
-     * @param string|null $title The channel title to check
+     * @param  string|null  $title  The channel title to check
      * @return bool True if VEVO pattern found
      */
     private function containsVEVOInName(?string $title): bool
@@ -272,7 +276,7 @@ class VEVOChannelDetectionService
     /**
      * Check if a channel description contains VEVO-related patterns.
      *
-     * @param string|null $description The channel description to check
+     * @param  string|null  $description  The channel description to check
      * @return bool True if VEVO pattern found
      */
     private function containsVEVOPatterns(?string $description): bool
@@ -292,12 +296,11 @@ class VEVOChannelDetectionService
         return false;
     }
 
-
     /**
      * Create a YouTube link record for an artist.
      *
-     * @param Artist $artist The artist
-     * @param string $channelId The YouTube channel ID
+     * @param  Artist  $artist  The artist
+     * @param  string  $channelId  The YouTube channel ID
      * @return ArtistLink The created link
      */
     private function createYouTubeLink(Artist $artist, string $channelId): ArtistLink

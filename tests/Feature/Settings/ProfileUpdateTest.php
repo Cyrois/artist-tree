@@ -14,7 +14,7 @@ test('profile page is displayed', function () {
 
 test('profile information can be updated', function () {
     $user = User::factory()->create();
-    $newEmail = 'test-' . uniqid() . '@example.com';
+    $newEmail = 'test-'.uniqid().'@example.com';
 
     $response = $this
         ->actingAs($user)

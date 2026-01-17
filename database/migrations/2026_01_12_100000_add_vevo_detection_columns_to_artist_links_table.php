@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('artist_links', function (Blueprint $table) {
             // Add review status column for future manual review functionality
             $table->string('review_status')->default('public_added')->after('vote_score');
-            
+
             // Add column to track VEVO detection processing
             $table->timestamp('vevo_checked_at')->nullable()->after('review_status');
         });

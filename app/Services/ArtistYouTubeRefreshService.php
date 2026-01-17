@@ -3,13 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\YouTubeApiException;
+use App\Jobs\UpdateYoutubeLinksJob;
 use App\Models\Artist;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\UpdateYoutubeLinksJob;
 
 /**
  * Service for handling YouTube data refresh operations for artists.
- * 
+ *
  * Encapsulates the business logic for refreshing YouTube metrics and analytics,
  * including conditional refresh based on data staleness.
  */
@@ -22,26 +22,26 @@ class ArtistYouTubeRefreshService
     /**
      * Force refresh YouTube data for an artist (both basic metrics and analytics).
      *
-     * @param Artist $artist The artist to refresh YouTube data for
+     * @param  Artist  $artist  The artist to refresh YouTube data for
      * @return bool True if refresh was successful, false otherwise
      */
     public function forceRefresh(Artist $artist): bool
     {
         // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
+        if (! $artist->youtube_channel_id) {
             return false;
         }
 
         $basicSuccess = $this->refreshBasicMetrics($artist);
-        
+
         if ($basicSuccess) {
             $this->refreshAnalytics($artist);
-            
+
             Log::info('YouTube data force refreshed successfully', [
                 'artist_id' => $artist->id,
                 'youtube_channel_id' => $artist->youtube_channel_id,
             ]);
-            
+
             return true;
         }
 
@@ -51,7 +51,7 @@ class ArtistYouTubeRefreshService
     /**
      * Refresh YouTube data for an artist if needed (based on staleness).
      *
-     * @param Artist $artist The artist to refresh YouTube data for
+     * @param  Artist  $artist  The artist to refresh YouTube data for
      * @return bool True if refresh was attempted (regardless of success), false if skipped
      */
     public function refreshIfNeeded(Artist $artist): bool
@@ -59,16 +59,17 @@ class ArtistYouTubeRefreshService
         // Dispatch YouTube channel discovery if needed
         if ($artist->needsToUpdateYoutubeChannel()) {
             UpdateYoutubeLinksJob::dispatch($artist);
+
             return true;
         }
 
         // If no metrics exist, we need to create them and fetch data
-        if (!$artist->metrics) {
+        if (! $artist->metrics) {
             return $this->forceRefresh($artist);
         }
 
         // Skip if existing metrics don't need refresh
-        if (!$artist->metrics->needsYouTubeRefresh()) {
+        if (! $artist->metrics->needsYouTubeRefresh()) {
             return false;
         }
 
@@ -92,19 +93,19 @@ class ArtistYouTubeRefreshService
     /**
      * Refresh only basic YouTube metrics (subscriber count, video count).
      *
-     * @param Artist $artist The artist to refresh basic metrics for
+     * @param  Artist  $artist  The artist to refresh basic metrics for
      * @return bool True if refresh was successful, false otherwise
      */
     public function refreshBasicMetrics(Artist $artist): bool
     {
         // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
+        if (! $artist->youtube_channel_id) {
             return false;
         }
 
         try {
             $channelData = $this->youtubeService->getChannelMetrics($artist->youtube_channel_id);
-            
+
             if ($channelData) {
                 $updateData = [
                     'youtube_subscribers' => $channelData->subscriberCount,
@@ -136,19 +137,19 @@ class ArtistYouTubeRefreshService
     /**
      * Refresh only YouTube video analytics.
      *
-     * @param Artist $artist The artist to refresh analytics for
+     * @param  Artist  $artist  The artist to refresh analytics for
      * @return bool True if refresh was successful, false otherwise
      */
     public function refreshAnalytics(Artist $artist): bool
     {
         // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
+        if (! $artist->youtube_channel_id) {
             return false;
         }
 
         try {
             $analyticsData = $this->youtubeService->calculateVideoAnalytics($artist->youtube_channel_id);
-            
+
             if ($analyticsData) {
                 $updateData = [
                     'youtube_avg_views' => (int) $analyticsData->averageViews,
@@ -161,7 +162,7 @@ class ArtistYouTubeRefreshService
                 // Update existing metrics or create new ones
                 // If creating, also set the general refreshed_at timestamp
                 $artist->metrics()->updateOrCreate([], array_merge($updateData, [
-                    'refreshed_at' => $artist->metrics?->refreshed_at ?? now()
+                    'refreshed_at' => $artist->metrics?->refreshed_at ?? now(),
                 ]));
 
                 Log::debug('YouTube analytics refreshed', [
@@ -187,18 +188,18 @@ class ArtistYouTubeRefreshService
     /**
      * Check if an artist needs YouTube data refresh.
      *
-     * @param Artist $artist The artist to check
+     * @param  Artist  $artist  The artist to check
      * @return bool True if refresh is needed
      */
     public function needsRefresh(Artist $artist): bool
     {
         // Skip if no YouTube channel ID
-        if (!$artist->youtube_channel_id) {
+        if (! $artist->youtube_channel_id) {
             return false;
         }
 
         // Need refresh if no metrics exist
-        if (!$artist->metrics) {
+        if (! $artist->metrics) {
             return true;
         }
 
@@ -208,10 +209,9 @@ class ArtistYouTubeRefreshService
     /**
      * Handle YouTube API errors with standardized logging.
      *
-     * @param YouTubeApiException|\Exception $e The exception to handle
-     * @param string $context Description of what operation failed
-     * @param array<string, mixed> $logData Additional data to include in logs
-     * @return void
+     * @param  YouTubeApiException|\Exception  $e  The exception to handle
+     * @param  string  $context  Description of what operation failed
+     * @param  array<string, mixed>  $logData  Additional data to include in logs
      */
     private function handleYouTubeError(YouTubeApiException|\Exception $e, string $context, array $logData = []): void
     {

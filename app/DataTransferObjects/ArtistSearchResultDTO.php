@@ -32,10 +32,10 @@ readonly class ArtistSearchResultDTO
     public static function fromLocalArtist(Artist $artist): self
     {
         $score = app(\App\Services\ArtistScoringService::class)->calculateScore($artist);
-        
+
         // Handle relation if loaded, otherwise fallback to empty
-        $genres = $artist->relationLoaded('genres') 
-            ? $artist->genres->pluck('name')->toArray() 
+        $genres = $artist->relationLoaded('genres')
+            ? $artist->genres->pluck('name')->toArray()
             : [];
 
         return new self(

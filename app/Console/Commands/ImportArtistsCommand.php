@@ -10,8 +10,6 @@ use App\Models\Country;
 use App\Models\Genre;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use SplFileObject;
 
 class ImportArtistsCommand extends Command
@@ -59,7 +57,7 @@ class ImportArtistsCommand extends Command
     public function handle()
     {
         $specificFile = $this->argument('file');
-        
+
         if ($specificFile) {
             $files = [$specificFile];
         } else {
@@ -68,6 +66,7 @@ class ImportArtistsCommand extends Command
 
         if (empty($files)) {
             $this->error('No CSV files found.');
+
             return 1;
         }
 
@@ -76,13 +75,13 @@ class ImportArtistsCommand extends Command
         // Pre-load existing MBIDs to memory to reduce DB hits (Optimization)
         $this->info('Loading existing artists into memory...');
         $existingMbids = Artist::pluck('musicbrainz_id')->flip()->toArray();
-        $this->info('Loaded ' . count($existingMbids) . ' existing artists.');
+        $this->info('Loaded '.count($existingMbids).' existing artists.');
 
         // Pre-load countries to memory to reduce DB hits
         $countries = Country::all()->keyBy('iso2'); // Key by ISO2 code
-        $countryNameMap = Country::all()->keyBy(fn($c) => strtolower($c->name)); // Fallback map by name
+        $countryNameMap = Country::all()->keyBy(fn ($c) => strtolower($c->name)); // Fallback map by name
 
-        $errorLogPath = storage_path('logs/artist_import_errors_' . date('Y-m-d_H-i-s') . '.csv');
+        $errorLogPath = storage_path('logs/artist_import_errors_'.date('Y-m-d_H-i-s').'.csv');
         $errorHandle = fopen($errorLogPath, 'w');
         fputcsv($errorHandle, ['File', 'Row', 'Artist Name', 'MBID', 'Spotify ID', 'Error Type', 'Message']);
 
@@ -96,11 +95,11 @@ class ImportArtistsCommand extends Command
 
     private function processFile(string $filePath, $countries, $countryNameMap, $errorHandle, &$existingMbids)
     {
-        $this->info("Processing file: " . basename($filePath));
+        $this->info('Processing file: '.basename($filePath));
 
         $csv = new SplFileObject($filePath);
         $csv->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
-        
+
         $headers = [];
         $headerMap = []; // Col Index -> Header Name
 
@@ -109,10 +108,12 @@ class ImportArtistsCommand extends Command
                 $headers = $row;
                 $headerMap = array_flip($headers);
                 // Validate required headers
-                if (!isset($headerMap['ID']) || !isset($headerMap['Name'])) {
+                if (! isset($headerMap['ID']) || ! isset($headerMap['Name'])) {
                     $this->error("Invalid CSV format in $filePath. Missing ID or Name.");
+
                     return;
                 }
+
                 continue;
             }
 
@@ -132,7 +133,7 @@ class ImportArtistsCommand extends Command
                     $row[$headerMap['ID']] ?? 'Unknown',
                     'Unknown',
                     'Exception',
-                    $e->getMessage()
+                    $e->getMessage(),
                 ]);
             }
         }
@@ -142,19 +143,21 @@ class ImportArtistsCommand extends Command
     {
         $mbid = $row[$headerMap['ID']];
         $name = mb_scrub($row[$headerMap['Name']]); // Sanitize UTF-8
-        
+
         $countryCode = $row[$headerMap['Country Code']] ?? null;
         if ($countryCode) {
-             $countryCode = strtoupper(trim($countryCode));
-             // Validate ISO2 format (2 chars A-Z)
-             if (!preg_match('/^[A-Z]{2}$/', $countryCode)) {
-                 $countryCode = null; // Invalid code, ignore
-             }
+            $countryCode = strtoupper(trim($countryCode));
+            // Validate ISO2 format (2 chars A-Z)
+            if (! preg_match('/^[A-Z]{2}$/', $countryCode)) {
+                $countryCode = null; // Invalid code, ignore
+            }
         }
 
         $countryName = $row[$headerMap['Country']] ?? null;
-        if ($countryName) $countryName = mb_scrub($countryName);
-        
+        if ($countryName) {
+            $countryName = mb_scrub($countryName);
+        }
+
         // Extract Spotify ID
         $spotifyLink = $row[$headerMap['Spotify']] ?? null;
         $spotifyId = null;
@@ -166,7 +169,7 @@ class ImportArtistsCommand extends Command
 
         // 1. Check for Duplicate MBID (Primary Key Check) - Memory Optimized
         if (isset($existingMbids[$mbid])) {
-             return; 
+            return;
         }
 
         // 2. Check for Duplicate Spotify ID (Conflict Check)
@@ -179,8 +182,9 @@ class ImportArtistsCommand extends Command
                 $mbid,
                 $spotifyId,
                 'Duplicate Spotify ID',
-                "Conflict with existing artist ID: {$existing->id} (MBID: {$existing->musicbrainz_id})"
+                "Conflict with existing artist ID: {$existing->id} (MBID: {$existing->musicbrainz_id})",
             ]);
+
             return; // Skip insertion
         }
 
@@ -199,8 +203,12 @@ class ImportArtistsCommand extends Command
             );
             $countryId = $newCountry->id;
             // Update cache maps
-            if ($countryCode) $countries[$countryCode] = $newCountry;
-            if ($countryName) $countryNameMap[strtolower($countryName)] = $newCountry;
+            if ($countryCode) {
+                $countries[$countryCode] = $newCountry;
+            }
+            if ($countryName) {
+                $countryNameMap[strtolower($countryName)] = $newCountry;
+            }
         }
 
         // 4. Create Artist
@@ -223,7 +231,7 @@ class ImportArtistsCommand extends Command
                     if ($aliasName) {
                         ArtistAlias::create([
                             'artist_id' => $artist->id,
-                            'name' => $aliasName
+                            'name' => $aliasName,
                         ]);
                     }
                 }
@@ -243,27 +251,27 @@ class ImportArtistsCommand extends Command
 
             // 7. Links
             foreach ($this->platformMapping as $header => $platformValue) {
-                if (isset($headerMap[$header]) && !empty($row[$headerMap[$header]])) {
+                if (isset($headerMap[$header]) && ! empty($row[$headerMap[$header]])) {
                     $url = $row[$headerMap[$header]];
-                    
+
                     // Special extraction for YouTube Channel ID if needed for main table
-                    if ($platformValue === 'youtube' && !$artist->youtube_channel_id) {
-                         // Simple extraction logic: channel/ID or user/USER
-                         if (preg_match('/channel\/(UC[\w-]+)/', $url, $matches)) {
-                             $artist->update(['youtube_channel_id' => $matches[1]]);
-                         }
+                    if ($platformValue === 'youtube' && ! $artist->youtube_channel_id) {
+                        // Simple extraction logic: channel/ID or user/USER
+                        if (preg_match('/channel\/(UC[\w-]+)/', $url, $matches)) {
+                            $artist->update(['youtube_channel_id' => $matches[1]]);
+                        }
                     }
 
                     ArtistLink::create([
                         'artist_id' => $artist->id,
                         'platform' => SocialPlatform::from($platformValue),
-                        'url' => $url
+                        'url' => $url,
                     ]);
                 }
             }
 
             DB::commit();
-            
+
             // Mark as existing
             $existingMbids[$mbid] = true;
 

@@ -261,7 +261,7 @@ class CountrySeeder extends Seeder
             ['name' => 'Western Sahara', 'iso2' => 'EH', 'iso3' => 'ESH'],
             ['name' => 'Yemen', 'iso2' => 'YE', 'iso3' => 'YEM'],
             ['name' => 'Zambia', 'iso2' => 'ZM', 'iso3' => 'ZMB'],
-            ['name' => 'Zimbabwe', 'iso2' => 'ZW', 'iso3' => 'ZWE']
+            ['name' => 'Zimbabwe', 'iso2' => 'ZW', 'iso3' => 'ZWE'],
         ];
 
         foreach ($countries as $country) {

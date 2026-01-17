@@ -30,12 +30,12 @@ class Genre extends Model
             if (empty($genre->slug)) {
                 $genre->slug = Str::slug($genre->name);
             }
-            
+
             // Always ensure the base normalized version is in synonyms
             // so we can match variations against it later.
             $normalized = static::normalizeName($genre->name);
             $synonyms = $genre->synonyms ?? [];
-            if (!in_array($normalized, $synonyms)) {
+            if (! in_array($normalized, $synonyms)) {
                 $synonyms[] = $normalized;
                 $genre->synonyms = $synonyms;
             }
@@ -51,6 +51,7 @@ class Genre extends Model
     {
         $name = str_replace('&', 'n', $name); // treat & as n (R&B -> Rnb)
         $name = preg_replace('/[^a-zA-Z]/', '', $name); // Strip non-alpha
+
         return strtolower($name);
     }
 
@@ -68,12 +69,12 @@ class Genre extends Model
         // 1. Try exact matches (Slug, Name, or EXACT Raw Synonym)
         $genre = static::where('slug', $slug)
             ->orWhere('name', $likeOperator, $name)
-            ->orWhereJsonContains('synonyms', $name) 
+            ->orWhereJsonContains('synonyms', $name)
             ->first();
 
         // 2. Try normalized match in synonyms (Fuzzy Match)
         // This catches "RnB" matching "rnb" (from "R&B")
-        if (!$genre) {
+        if (! $genre) {
             $genre = static::whereJsonContains('synonyms', $normalized)->first();
         }
 
@@ -81,12 +82,13 @@ class Genre extends Model
             // Found! "Learn" this new raw variation.
             // If the user passed "RnB", we want to save "RnB" so next time it matches instantly.
             $synonyms = $genre->synonyms ?? [];
-            
-            if (!in_array($name, $synonyms)) {
-                 $synonyms[] = $name;
-                 // Ensure uniqueness just in case
-                 $genre->update(['synonyms' => array_values(array_unique($synonyms))]);
+
+            if (! in_array($name, $synonyms)) {
+                $synonyms[] = $name;
+                // Ensure uniqueness just in case
+                $genre->update(['synonyms' => array_values(array_unique($synonyms))]);
             }
+
             return $genre;
         }
 

@@ -2,7 +2,6 @@
 
 use App\DataTransferObjects\YouTubeChannelDTO;
 use App\DataTransferObjects\YouTubeVideoAnalyticsDTO;
-use App\Exceptions\YouTubeApiException;
 use App\Services\YouTubeService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -318,11 +317,11 @@ it('handles API errors gracefully and returns empty results', function () {
     ]);
 
     $service = new YouTubeService;
-    
+
     // Should return null gracefully instead of throwing exception
     $result = $service->getChannelMetrics('UCTestChannel');
     expect($result)->toBeNull();
-    
+
     // Should also work for batch requests
     $results = $service->getMultipleChannelMetrics(['UCTestChannel1', 'UCTestChannel2']);
     expect($results)->toBeEmpty();
@@ -345,7 +344,7 @@ it('handles channels that are not found or private', function () {
 });
 
 it('respects API request limits for batch operations', function () {
-    $channelIds = array_map(fn($i) => "UCChannel{$i}", range(1, 51)); // 51 channels
+    $channelIds = array_map(fn ($i) => "UCChannel{$i}", range(1, 51)); // 51 channels
 
     $service = new YouTubeService;
 
@@ -417,6 +416,7 @@ it('implements retry logic with exponential backoff for transient failures', fun
             // First two calls fail with 500 error
             return Http::response(['error' => ['message' => 'Internal server error']], 500);
         }
+
         // Third call succeeds
         return Http::response([
             'items' => [
@@ -438,12 +438,12 @@ it('implements retry logic with exponential backoff for transient failures', fun
     });
 
     $service = new YouTubeService;
-    
+
     // Should eventually succeed after retries
     $result = $service->getChannelMetrics('UCTestChannel');
     expect($result)->toBeInstanceOf(YouTubeChannelDTO::class);
     expect($result->subscriberCount)->toBe(1000);
-    
+
     // Should have made 3 requests (2 failures + 1 success)
     Http::assertSentCount(3);
 });
@@ -476,27 +476,27 @@ it('handles private, terminated, or not found channels gracefully', function () 
     ]);
 
     $service = new YouTubeService;
-    
+
     // Test batch processing with mixed valid/invalid channels
     $results = $service->getMultipleChannelMetrics([
         'UCValidChannel',
-        'UCPrivateChannel', 
-        'UCTerminatedChannel'
+        'UCPrivateChannel',
+        'UCTerminatedChannel',
     ]);
-    
+
     // Should return only the valid channel
     expect($results)->toHaveCount(1);
     expect($results)->toHaveKey('UCValidChannel');
     expect($results['UCValidChannel']->subscriberCount)->toBe(1000);
-    
+
     // Should not throw exceptions for missing channels
     expect($results)->not->toHaveKey('UCPrivateChannel');
     expect($results)->not->toHaveKey('UCTerminatedChannel');
-    
+
     // Test individual channel that doesn't exist
     $singleResult = $service->getChannelMetrics('UCNonExistentChannel');
     expect($singleResult)->toBeNull();
-    
+
     // Should have made API requests without throwing exceptions
     Http::assertSentCount(2);
 });
@@ -504,7 +504,7 @@ it('handles private, terminated, or not found channels gracefully', function () 
 it('sets quota exhaustion flag correctly when API returns quota exceeded error', function () {
     // Set quota limit to 1 for easy testing
     config(['services.youtube.quota_limit' => 1]);
-    
+
     Http::fake([
         '*' => Http::response([
             'error' => [
@@ -517,19 +517,19 @@ it('sets quota exhaustion flag correctly when API returns quota exceeded error',
                         'reason' => 'quotaExceeded',
                     ],
                 ],
-            ]
+            ],
         ], 403),
     ]);
 
     $service = new YouTubeService;
-    
+
     // Initially quota should be available
     expect($service->checkQuotaAvailability())->toBeTrue();
-    
+
     // Make a request that will trigger quota exhaustion
     $result = $service->getChannelMetrics('UCTestChannel');
     expect($result)->toBeNull(); // Should handle gracefully
-    
+
     // After quota exhaustion, checkQuotaAvailability should return false
     expect($service->checkQuotaAvailability())->toBeFalse();
     expect($service->getRemainingQuota())->toBe(0);
@@ -561,38 +561,38 @@ it('gracefully degrades during API outages and quota exhaustion', function () {
             ],
         ], 200),
     ]);
-    
+
     $service = new YouTubeService;
-    
+
     // First request - should succeed and cache result
     $cachedResult = $service->getChannelMetrics('UCTestChannel');
     expect($cachedResult)->toBeInstanceOf(YouTubeChannelDTO::class);
     expect($cachedResult->subscriberCount)->toBe(1000);
-    
+
     // Now simulate API outage (503 error)
     Http::fake([
         '*' => Http::response([
-            'error' => ['message' => 'Service unavailable']
+            'error' => ['message' => 'Service unavailable'],
         ], 503),
     ]);
-    
+
     // Request for cached channel should still work (returns cached data)
     $degradedResult = $service->getChannelMetrics('UCTestChannel');
     expect($degradedResult)->toBeInstanceOf(YouTubeChannelDTO::class);
     expect($degradedResult->subscriberCount)->toBe(1000);
-    
+
     // Request for uncached channel should handle gracefully
     $uncachedResult = $service->getChannelMetrics('UCNewChannel');
     expect($uncachedResult)->toBeNull(); // Should not throw exception
-    
+
     // Test quota exhaustion scenario
     // Set quota limit to 1 to easily trigger exhaustion and create new service instance
     config(['services.youtube.quota_limit' => 1]);
     $quotaService = new YouTubeService; // New instance with low quota limit
-    
+
     // Clear cache to force API call
     Cache::flush();
-    
+
     Http::fake([
         '*' => Http::response([
             'error' => [
@@ -605,26 +605,26 @@ it('gracefully degrades during API outages and quota exhaustion', function () {
                         'reason' => 'quotaExceeded',
                     ],
                 ],
-            ]
+            ],
         ], 403),
     ]);
-    
+
     // Re-cache the first channel since we flushed cache
     Cache::put('youtube_channel:UCTestChannel', $cachedResult, 86400);
-    
+
     // This should trigger quota exhaustion handling
     $quotaExhaustedResult = $quotaService->getChannelMetrics('UCNewChannel2');
     expect($quotaExhaustedResult)->toBeNull(); // Should handle gracefully
-    
+
     // After quota exhaustion, checkQuotaAvailability should return false
     expect($quotaService->checkQuotaAvailability())->toBeFalse();
-    
+
     // Should handle quota exhaustion gracefully for batch requests
     // This should return only cached results since quota is exhausted
     $batchResults = $quotaService->getMultipleChannelMetrics(['UCTestChannel', 'UCNewChannel3']);
     expect($batchResults)->toHaveCount(1); // Only cached result returned
     expect($batchResults['UCTestChannel']->subscriberCount)->toBe(1000);
-    
+
     // Verify that system continues operating without throwing exceptions
     expect($quotaService->getRemainingQuota())->toBe(0); // Should be 0 after quota exhaustion
 });
@@ -644,7 +644,7 @@ it('logs quota warnings at various thresholds', function () {
             $url = $request->url();
             preg_match('/id=([^&]+)/', $url, $matches);
             $channelId = $matches[1] ?? 'UCTestChannel';
-            
+
             return Http::response([
                 'items' => [
                     [
@@ -674,7 +674,7 @@ it('logs quota warnings at various thresholds', function () {
         $result = $service->getChannelMetrics("UCTestChannel{$i}");
         expect($result)->toBeInstanceOf(YouTubeChannelDTO::class);
     }
-    
+
     expect($service->getQuotaUsagePercentage())->toBe(50.0);
     expect($service->getRemainingQuota())->toBe(5);
     expect($service->isQuotaLow())->toBeFalse();
@@ -685,26 +685,26 @@ it('logs quota warnings at various thresholds', function () {
         $result = $service->getChannelMetrics("UCTestChannel{$i}");
         expect($result)->toBeInstanceOf(YouTubeChannelDTO::class);
     }
-    
+
     expect($service->getQuotaUsagePercentage())->toBe(80.0);
     expect($service->getRemainingQuota())->toBe(2);
     expect($service->isQuotaLow())->toBeFalse(); // Still not low
 
     // 90% threshold (9/10)
-    Cache::forget("youtube_channel:UCTestChannel9");
-    $result9 = $service->getChannelMetrics("UCTestChannel9");
+    Cache::forget('youtube_channel:UCTestChannel9');
+    $result9 = $service->getChannelMetrics('UCTestChannel9');
     expect($result9)->toBeInstanceOf(YouTubeChannelDTO::class);
-    
+
     expect($service->getQuotaUsagePercentage())->toBe(90.0);
     expect($service->getRemainingQuota())->toBe(1);
     expect($service->isQuotaLow())->toBeTrue(); // Now it should be low
     expect($service->checkQuotaAvailability())->toBeTrue(); // Should still allow 1 more
 
     // 100% threshold (10/10)
-    Cache::forget("youtube_channel:UCTestChannel10");
-    $result10 = $service->getChannelMetrics("UCTestChannel10");
+    Cache::forget('youtube_channel:UCTestChannel10');
+    $result10 = $service->getChannelMetrics('UCTestChannel10');
     expect($result10)->toBeInstanceOf(YouTubeChannelDTO::class);
-    
+
     expect($service->getQuotaUsagePercentage())->toBe(100.0);
     expect($service->getRemainingQuota())->toBe(0);
     expect($service->checkQuotaAvailability())->toBeFalse(); // No more quota
@@ -720,8 +720,8 @@ it('logs quota warnings at various thresholds', function () {
     expect($status)->toHaveKey('resets_at');
 
     // Attempt to make another request - should be blocked
-    Cache::forget("youtube_channel:UCTestChannel11");
-    $result11 = $service->getChannelMetrics("UCTestChannel11");
+    Cache::forget('youtube_channel:UCTestChannel11');
+    $result11 = $service->getChannelMetrics('UCTestChannel11');
     expect($result11)->toBeNull(); // Should return null due to quota exhaustion
 });
 
@@ -740,7 +740,7 @@ it('resets quota tracking at day boundaries', function () {
             $url = $request->url();
             preg_match('/id=([^&]+)/', $url, $matches);
             $channelId = $matches[1] ?? 'UCTestChannel';
-            
+
             return Http::response([
                 'items' => [
                     [
@@ -768,26 +768,26 @@ it('resets quota tracking at day boundaries', function () {
         Cache::forget("youtube_channel:UCTestChannel{$i}");
         $service->getChannelMetrics("UCTestChannel{$i}");
     }
-    
+
     expect($service->getRemainingQuota())->toBe(0);
     expect($service->checkQuotaAvailability())->toBeFalse();
 
     // Manually reset quota (simulating day boundary)
     $service->resetQuotaTracking();
-    
+
     // After reset, quota should be available again
     expect($service->getRemainingQuota())->toBe(5);
     expect($service->checkQuotaAvailability())->toBeTrue();
     expect($service->getQuotaUsagePercentage())->toBe(0.0);
-    
+
     $status = $service->getQuotaStatus();
     expect($status['used'])->toBe(0);
     expect($status['remaining'])->toBe(5);
     expect($status['is_exhausted'])->toBeFalse();
 
     // Should be able to make requests again
-    Cache::forget("youtube_channel:UCNewChannel");
-    $result = $service->getChannelMetrics("UCNewChannel");
+    Cache::forget('youtube_channel:UCNewChannel');
+    $result = $service->getChannelMetrics('UCNewChannel');
     expect($result)->toBeInstanceOf(YouTubeChannelDTO::class);
     expect($service->getRemainingQuota())->toBe(4);
 });
@@ -846,7 +846,7 @@ it('applies graceful degradation when quota is low', function () {
             $url = $request->url();
             preg_match('/id=([^&]+)/', $url, $matches);
             $channelId = $matches[1] ?? 'UCTestChannel';
-            
+
             return Http::response([
                 'items' => [
                     [
@@ -889,12 +889,12 @@ it('applies graceful degradation when quota is low', function () {
 
     // When quota is exhausted, should return cached data and avoid API calls
     $results = $service->getMultipleChannelMetrics(['UCCachedChannel', 'UCNewChannel']);
-    
+
     // Should only return cached channel, not make API call for new channel
     expect($results)->toHaveCount(1);
     expect($results)->toHaveKey('UCCachedChannel');
     expect($results['UCCachedChannel']->subscriberCount)->toBe(5000);
-    
+
     // Should not have made additional API calls due to graceful degradation
     Http::assertSentCount(10); // Only the 10 calls from the loop above
 });

@@ -7,7 +7,6 @@ use App\Models\Genre;
 use App\Services\SpotifyService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class UpdateArtistMetadataFromSpotifyCommand extends Command
 {

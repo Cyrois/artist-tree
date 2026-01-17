@@ -32,7 +32,7 @@ class YouTubeChannelDTO
         $relatedPlaylists = $contentDetails['relatedPlaylists'] ?? [];
         $snippet = $data['snippet'] ?? [];
         $status = $data['status'] ?? [];
-        
+
         return new self(
             channelId: $data['id'],
             subscriberCount: (int) ($statistics['subscriberCount'] ?? 0),
@@ -68,6 +68,7 @@ class YouTubeChannelDTO
         }
 
         $thresholdDate = now()->subMonths($monthsThreshold);
+
         return $this->lastUploadDate >= $thresholdDate;
     }
 
